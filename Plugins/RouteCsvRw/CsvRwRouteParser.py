@@ -1,7 +1,10 @@
 from RouteManager2.CurrentRoute import CurrentRoute
 from .RouteData import RouteData
+from .Preprocess import PreprocessMixin
+from OpenBveApi.Objects.ObjectInterface import ObjectInterface, CompatabilityHacks
 
-class Parser:
+class Parser(PreprocessMixin):
+    EnabledHacks = CompatabilityHacks()
     def __init__(self):
         self.ObjectPath = ''
         self.SoundPath = ''
@@ -33,10 +36,21 @@ class Parser:
             return
         Data = self.ApplyRouteData(FileName, Data, PreviewOnly)
 		
-    @staticmethod
-    def ParseRouteForData(FileName, Encoding,Data,PreviewOnly):
-        pass
+    def ParseRouteForData(self, FileName, Encoding,Data,PreviewOnly):
+        with open(FileName, 'r', encoding=Encoding) as f:
+            lines: List[str] = f.readlines()
+
+        Expressions = self.PreprocessSplitIntoExpressions(FileName, lines, True)
+        Expressions = self.PreprocessChrRndSub(FileName, Encoding, Expressions)
+        test(Expressions)
 
     @staticmethod
     def ApplyRouteData(FileName, Data, PreviewOnly):
         pass
+
+def test(Expressions):
+    with open("C:/TEMP/expressions_all.txt", "w", encoding="utf-8") as f:
+        for i in range(len(Expressions)):
+            f.write(
+                f"{i} , {Expressions[i].Line} , {Expressions[i].Text}, {Expressions[i].TrackPositionOffset}, {Expressions[i].File}\n")
+    pass

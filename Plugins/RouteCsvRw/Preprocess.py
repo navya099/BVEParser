@@ -1,13 +1,14 @@
 import re
 import os
 import random
-from unittest import case
-from xxsubtype import bench
-
 import chardet
 
 from .Structures.Expression import Expression
-from  OpenBveApi.Math.Math import NumberFormats
+from OpenBveApi.Math.Math import NumberFormats
+from .Structures.PositionedExpression import PositionedExpression
+
+
+
 
 def detect_encoding(path):
     # 파일을 열어 일부를 읽어서 인코딩을 감지합니다
@@ -16,9 +17,10 @@ def detect_encoding(path):
         result = chardet.detect(raw_data)  # 인코딩 탐지
         return result['encoding']
 
+
 class PreprocessMixin:
     def PreprocessSplitIntoExpressions(self, file_name, lines, allow_rw_route_description, track_position_offset=0.0):
-        expressions = [Expression('','',0,0,0.0) for _ in range(4096)]  # 기본 생성자를 사용할 경우
+        expressions = [Expression('', '', 0, 0, 0.0) for _ in range(4096)]  # 기본 생성자를 사용할 경우
         e = 0
         # full-line rw comments
         if self.IsRW:
@@ -41,12 +43,11 @@ class PreprocessMixin:
                             if level == 0:
                                 j = len(lines[i])
 
-
         # parse
         for i in range(len(lines)):
-            #Remove empty null characters
-            #Found these in a couple of older routes, harmless but generate errors
-	    #Possibly caused by BVE-RR (DOS version)
+            # Remove empty null characters
+            # Found these in a couple of older routes, harmless but generate errors
+            # Possibly caused by BVE-RR (DOS version)
             lines[i] = lines[i].replace("\0", "")
             if self.IsRW and allow_rw_route_description:
                 # ignore rw route description
@@ -62,8 +63,8 @@ class PreprocessMixin:
                         self.CurrentRoute.Comment += "\n"
                     self.CurrentRoute.Comment += lines[i]
                     continue
-                
-            #count expressions
+
+            # count expressions
             n = 0
             level = 0
             for j in range(len(lines[i])):
@@ -75,14 +76,13 @@ class PreprocessMixin:
                         level -= 1
 
                     case ',':
-                        if not self.IsRW  and level == 0:
+                        if not self.IsRW and level == 0:
                             n += 1
 
                     case '@':
                         if self.IsRW and level == 0:
                             n += 1
 
-            
             if self.SplitLineHack:
                 matches = re.findall(r".Load", lines[i], re.IGNORECASE)
                 if len(matches) > 1:
@@ -92,9 +92,9 @@ class PreprocessMixin:
                         new_line = split_line[j].strip()
                         if len(new_line) > 0:
                             lines.insert(i, new_line)
-                            
-            #create expressions
-            m = e+ n +1
+
+            # create expressions
+            m = e + n + 1
             while m >= len(expressions):
                 expressions.extend([None] * len(expressions))  # 크기를 2배로 확장
 
@@ -108,10 +108,11 @@ class PreprocessMixin:
                     case ')':
                         if self.Plugin.CurrentOptions.EnableBveTsHacks:
                             if level > 0:
-                                #Don't decrease the level below zero, as this messes up when extra closing brackets are encountere
+                                # Don't decrease the level below zero, as this messes up when extra closing brackets are encountere
                                 level -= 1
                             else:
-                                print(f"Invalid additional closing parenthesis encountered at line {i} character {j} in file {file_name}")
+                                print(
+                                    f"Invalid additional closing parenthesis encountered at line {i} character {j} in file {file_name}")
                         else:
                             level -= 1
 
@@ -126,20 +127,20 @@ class PreprocessMixin:
 
                     case '@':
                         if level == 1 and self.IsRW and self.Plugin.CurrentOptions.EnableBveTsHacks:
-                            #BVE2 doesn't care if a bracket is unclosed, fixes various routefiles
+                            # BVE2 doesn't care if a bracket is unclosed, fixes various routefiles
                             level -= 1
                         elif level == 2 and self.IsRW and self.Plugin.CurrentOptions.EnableBveTsHacks:
                             k = j
                             while k > 0:
-                                k -=1
+                                k -= 1
                                 if lines[i][j] == '(':
-                                    #Opening bracket has been used instead of closing bracket, again BVE2 ignores this
+                                    # Opening bracket has been used instead of closing bracket, again BVE2 ignores this
                                     level -= 2
                                     break
                                 if not lines[i][k].isspace():
-                                    #Bracket not found, and this isn't whitespace either, so break out
+                                    # Bracket not found, and this isn't whitespace either, so break out
                                     break
-                        if level == 0 and  self.IsRW:
+                        if level == 0 and self.IsRW:
                             t = lines[i][a:j].strip()
                             if len(t) > 0 and not t.startswith(';'):
                                 expressions[e] = Expression(file_name, t, i + 1, c + 1, track_position_offset)
@@ -147,7 +148,6 @@ class PreprocessMixin:
                             a = j + 1
                             c += 1
 
-            
             if len(lines[i]) - a > 0:
                 t = lines[i][a:].strip()
                 if len(t) > 0 and not t.startswith(';'):
@@ -157,11 +157,10 @@ class PreprocessMixin:
         expressions = expressions[:e]
         return expressions
 
-
     def PreprocessChrRndSub(self, FileName, Encoding, Expressions):
         Subs = [""] * 16
         openIfs = 0
-        for i in range (len(Expressions)):
+        for i in range(len(Expressions)):
             Epilog = f" at line {str(Expressions[i].Line)} column {str(Expressions[i].Column)} in file {Expressions[i].File}"
             continueWithNextExpression = False
             for j in range(len(Expressions[i].Text) - 1):
@@ -176,8 +175,8 @@ class PreprocessMixin:
                             break
                     if k <= len(Expressions[i].Text):
                         t = Expressions[i].Text[j:k].rstrip()
-                        l,h = 1,0
-                        h = k +1
+                        l, h = 1, 0
+                        h = k + 1
                         for h in range(k + 1, len(Expressions[i].Text)):
                             match Expressions[i].Text[h]:
                                 case '(':
@@ -207,7 +206,7 @@ class PreprocessMixin:
                                         openIfs += 1
                                         Expressions[i].Text = ""
                                         if num == 0.0:
-                                            #Blank every expression until the matching $Else or $EndIf
+                                            # Blank every expression until the matching $Else or $EndIf
                                             i += 1
                                             level = 1
                                             while i < len(Expressions):
@@ -277,7 +276,6 @@ class PreprocessMixin:
                                     print("$EndIf without matching $If encountered" + Epilog)
                                 continueWithNextExpression = True
 
-
                             case "$include":
                                 if j != 0:
                                     print("The $Include directive must not appear within another statement" + Epilog)
@@ -301,7 +299,7 @@ class PreprocessMixin:
                                         try:
                                             offset = float(value)
                                         except ValueError:
-                                            continueWithNextExpression = True # or any default value you want to assign in case of failure
+                                            continueWithNextExpression = True  # or any default value you want to assign in case of failure
                                             print("The track position offset " + value + " is invalid in " + t + Epilog)
                                             break
                                     else:
@@ -312,9 +310,9 @@ class PreprocessMixin:
                                         files[ia] = os.path.join(os.path.dirname(FileName), file)
                                     except Exception as ex:
                                         continueWithNextExpression = True
-                                        print( "The filename " + file + " contains invalid characters in " + t + Epilog)
-                                        for ta in range(i , len(Expressions) -1):
-                                            Expressions[ta] = Expressions[ta +1]
+                                        print("The filename " + file + " contains invalid characters in " + t + Epilog)
+                                        for ta in range(i, len(Expressions) - 1):
+                                            Expressions[ta] = Expressions[ta + 1]
                                         Expressions = Expressions[:-1]
                                         i -= 1
                                         break
@@ -340,7 +338,7 @@ class PreprocessMixin:
                                             break
                                         weightsTotal += weights[ia]
                                     else:
-                                        weights[ia]  = 1.0
+                                        weights[ia] = 1.0
                                         weightsTotal += 1.0
                                 if count == 0:
                                     continueWithNextExpression = True
@@ -359,10 +357,13 @@ class PreprocessMixin:
                                     if includeEncoding != Encoding and includeEncoding != Encoding:
                                         # If the encodings do not match, add a warning
                                         # This is not critical, but it's a bad idea to mix and match character encodings within a routefile, as the auto-detection may sometimes be wrong
-                                        print("The text encoding of the $Include file " + files[chosenIndex] + " does not match that of the base routefile.")
+                                        print("The text encoding of the $Include file " + files[
+                                            chosenIndex] + " does not match that of the base routefile.")
                                     with open(files[chosenIndex], 'r', encoding=includeEncoding) as f:
                                         lines = f.readlines()
-                                    expr = self.PreprocessSplitIntoExpressions(files[chosenIndex], lines, False, offsets[chosenIndex] + Expressions[i].TrackPositionOffset)
+                                    expr = self.PreprocessSplitIntoExpressions(files[chosenIndex], lines, False,
+                                                                               offsets[chosenIndex] + Expressions[
+                                                                                   i].TrackPositionOffset)
                                     length = len(Expressions)
                                     if len(expr) == 0:
                                         # 표현식이 비었으면 현재 i 위치 요소 삭제
@@ -403,24 +404,69 @@ class PreprocessMixin:
 
                 if continueWithNextExpression:
                     break
-        #// handle comments introduced via chr, rnd, sub
+        # // handle comments introduced via chr, rnd, sub
         length = len(Expressions)
         for i in range(length):
             Expressions[i].Text = Expressions[i].Text.strip()
             if len(Expressions[i].Text) != 0:
                 if Expressions[i].Text[0] == ';':
-                    for j in range(i, len(length)- 1):
-                        Expressions[j] =  Expressions[j +1 ]
+                    for j in range(i, len(length) - 1):
+                        Expressions[j] = Expressions[j + 1]
                     length -= 1
                     i -= 1
             else:
                 for j in range(i, len(length) - 1):
-                    Expressions[j] = Expressions[j + 1 ]
+                    Expressions[j] = Expressions[j + 1]
                 length -= 1
                 i -= 1
         if length != len(Expressions):
             Expressions = Expressions[:length]
 
-
-
         return Expressions
+
+    def preprocess_sort_by_track_position(self, expressions: list[Expression]) -> list[PositionedExpression(0.0, None)]:
+
+        p = [PositionedExpression(0, expr) for expr in expressions]
+        n = 0
+        a = -1.0
+        number_check = not self.IsRW
+        for i in range(len(expressions)):
+            if self.IsRW:
+                # only check for track positions in the railway section for RW routes
+                if expressions[i].Text.startswith('[') and expressions[i].Text.endswith(']'):
+                    s = expressions[i].Text[1:-1].strip()
+                    number_check = s.lower() == "railway"
+            if number_check:
+                try:
+                    x = float(expressions[i].Text)
+                    x += expressions[i].TrackPositionOffset
+                    if x >= 0.0:
+                        if self.Plugin.CurrentOptions.EnableBveTsHacks:
+                            match os.path.basename(expressions[i].File.lower()):
+                                case "balloch - dumbarton central special nighttime run.csv":
+                                    pass
+                                case "balloch - dumbarton central summer 2004 morning run.csv":
+                                    if x != 0 or a != 4125:
+                                        # Misplaced comma in the middle of the line causes this to be interpreted as a track position
+                                        a = x
+                                case _:  # 기본 동작(c# default)
+                                    a = x
+                        else:
+                            a = x
+                    else:
+                        print(
+                            f'Negative track position encountered at line {str(expressions[i].Line)}, column {str(expressions[i].Column)} in file {expressions[i].File}')
+                except Exception as ex:
+                    p[n].track_position = a
+                    p[n].expression = expressions[i]
+                    j = n
+                    n += 1
+                    p.sort(key=lambda e: e.track_position)
+        a = -1.0
+        e = []
+        m = 0
+        for i in range(n):
+            if p[i].track_position != a:
+                a = p[i].track_position
+                e[m] = Expression("", str(a / unit_factors[-1]), -1, -1, -1.0)
+                m += 1

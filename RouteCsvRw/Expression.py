@@ -1,9 +1,10 @@
-from ..import math
+
 class Expression:
-    def __init__(self,file: str,text: str, line: int, column: int, trackpositionoffset: float) -> list:
+    def __init__(self,file: str,text: str, line: int, column: int, trackpositionoffset: float):
         self.file = file
         self.text = text
         self.line = line
+        self.column = column
         self.trackpositionoffset = trackpositionoffset
 
 
@@ -13,7 +14,8 @@ class Expression:
             # handle RW cycle syntax
             t = self.text[:equals]
             if section.lower() == "cycle" and sectionalwaysprefix:
-                if numberformats.TryParseDoubleVb6(t, out double b))
+                if numberformats.TryParseDoubleVb6(t):
+                    pass
 #test
 expression = Expression('a','sty4=35',141,52,1.4)
 expression.convertrwtocsv('af33',False)

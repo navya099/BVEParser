@@ -397,7 +397,7 @@ class PreprocessMixin:
     def preprocess_sort_by_track_position(self, unitfactors: List[float],
                                           expressions: List[Expression]) -> List[Expression]:
 
-        p = [PositionedExpression(0, expr) for expr in expressions]
+        p = []
         n = 0
         a = -1.0
         number_check = not self.IsRW
@@ -429,23 +429,20 @@ class PreprocessMixin:
                         print(
                             f'Negative track position encountered at line {str(expressions[i].Line)}, column {str(expressions[i].Column)} in file {expressions[i].File}')
                 except Exception as ex:
-                    p[n].track_position = a
-                    p[n].expression = expressions[i]
-                    j = n
-                    n += 1
-                    p.sort(key=lambda e: e.track_position)
+                    p.append(PositionedExpression(a, expressions[i]))
+        p.sort(key=lambda e: e.track_position)
         a = -1.0
-        e = [Expression('', '', 0, 0, 0.0) for _ in expressions]
+        e = [] # Expression 객체를 담을 리스트
 
-        m = 0
-        for i in range(n):
-            if p[i].track_position != a:
-                a = p[i].track_position
-                e[m] = Expression("", str(a / unitfactors[-1]), -1, -1, -1.0)
+        for pe in p:
+            if pe.track_position != a:
+                a = pe.track_position
+                # 트랙 위치를 유닛으로 나눠서 문자열 표현
+                pos_str = str(a / unitfactors[-1])
+                e.append(Expression('', pos_str, -1, -1, -1))
 
-            e[m] = p[i].expression
-            m += 1
-        e = e[:m]
+            e.append(pe.expression)
+
         expressions = e
 
         return expressions

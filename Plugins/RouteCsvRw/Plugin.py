@@ -3,11 +3,11 @@ import chardet
 from RouteManager2.CurrentRoute import CurrentRoute
 from .CsvRwRouteParser import Parser
 from OpenBveApi.Routes.RouteInterface import RouteInterface
-from OpenBveApi.System.BaseOptions import BaseOptions 
+from OpenBveApi.System.BaseOptions import BaseOptions
 from OpenBveApi.System.Path import Path
 import traceback
-import threading
 import time
+
 
 def detect_encoding(path):
     # 파일을 열어 일부를 읽어서 인코딩을 감지합니다
@@ -15,7 +15,8 @@ def detect_encoding(path):
         raw_data = file.read(10000)  # 처음 10000 바이트를 읽어봄
         result = chardet.detect(raw_data)  # 인코딩 탐지
         return result['encoding']
-    
+
+
 class Plugin(RouteInterface):
     CurrentRoute = CurrentRoute()
     CurrentOptions = BaseOptions()
@@ -23,22 +24,22 @@ class Plugin(RouteInterface):
     Random = None
     FileSystem = None
     TrainManager = None
-    
+
     def __init__(self):
         super().__init__()
-        
+
     def load(self, host, file_system, options, train_manager_reference):
-        CurrentHost = host
-        FileSystem = file_system
-        CurrentOptions = options
-        
+        current_host = host
+        file_system = file_system
+        current_options = options
+
         # Check if train_manager_reference is of type TrainManagerBase
         if isinstance(train_manager_reference, TrainManagerBase):
             self.TrainManager = train_manager_reference
-        
+
         # Set TrainDownloadLocation to an empty string
-        CurrentOptions.TrainDownloadLocation = ""
-        
+        current_options.TrainDownloadLocation = ""
+
     def CanLoadRoute(self, path: str) -> bool:
         if not path or not os.path.exists(path):
             return False
@@ -46,7 +47,7 @@ class Plugin(RouteInterface):
             return True
         if path.lower().endswith(".csv"):
             encoding = detect_encoding(path)  # 파일 인코딩 탐지
-            with open(path, 'r',encoding=encoding) as file:
+            with open(path, 'r', encoding=encoding) as file:
                 for i in range(30):
                     try:
                         line = file.readline()
@@ -63,12 +64,11 @@ class Plugin(RouteInterface):
             return True
 
         return False
-    
-    def LoadRoute(self, path: str, encoding: str, trainPath: str,
-                  objectPath: str, soundPath: str,
-                  previewOnly: bool, route: object) -> bool:
-        if encoding is None:
 
+    def LoadRoute(self, path: str, encoding: str, train_path: str,
+                  object_path: str, sound_path: str,
+                  preview_only: bool, route: object) -> bool:
+        if encoding is None:
             encoding = 'utf-8'
 
         self.LastException = None
@@ -80,17 +80,17 @@ class Plugin(RouteInterface):
         else:
             raise TypeError("route must be a CurrentRoute instance.")
         print(f"Loading route file: {path}")
-        print(f"INFO: Route file hash {Path.get_checksum(path)}");
+        print(f"INFO: Route file hash {Path.get_checksum(path)}")
 
-        #First, check the format of the route file
-        #RW routes were written for BVE1 / 2, and have a different command syntax
+        # First, check the format of the route file
+        # RW routes were written for BVE1 / 2, and have a different command syntax
         isrw = path.lower().endswith(".rw")
         print(f"Route file format is: {'RW' if isrw else 'CSV'}\n")
         try:
             parser = Parser()
-            parser.ParseRoute(path, isrw, encoding,
-                              trainPath, objectPath,soundPath,
-                              previewOnly ,self)
+            parser.parse_route(path, isrw, encoding,
+                               train_path, object_path, sound_path,
+                               preview_only, self)
             self.IsLoading = False
             return True
 
@@ -102,6 +102,7 @@ class Plugin(RouteInterface):
             print("Error loading route:", ex)
             traceback.print_exc()
             return False
+
     def Unload(self):
         self.Cancel = True
         while self.IsLoading:

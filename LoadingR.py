@@ -23,11 +23,11 @@ class Loading:
             else:
                 path = file.name
                 plugin = Plugin()
-                currentRoute = CurrentRoute()
+                current_route = CurrentRoute()
 
                 # 루트 파일이 유효한지 확인
                 if plugin.CanLoadRoute(path):
-                    plugin.LoadRoute(path, 'utf-8', None, None, None, False, currentRoute)
+                    plugin.LoadRoute(path, 'utf-8', '', '', '', False, current_route)
                 else:
                     print('유효한 루트 파일이 아닙니다.')
                     plugin.Unload()

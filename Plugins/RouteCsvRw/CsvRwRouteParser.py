@@ -4,12 +4,15 @@ from .RouteData import RouteData
 from .Preprocess import PreprocessMixin
 from OpenBveApi.Objects.ObjectInterface import ObjectInterface, CompatabilityHacks
 from typing import List
+from tqdm import tqdm
+import time
 
 
 class Parser(PreprocessMixin, PreprocessMixin2):
     EnabledHacks = CompatabilityHacks()
 
     def __init__(self):
+        super().__init__()
         self.ObjectPath = ''
         self.SoundPath = ''
         self.TrainPath = ''
@@ -21,42 +24,45 @@ class Parser(PreprocessMixin, PreprocessMixin2):
         self.AllowTrackPositionArguments = False
         self.SplitLineHack = True
 
-    def ParseRoute(self, FileName, isRW, Encoding, trainPath, objectPath, soundPath, PreviewOnly, hostPlugin):
-        self.Plugin = hostPlugin
-        currentRoute = self.Plugin.CurrentRoute
-        self.ObjectPath = objectPath
-        self.SoundPath = soundPath
-        self.TrainPath = trainPath
-        self.IsRW = isRW
+    def parse_route(self, file_name, is_rw, encoding, train_path, object_path, sound_path, preview_only, host_plugin):
+        self.Plugin = host_plugin
+        self.CurrentRoute = self.Plugin.CurrentRoute
+        self.ObjectPath = object_path
+        self.SoundPath = sound_path
+        self.TrainPath = train_path
+        self.IsRW = is_rw
 
-        freeObjCount = 0
-        railtypeCount = 0
-        Data = RouteData(PreviewOnly)
+        freeobj_count = 0
+        railtype_count = 0
+        data = RouteData(preview_only)
 
-        Data = self.ParseRouteForData(FileName, Encoding, Data, PreviewOnly)
+        self.parse_route_for_data(file_name, encoding, data, preview_only)
 
         if self.Plugin.Cancel:
             self.Plugin.IsLoading = False
             return
-        Data = self.ApplyRouteData(FileName, Data, PreviewOnly)
+        self.apply_route_data(file_name, data, preview_only)
 
-    def ParseRouteForData(self, FileName, Encoding, Data, PreviewOnly):
+    def parse_route_for_data(self, FileName, Encoding, Data, PreviewOnly):
         with open(FileName, 'r', encoding=Encoding) as f:
             lines: List[str] = f.readlines()
-
-        Expressions = self.PreprocessSplitIntoExpressions(FileName, lines, True)
-        Expressions = self.PreprocessChrRndSub(FileName, Encoding, Expressions)
+        start_time = time.time()
+        expressions = self.preprocess_split_into_expressions(FileName, lines, True)
+        expressions = self.preprocess_chr_rnd_sub(FileName, Encoding, expressions)
+        print('루프탈출')
         unit_of_length = [1.0]
         Data.UnitOfSpeed = 0.277777777777778
-        Expressions = self.preprocess_sort_by_track_position(unit_of_length, Expressions)
-
+        expressions = self.preprocess_sort_by_track_position(unit_of_length, expressions)
+        print('정렬성공')
+        end_time = time.time()
+        elapsed = end_time - start_time
         # Set units of speed initially to km/h
         # This represents 1km/h in m/s
-        # preprocessOptions(Expressions, Data, unit_of_length, PreviewOnly)
-        test(Expressions)
-
+        # preprocessOptions(expressions, Data, unit_of_length, PreviewOnly)
+        test(expressions)
+        print('테스트성공')
     @staticmethod
-    def ApplyRouteData(FileName, Data, PreviewOnly):
+    def apply_route_data(file_name, data, preview_only):
         pass
 
 

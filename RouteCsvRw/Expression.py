@@ -14,7 +14,7 @@ class Expression:
             # handle RW cycle syntax
             t = self.text[:equals]
             if section.lower() == "cycle" and sectionalwaysprefix:
-                if numberformats.TryParseDoubleVb6(t):
+                if numberformats.try_parse_double_vb6(t):
                     pass
 #test
 expression = Expression('a','sty4=35',141,52,1.4)

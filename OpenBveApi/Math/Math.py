@@ -1,5 +1,7 @@
 import math
 import re
+
+
 class NumberFormats:
     @staticmethod
     def trim_inside(expression: str) -> str:
@@ -7,11 +9,11 @@ class NumberFormats:
         return ''.join(expression.split())
 
     @staticmethod
-    def TryParseDoubleVb6(expression: str) -> tuple[bool, float]:
+    def try_parse_double_vb6(expression: str) -> tuple[bool, float]:
         """Parses a double formatted as a Visual Basic 6 string."""
         if not expression:
             return False, 0.0
-        
+
         # Handle EM-DASH (– or —)
         if ord(expression[0]) in [65533, 8212, 8211]:
             expression = '-' + expression[1:]
@@ -50,13 +52,13 @@ class NumberFormats:
             except ValueError:
                 continue
         return False, 0
-    
+
     @staticmethod
     def is_valid_double(expression: str, unit_factors: list[float]) -> bool:
         """Returns whether a string contains a valid double with optional unit parsing."""
         success, _ = try_parse_double(expression, unit_factors)
         return success
-    
+
     @staticmethod
     def try_parse_double(expression: str, unit_factors: list[float]) -> tuple[bool, float]:
         """Parses a double from a string, supporting colon-separated units."""
@@ -77,7 +79,7 @@ class NumberFormats:
                 except ValueError:
                     return False, 0.0
             return True, value
-        
+
     @staticmethod
     def try_parse_double_vb6_units(expression: str, unit_factors: list[float]) -> tuple[bool, float]:
         """Parses a VB6-style double with unit support."""
@@ -97,12 +99,12 @@ class NumberFormats:
                 j = i + len(unit_factors) - len(parts)
                 value += num * unit_factors[j]
             return True, value
-        
+
     @staticmethod
     def to_radians(degrees: float) -> float:
         """Converts degrees to radians."""
         return degrees * (math.pi / 180.0)
-    
+
     @staticmethod
     def mod(a: float, b: float) -> float:
         """Returns a modulo b."""

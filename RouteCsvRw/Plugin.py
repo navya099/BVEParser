@@ -20,7 +20,7 @@ class Plugin:
         print(f"Route file format is: {'RW' if is_rw else 'CSV'}\n")
         try:
             parser = Parser()
-            parser.ParseRoute(path, isRw, Encoding, trainPath, objectPath, soundPath, PreviewOnly, this);
+            parser.parse_route(path, isRw, Encoding, trainPath, objectPath, soundPath, PreviewOnly, this);
             IsLoading = false;
             return true;
 

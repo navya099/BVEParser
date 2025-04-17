@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from RouteCsvRw.Expression import Expression
+from .Expression import Expression
 
 
 @dataclass

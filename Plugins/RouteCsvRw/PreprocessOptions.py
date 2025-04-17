@@ -1,5 +1,5 @@
 from Plugins.RouteCsvRw.RouteData import RouteData
-from RouteCsvRw.Expression import Expression
+from .Structures.Expression import Expression
 from typing import List
 
 

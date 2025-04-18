@@ -43,22 +43,23 @@ class Parser(PreprocessMixin, PreprocessMixin2):
             return
         self.apply_route_data(file_name, data, preview_only)
 
-    def parse_route_for_data(self, FileName, Encoding, Data, PreviewOnly):
-        with open(FileName, 'r', encoding=Encoding) as f:
+    def parse_route_for_data(self, file_name, encoding, data, preview_only):
+        with open(file_name, 'r', encoding=encoding) as f:
             lines: List[str] = f.readlines()
         start_time = time.time()
-        expressions = self.preprocess_split_into_expressions(FileName, lines, True)
-        expressions = self.preprocess_chr_rnd_sub(FileName, Encoding, expressions)
+        expressions = self.preprocess_split_into_expressions(file_name, lines, True)
+        expressions = self.preprocess_chr_rnd_sub(file_name, encoding, expressions)
         print('루프탈출')
         unit_of_length = [1.0]
-        Data.UnitOfSpeed = 0.277777777777778
+        # Set units of speed initially to km/h
+        # This represents 1km/h in m/s
+        data.UnitOfSpeed = 0.277777777777778
+        self.pre_process_options(expressions, data, unit_of_length, preview_only)
         expressions = self.preprocess_sort_by_track_position(unit_of_length, expressions)
         print('정렬성공')
         end_time = time.time()
         elapsed = end_time - start_time
-        # Set units of speed initially to km/h
-        # This represents 1km/h in m/s
-        # preprocessOptions(expressions, Data, unit_of_length, PreviewOnly)
+
         test(expressions)
         print('테스트성공')
     @staticmethod

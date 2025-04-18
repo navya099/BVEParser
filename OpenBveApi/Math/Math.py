@@ -4,34 +4,47 @@ import re
 
 class NumberFormats:
     @staticmethod
-    def trim_inside(expression: str) -> str:
-        """Remove all whitespace characters from the expression."""
-        return ''.join(expression.split())
+    def try_parse_double_vb6(expression: str, unit_factors: list[float] = None)\
+            -> tuple[bool, float]:
+        def parse_single(s: str) -> float | None:
+            try:
+                return float(s.strip().lower().replace("d", "e"))
+            except ValueError:
+                return None
 
-    @staticmethod
-    def try_parse_double_vb6(expression: str) -> tuple[bool, float]:
-        """Parses a double formatted as a Visual Basic 6 string."""
-        if not expression:
+        # 기본 값
+        value = 0.0
+
+        # 단순한 숫자 하나일 때
+        parsed = parse_single(expression)
+        if parsed is not None:
+            if unit_factors:
+                value = parsed * unit_factors[-1]
+            else:
+                value = parsed
+            return True, value
+
+        # 콜론(:) 구분자 있는 복합 형식일 때
+        if unit_factors is None:
+            return False, 0.0  # 단위 변환 정보 없으면 실패
+
+        parts = expression.split(':')
+        if len(parts) > len(unit_factors):
             return False, 0.0
 
-        # Handle EM-DASH (– or —)
-        if ord(expression[0]) in [65533, 8212, 8211]:
-            expression = '-' + expression[1:]
+        for i, part in enumerate(parts):
+            parsed = parse_single(part)
+            if parsed is None:
+                return False, 0.0
+            j = i + len(unit_factors) - len(parts)
+            value += parsed * unit_factors[j]
 
-        expression = trim_inside(expression)
-
-        for n in range(len(expression), 0, -1):
-            try:
-                value = float(expression[:n])
-                return True, value
-            except ValueError:
-                continue
-        return False, 0.0
+        return True, value
 
     @staticmethod
     def try_parse_float_vb6(expression: str) -> tuple[bool, float]:
         """Parses a float formatted as a Visual Basic 6 string."""
-        expression = trim_inside(expression)
+        expression = NumberFormats.trim_inside(expression)
         for n in range(len(expression), 0, -1):
             try:
                 value = float(expression[:n])
@@ -42,7 +55,7 @@ class NumberFormats:
 
     def try_parse_int_vb6(expression: str) -> tuple[bool, int]:
         """Parses an integer formatted as a Visual Basic 6 string."""
-        expression = trim_inside(expression)
+        expression = NumberFormats.trim_inside(expression)
         for n in range(len(expression), 0, -1):
             try:
                 value = float(expression[:n])
@@ -56,7 +69,7 @@ class NumberFormats:
     @staticmethod
     def is_valid_double(expression: str, unit_factors: list[float]) -> bool:
         """Returns whether a string contains a valid double with optional unit parsing."""
-        success, _ = try_parse_double(expression, unit_factors)
+        success, _ = NumberFormats.try_parse_double(expression, unit_factors)
         return success
 
     @staticmethod
@@ -93,7 +106,7 @@ class NumberFormats:
 
             value = 0.0
             for i, part in enumerate(parts):
-                success, num = try_parse_double_vb6(part.strip())
+                success, num = NumberFormats.try_parse_double_vb6(part.strip())
                 if not success:
                     return False, 0.0
                 j = i + len(unit_factors) - len(parts)
@@ -109,3 +122,7 @@ class NumberFormats:
     def mod(a: float, b: float) -> float:
         """Returns a modulo b."""
         return a - b * math.floor(a / b)
+
+    @staticmethod
+    def trim_inside(expression: str) -> str:
+        return ''.join(c for c in expression if not c.isspace())

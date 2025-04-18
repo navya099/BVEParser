@@ -81,7 +81,7 @@ class Plugin(RouteInterface):
             raise TypeError("route must be a CurrentRoute instance.")
         print(f"Loading route file: {path}")
         print(f"INFO: Route file hash {Path.get_checksum(path)}")
-
+        print(f'Encoding: {encoding}')
         # First, check the format of the route file
         # RW routes were written for BVE1 / 2, and have a different command syntax
         isrw = path.lower().endswith(".rw")

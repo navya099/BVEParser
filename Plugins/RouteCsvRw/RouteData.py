@@ -1,7 +1,7 @@
 from . Structures.Block import Block
 
 class RouteData:
-    def __init__(self, previewOnly):
+    def __init__(self, preview_only):
         self.TrackPosition = 0.0
         self.BlockInterval = 25.0
         self.UnitOfSpeed = 0.0

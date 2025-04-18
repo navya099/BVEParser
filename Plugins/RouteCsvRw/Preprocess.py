@@ -3,19 +3,11 @@ import os
 import random
 from typing import List
 from tqdm import tqdm
-import chardet
 
 from .Structures.Expression import Expression
 from OpenBveApi.Math.Math import NumberFormats
 from .Structures.PositionedExpression import PositionedExpression
-
-
-def detect_encoding(path):
-    # 파일을 열어 일부를 읽어서 인코딩을 감지합니다
-    with open(path, 'rb') as file:
-        raw_data = file.read(10000)  # 처음 10000 바이트를 읽어봄
-        result = chardet.detect(raw_data)  # 인코딩 탐지
-        return result['encoding']
+from OpenBveApi.System.TextEncoding import TextEncoding
 
 
 class PreprocessMixin:
@@ -349,7 +341,8 @@ class PreprocessMixin:
                                             break
 
                                     # Get the text encoding of our $Include file
-                                    include_encoding = detect_encoding(files[chosen_index])
+
+                                    include_encoding = TextEncoding.get_system_encoding_from_file(files[chosen_index])
                                     if include_encoding != encoding:
                                         # If the encodings do not match, add a warning
                                         # This is not critical, but it's a bad idea to mix and match character
@@ -428,11 +421,11 @@ class PreprocessMixin:
                     else:
                         print(
                             f'Negative track position encountered at line {str(expressions[i].Line)}, column {str(expressions[i].Column)} in file {expressions[i].File}')
-                except Exception as ex:
+                except ValueError as ex:
                     p.append(PositionedExpression(a, expressions[i]))
         p.sort(key=lambda e: e.track_position)
         a = -1.0
-        e = [] # Expression 객체를 담을 리스트
+        e = []  # Expression 객체를 담을 리스트
 
         for pe in p:
             if pe.track_position != a:

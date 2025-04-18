@@ -3,6 +3,8 @@ from RouteManager2.CurrentRoute import CurrentRoute
 import tkinter as tk
 from tkinter import filedialog
 import traceback
+from OpenBveApi.System.TextEncoding import TextEncoding
+
 
 def askfile():
     # 파일 열기 대화상자에서 파일 선택
@@ -27,7 +29,9 @@ class Loading:
 
                 # 루트 파일이 유효한지 확인
                 if plugin.CanLoadRoute(path):
-                    plugin.LoadRoute(path, 'utf-8', '', '', '', False, current_route)
+
+                    encoding = TextEncoding.get_system_encoding_from_file(path)
+                    plugin.LoadRoute(path, encoding, '', '', '', False, current_route)
                 else:
                     print('유효한 루트 파일이 아닙니다.')
                     plugin.Unload()

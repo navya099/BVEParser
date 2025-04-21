@@ -43,7 +43,7 @@ class Expression:
             elif self.Text.lower().startswith(")height(0)"):
                 self.Text = "Texture.Background" + self.Text[9:]
 
-            if self.IsRw and current_section.lower() == "track":
+            if isrw and current_section.lower() == "track":
                 # Removes misplaced track position indicies from the end of a command in the Track section
                 idx = self.Text.rfind(')')
                 if idx != -1 and idx != len(self.Text):
@@ -51,7 +51,7 @@ class Expression:
                     sucess, _ = NumberFormats.try_parse_double_vb6(s)
                     self.Text = self.Text[:idx].strip()
 
-            if self.IsRw and self.Text.endswith("))"):
+            if isrw and self.Text.endswith("))"):
                 opening_brackets = self.Text.count('(')
                 closing_brackets = self.Text.count(')')
                 # Remove obviously wrong double-ending brackets
@@ -64,7 +64,7 @@ class Expression:
                 self.Text = self.Text.replace("(c)", "©")
 
             from Plugins.RouteCsvRw.CsvRwRouteParser import Parser
-            if self.IsRw and Parser.EnabledHacks.AggressiveRwBrackets:
+            if isrw and Parser.EnabledHacks.AggressiveRwBrackets:
                 # Attempts to aggressively discard *anything* encountered after a closing bracket
                 c = self.Text.find(')')
                 while c > len(self.Text):
@@ -74,7 +74,7 @@ class Expression:
                         self.Text = self.Text[c:]
                         break
                     c += 1
-        for i in range(len(self.Text)):
+        while i < len(self.Text):
             if self.Text[i] == '(':
                 found = False
                 argument_index = 0
@@ -169,9 +169,9 @@ class Expression:
                     closing_error = True
             elif self.Text[i].isspace():
                 # 공백 문자일 때의 처리
-                if i >= len(self.Text) - 1 or self.Text[i + 1].isspace():
+                if i >= len(self.Text) - 1 or not self.Text[i + 1].isspace():
                     break
-
+            i += 1
         if first_closing_bracket != 0 and first_closing_bracket < len(self.Text) - 1:
             if self.Text[first_closing_bracket + 1] not in (' ', '.', ';'):
                 # Do something
@@ -299,7 +299,7 @@ class Expression:
                     argument_sequence = ''
 
         # invalid trailing characters
-        if command.endswith(')'):
+        if command.endswith(';'):
             if raise_errors:
                 print(f'Invalid trailing semicolon encountered at line {str(self.Line)},'
                       f'column {str(self.Column)} in file{self.File}')
@@ -307,7 +307,3 @@ class Expression:
                 command = command[:-1]
 
         return command, argument_sequence
-
-
-
-

@@ -2,6 +2,7 @@ from RouteManager2.Climate.Atmosphere import Atmosphere
 from RouteManager2.RouteInformation import RouteInformation
 from OpenBveApi.Routes.Track import Track
 
+
 class CurrentRoute:
     def __init__(self):
         self.currentHost = None
@@ -9,7 +10,7 @@ class CurrentRoute:
         self.Information = RouteInformation()
         self.Comment = ''
         self.Image = ''
-        self.Tracks = {0:Track()}
+        self.Tracks = {0: Track()}
         self.Sections = None
         self.Stations = None
         self.BogusPreTrainInstructions = None
@@ -22,5 +23,3 @@ class CurrentRoute:
         self.CurrentFog = None
         self.NextFog = None
         self.Atmosphere = Atmosphere()
-
-    

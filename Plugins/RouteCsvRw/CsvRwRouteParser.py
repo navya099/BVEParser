@@ -1,14 +1,18 @@
 from RouteManager2.CurrentRoute import CurrentRoute
-from .PreprocessOptions import PreprocessMixin2
+from RouteManager2.Stations.RouteStation import RouteStation
+from .Compatability.RoutefilePatch import Parser3
+from .PreprocessOptions import Parser2
 from .RouteData import RouteData
-from .Preprocess import PreprocessMixin
+from .Preprocess import Parser1
 from OpenBveApi.Objects.ObjectInterface import ObjectInterface, CompatabilityHacks
 from typing import List
 from tqdm import tqdm
 import time
+from OpenBveApi.Routes.TrackDirection import TrackDirection
+from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
 
 
-class Parser(PreprocessMixin, PreprocessMixin2):
+class Parser(Parser1, Parser2, Parser3):
     EnabledHacks = CompatabilityHacks()
 
     def __init__(self):
@@ -54,14 +58,34 @@ class Parser(PreprocessMixin, PreprocessMixin2):
         # Set units of speed initially to km/h
         # This represents 1km/h in m/s
         data.UnitOfSpeed = 0.277777777777778
-        self.pre_process_options(expressions, data, unit_of_length, preview_only)
+        data = self.pre_process_options(expressions, data, unit_of_length, preview_only)
         expressions = self.preprocess_sort_by_track_position(unit_of_length, expressions)
+        data = self.parse_route_for_data2(file_name, encoding, expressions, unit_of_length, data, preview_only)
         print('정렬성공')
         end_time = time.time()
         elapsed = end_time - start_time
 
         test(expressions)
         print('테스트성공')
+
+    def parse_route_for_data2(self, file_name: str, encoding: str, expressions: List[Expression],
+                              unit_of_length: [float], data: RouteData, preview_only: bool) -> RouteData:
+        current_station = -1
+        current_stop = -1
+        current_section = 0
+
+        section = ""
+        section_always_prefix = False
+        block_index = 0
+
+        self.CurrentRoute.Tracks[0].Direction = TrackDirection.Forwards
+        self.CurrentRoute.Stations = List[RouteStation]
+
+        data.RequestStops = List[StopRequest]
+        progress_factor = 0.3333 if len(expressions) == 0 else 0.3333 / len(expressions)
+        # process non-track namespaces
+        # Check for any special-cased fixes we might need
+
     @staticmethod
     def apply_route_data(file_name, data, preview_only):
         pass

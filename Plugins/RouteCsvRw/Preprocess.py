@@ -10,7 +10,7 @@ from .Structures.PositionedExpression import PositionedExpression
 from OpenBveApi.System.TextEncoding import TextEncoding
 
 
-class PreprocessMixin:
+class Parser1:
     def preprocess_split_into_expressions(self, file_name, lines, allow_rw_route_description,
                                           track_position_offset=0.0):
         expressions = []  # 기본 생성자를 사용할 경우

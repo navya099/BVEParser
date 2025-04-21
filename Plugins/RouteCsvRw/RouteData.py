@@ -1,4 +1,5 @@
-from . Structures.Block import Block
+from .Structures.Block import Block
+
 
 class RouteData:
     def __init__(self, preview_only):
@@ -10,4 +11,6 @@ class RouteData:
         block = Block()
         self.Blocks.append(block)
         self.FirstUsedBlock = -1
-        
+        self.RequestStops = None
+        self.line_ending_fix = False
+        self.ignore_pitch_roll = False

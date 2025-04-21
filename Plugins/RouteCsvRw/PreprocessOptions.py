@@ -4,12 +4,12 @@ from typing import List
 from OpenBveApi.Math.Math import NumberFormats
 
 
-class PreprocessMixin2:
+class Parser2:
     def __init__(self):
         pass
 
     def pre_process_options(self, expressions: List[Expression], data: RouteData,
-                           unit_of_length: List[float], preview_only: bool) -> None:
+                            unit_of_length: List[float], preview_only: bool) -> RouteData:
         section = ''
         section_always_prefix = False
         # process expressions
@@ -25,7 +25,8 @@ class PreprocessMixin2:
             else:
                 expressions[j].convert_rw_to_csv(section, section_always_prefix)
                 # separate command and arguments
-                command, argument_sequence = expressions[j].separate_commands_and_arguments(None, True, self.IsRW, section)
+                command, argument_sequence = expressions[j].separate_commands_and_arguments(None, True, self.IsRW,
+                                                                                            section)
                 # process command
                 number_check = not self.IsRW or section.lower() == "track"
 
@@ -33,7 +34,7 @@ class PreprocessMixin2:
                 if not number_check or not success:
                     # plit arguments
                     arguments = []
-                    n =0
+                    n = 0
                     for k in range(len(argument_sequence)):
                         if self.IsRW and argument_sequence[k] == ',':
                             n += 1
@@ -73,7 +74,7 @@ class PreprocessMixin2:
 
                     # handle indices
                     if command is not None and command.endswith(')'):
-                        for k in range(len(command) - 2 , -1, -1):
+                        for k in range(len(command) - 2, -1, -1):
                             if command[k] == '(':
                                 indices = command[k + 1:len(command) - 1].lstrip()
                                 command = command[:k].rstrip()
@@ -105,12 +106,135 @@ class PreprocessMixin2:
                                           f'{expressions[j].File}')
                                 else:
                                     unit_of_length = []
-                                    for i in range(len(arguments)):
-                                        unit_of_length.append[1.0] if i == len(arguments) else 0.0
 
+                                    for i, arg in enumerate(arguments):
+                                        # 기본값: 마지막이면 1.0, 아니면 0.0
+                                        try:
+                                            value = float(arg) if arg.strip() else (
+                                                1.0 if i == len(arguments) - 1 else 0.0)
+                                        except ValueError:
+                                            print(
+                                                f"🚫 FactorInMeters{i} is invalid in {command} at line "
+                                                f"{expressions[j].Line}, column {expressions[j].Column} in file "
+                                                f"{expressions[j].File}")
+                                            value = 1.0 if i == 0 else 0.0
 
+                                        if value <= 0.0:
+                                            print(
+                                                f"⚠️  FactorInMeters{i} is expected to be positive in {command} at line "
+                                                f"{expressions[j].Line}, column {expressions[j].Column} in file "
+                                                f"{expressions[j].File}")
+                                            value = 1.0 if i == len(arguments) - 1 else 0.0
 
+                                        unit_of_length.append(value)
 
+                            case "options.unitofspeed":
+                                if len(arguments) < 1:
+                                    print(f'Exactly 1 argument is expected in {command} at line '
+                                          f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                          f'{expressions[j].File}')
+                                else:
+                                    if len(arguments) > 1:
+                                        print(f'Exactly 1 argument is expected in {command} at line '
+                                              f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
 
+                                    suceesss, out = NumberFormats.try_parse_double_vb6(arguments[0])
+                                    data.UnitOfSpeed = out
+                                    if len(arguments[0]) > 0 and not suceesss:
+                                        print(f'Factor InKmph is invalid in {command} at line '
+                                              f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
+                                        data.UnitOfSpeed = 0.277777777777778
+                                    elif data.UnitOfSpeed <= 0:
+                                        print(f'Factor InKmph is expected to be positive in {command} at line '
+                                              '{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
+                                        data.UnitOfSpeed = 0.277777777777778
 
+                                    else:
+                                        data.UnitOfSpeed *= 0.277777777777778
+                            case "options.objectvisibility":
+                                if len(arguments) == 0:
+                                    print(f'Exactly 1 argument is expected in {command} at line '
+                                          f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                          f'{expressions[j].File}')
+                                else:
+                                    if len(arguments) > 1:
+                                        print(f'Exactly 1 argument is expected in {command} at line '
+                                              f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
 
+                                    suceesss, mode = NumberFormats.try_parse_int_vb6(arguments[0])
+                                    if len(arguments) >= 1 and len(arguments[0]) != 0 and not suceesss:
+                                        print(f'Mode is invalid in {command} at line '
+                                              f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
+                                        mode = 0
+                                    elif mode < 0 or mode > 2:
+                                        print(f'The specified Mode is not supported in {command} at line '
+                                              f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
+                                        mode = 0
+                                    self.Plugin.CurrentOptions.ObjectDisposalMode = mode
+                            case "options.compatibletransparencymode":
+                                '''
+                                Whether to use fuzzy matching for BVE2 / BVE4 transparencies
+                                Should be DISABLED on openBVE content
+                                '''
+                                if preview_only:
+                                    continue
+                                if len(arguments) == 0:
+                                    print(f'Exactly 1 argument is expected in {command} at line '
+                                          f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                          f'{expressions[j].File}')
+                                else:
+                                    if len(arguments) > 1:
+                                        print(f'Exactly 1 argument is expected in {command} at line '
+                                              f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
+
+                                    suceesss, mode = NumberFormats.try_parse_int_vb6(arguments[0])
+                                    if len(arguments) >= 1 and len(arguments[0]) != 0 and not suceesss:
+                                        print(f'Mode is invalid in {command} at line '
+                                              f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
+                                        mode = 0
+                                    elif mode != 0 and mode != 1:
+                                        print(f'The specified Mode is not supported in {command} at line '
+                                              f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
+                                        mode = 0
+                                    self.Plugin.CurrentOptions.OldTransparencyMode = (mode == 1)
+                            case "options.enablebvetshacks":
+                                pass
+                            case "options.enablehacks":
+                                '''
+                                Whether to apply various hacks to fix BVE2 / BVE4 routes
+                                hilst this is harmless, it should be DISABLED on openBVE content
+                                in order to ensure that all errors are correctly fixed by the developer
+                                '''
+                                if preview_only:
+                                    continue
+                                if len(arguments) == 0:
+                                    print(f'Exactly 1 argument is expected in {command} at line '
+                                          f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                          f'{expressions[j].File}')
+                                else:
+                                    if len(arguments) > 1:
+                                        print(f'Exactly 1 argument is expected in {command} at line '
+                                              f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
+                                    suceesss, mode = NumberFormats.try_parse_int_vb6(arguments[0])
+                                    if len(arguments) >= 1 and len(arguments[0]) != 0 and not suceesss:
+                                        print(f'Mode is invalid in {command} at line '
+                                              f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
+                                        mode = 0
+                                    elif mode != 0 and mode != 1:
+                                        print(f'The specified Mode is not supported in {command} at line '
+                                              f'{expressions[j].Line}, column {expressions[j].Column} in file '
+                                              f'{expressions[j].File}')
+                                        mode = 0
+                                    self.Plugin.CurrentOptions.EnableBveTsHacks = (mode == 1)
+        return data

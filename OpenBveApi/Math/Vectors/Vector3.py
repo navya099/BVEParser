@@ -9,29 +9,34 @@ class Vector3:
     y: float = 0.0
     z: float = 0.0
 
-    @property
-    def X(self):
-        return self.x
+    # ✅ 클래스 밖에서 초기화 (dataclass의 제한 피하기 위함)
+    @classmethod
+    def Forward(cls):
+        return cls(0.0, 0.0, 1.0)
 
-    @X.setter
-    def X(self, value):
-        self.x = value
+    @classmethod
+    def Backward(cls):
+        return cls(0.0, 0.0, -1.0)
 
-    @property
-    def Y(self):
-        return self.y
+    @classmethod
+    def Zero(cls):
+        return cls(0.0, 0.0, 0.0)
 
-    @Y.setter
-    def Y(self, value):
-        self.y = value
+    @classmethod
+    def Left(cls):
+        return cls(-1.0, 0.0, 0.0)
 
-    @property
-    def Z(self):
-        return self.z
+    @classmethod
+    def Right(cls):
+        return cls(1.0, 0.0, 0.0)
 
-    @Z.setter
-    def Z(self, value):
-        self.z = value
+    @classmethod
+    def Down(cls):
+        return cls(0.0, 1.0, 0.0)
+
+    @classmethod
+    def Up(cls):
+        return cls(0.0, -1.0, 0.0)
 
     @classmethod
     def from_vector(cls, v: 'Vector3') -> 'Vector3':
@@ -47,14 +52,6 @@ class Vector3:
         except ValueError:
             x = y = z = 0.0
         return cls(x, y, z)
-
-    # ✅ 클래스 속성으로 Vector3 인스턴스 지정
-    Forward = None
-    Backward = None
-    Zero = None
-    Left = None
-    Right = None
-    Down = None
 
     # 벡터 + 벡터
     def __add__(self, other):
@@ -125,26 +122,26 @@ class Vector3:
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash((self.X, self.Y, self.Z))
+        return hash((self.x, self.y, self.z))
 
     def normalize(self):
-        norm = self.X ** 2 + self.Y ** 2 + self.Z ** 2
+        norm = self.x ** 2 + self.y ** 2 + self.z ** 2
         if norm == 0.0:
             return
         factor = 1.0 / math.sqrt(norm)
-        self.X *= factor
-        self.Y *= factor
-        self.Z *= factor
+        self.x *= factor
+        self.y *= factor
+        self.z *= factor
 
     def translate(self, offset):
-        self.X += offset.X
-        self.Y += offset.Y
-        self.Z += offset.Z
+        self.x += offset.x
+        self.y += offset.y
+        self.z += offset.z
 
     def scale(self, factor):
-        self.X *= factor.X
-        self.Y *= factor.Y
-        self.Z *= factor.Z
+        self.x *= factor.x
+        self.y *= factor.y
+        self.z *= factor.z
 
     def rotate(self, direction, angle):
         cos_a = math.cos(angle)
@@ -154,31 +151,22 @@ class Vector3:
 
     def rotate_with_cos_sin(self, direction, cos_a, sin_a):
         c = 1.0 - cos_a
-        x = (cos_a + c * direction.X * direction.X) * self.X + \
-            (c * direction.X * direction.Y - sin_a * direction.Z) * self.Y + \
-            (c * direction.X * direction.Z + sin_a * direction.Y) * self.Z
-        y = (cos_a + c * direction.Y * direction.Y) * self.Y + \
-            (c * direction.X * direction.Y + sin_a * direction.Z) * self.X + \
-            (c * direction.Y * direction.Z - sin_a * direction.X) * self.Z
-        z = (cos_a + c * direction.Z * direction.Z) * self.Z + \
-            (c * direction.X * direction.Z - sin_a * direction.Y) * self.X + \
-            (c * direction.Y * direction.Z + sin_a * direction.X) * self.Y
-        self.X, self.Y, self.Z = x, y, z
+        x = (cos_a + c * direction.x * direction.x) * self.x + \
+            (c * direction.x * direction.y - sin_a * direction.z) * self.y + \
+            (c * direction.x * direction.z + sin_a * direction.y) * self.z
+        y = (cos_a + c * direction.y * direction.y) * self.y + \
+            (c * direction.x * direction.y + sin_a * direction.z) * self.x + \
+            (c * direction.y * direction.z - sin_a * direction.x) * self.z
+        z = (cos_a + c * direction.z * direction.z) * self.z + \
+            (c * direction.x * direction.z - sin_a * direction.y) * self.x + \
+            (c * direction.y * direction.z + sin_a * direction.x) * self.y
+
+        self.x, self.y, self.z = x, y, z
 
     def rotate_plane(self, cosa, sina):
-        u = self.X * cosa - self.Z * sina
-        v = self.X * sina + self.Z * cosa
-        self.X, self.Z = u, v
+        u = self.x * cosa - self.z * sina
+        v = self.x * sina + self.z * cosa
+        self.x, self.z = u, v
 
     def is_null_vector(self):
-        return self.X == 0.0 and self.Y == 0.0 and self.Z == 0.0
-
-
-# ✅ 클래스 밖에서 초기화 (dataclass의 제한 피하기 위함)
-Vector3.Forward = Vector3(0.0, 0.0, 1.0)
-Vector3.Backward = Vector3(0.0, 0.0, -1.0)
-Vector3.Zero = Vector3(0.0, 0.0, 0.0)
-Vector3.Left = Vector3(-1.0, 0.0, 0.0)
-Vector3.Right = Vector3(1.0, 0.0, 0.0)
-Vector3.Down = Vector3(0.0, 1.0, 0.0)
-Vector3.Up = Vector3(0.0, -1.0, 0.0)
+        return self.x == 0.0 and self.y == 0.0 and self.z == 0.0

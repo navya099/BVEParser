@@ -6,7 +6,6 @@ from OpenBveApi.System.Path import Path
 
 class Parser3:
     def __init__(self):
-
         self.available_routefile_patches = {'': RoutefilePatch()}
 
     def check_for_available_patch(self, file_name: str, data: RouteData,

@@ -1,3 +1,4 @@
+from RouteManager2.Climate.Fog import Fog
 from RouteManager2.CurrentRoute import CurrentRoute
 from RouteManager2.Stations.RouteStation import RouteStation
 from .Compatability.RoutefilePatch import Parser3
@@ -6,31 +7,35 @@ from .RouteData import RouteData
 from .Preprocess import Parser1
 from OpenBveApi.Objects.ObjectInterface import ObjectInterface, CompatabilityHacks
 from typing import List
-from tqdm import tqdm
 import time
 from OpenBveApi.Routes.TrackDirection import TrackDirection
 from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
+from OpenBveApi.Routes.ObjectDisposalMode import ObjectDisposalMode
+from OpenBveApi.Colors.Color24 import Color24
 
 
 class Parser(Parser1, Parser2, Parser3):
-    EnabledHacks = CompatabilityHacks()
+    EnabledHacks: CompatabilityHacks = None
 
     def __init__(self):
         super().__init__()
-        self.ObjectPath = ''
-        self.SoundPath = ''
-        self.TrainPath = ''
-        self.CompatibilityFolder = ''
-        self.IsRW = None
-        self.IsHmmsim = None
-        self.CurrentRoute = CurrentRoute()
-        self.Plugin = None  # 여긴 직접 생성 X
+        self.ObjectPath: str = ''
+        self.SoundPath: str = ''
+        self.TrainPath: str = ''
+        self.CompatibilityFolder: str = ''
+        self.IsRW: bool
+        self.IsHmmsim: bool
+        self.CurrentRoute: CurrentRoute = None
+        self.Plugin: 'Plugin' = None  # 여긴 직접 생성 X
         self.AllowTrackPositionArguments = False
         self.SplitLineHack = True
 
-    def parse_route(self, file_name, is_rw, encoding, train_path, object_path, sound_path, preview_only, host_plugin):
+    def parse_route(self, file_name: str, is_rw: bool, encoding: str, train_path: str,
+                    object_path: str, sound_path: str, preview_only: bool, host_plugin: "Plugin"):
         self.Plugin = host_plugin
         self.CurrentRoute = self.Plugin.CurrentRoute
+
+        # Store paths for later use
         self.ObjectPath = object_path
         self.SoundPath = sound_path
         self.TrainPath = train_path
@@ -38,7 +43,15 @@ class Parser(Parser1, Parser2, Parser3):
 
         freeobj_count = 0
         railtype_count = 0
+        self.Plugin.CurrentOptions.UnitOfSpeed = "km/h"
+        self.Plugin.CurrentOptions.SpeedConversionFactor = 0.0
+
+        self.Plugin.CurrentOptions.ObjectDisposalMode = ObjectDisposalMode.Legacy
+
         data = RouteData(preview_only)
+        if not preview_only:
+            data.Blocks[0].Background = 0
+            data.Blocks[0].Fog = Fog(CurrentRoute.NoFogStart, CurrentRoute.NoFogEnd, Color24.Grey, 0)
 
         self.parse_route_for_data(file_name, encoding, data, preview_only)
 
@@ -68,8 +81,8 @@ class Parser(Parser1, Parser2, Parser3):
         test(expressions)
         print('테스트성공')
 
-    def parse_route_for_data2(self, file_name: str, encoding: str, expressions: List[Expression],
-                              unit_of_length: [float], data: RouteData, preview_only: bool) -> RouteData:
+    def parse_route_for_data2(self, file_name: str, encoding: str, expressions: List["Expression"],
+                              unit_of_length: list[float], data: RouteData, preview_only: bool) -> RouteData:
         current_station = -1
         current_stop = -1
         current_section = 0

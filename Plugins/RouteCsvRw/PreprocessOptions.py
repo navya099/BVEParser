@@ -5,9 +5,6 @@ from OpenBveApi.Math.Math import NumberFormats
 
 
 class Parser2:
-    def __init__(self):
-        pass
-
     def pre_process_options(self, expressions: List[Expression], data: RouteData,
                             unit_of_length: List[float], preview_only: bool) -> RouteData:
         section = ''

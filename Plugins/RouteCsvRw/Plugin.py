@@ -1,6 +1,9 @@
 import os
+import random
+
 import chardet
 from RouteManager2.CurrentRoute import CurrentRoute
+from TrainManager.TrainManager import TrainManagerBase
 from .CsvRwRouteParser import Parser
 from OpenBveApi.Routes.RouteInterface import RouteInterface
 from OpenBveApi.System.BaseOptions import BaseOptions
@@ -18,27 +21,28 @@ def detect_encoding(path):
 
 
 class Plugin(RouteInterface):
-    CurrentRoute = CurrentRoute()
-    CurrentOptions = BaseOptions()
-    CurrentHost = None
-    Random = None
-    FileSystem = None
-    TrainManager = None
+    CurrentHost: 'HostInterface' = None
+    CurrentRoute: CurrentRoute = None
+    RandomNumberGenerator: random.Random = random.Random()
+    FileSystem: 'FileSystem' = None
+    CurrentOptions: BaseOptions = None
+    TrainManager: TrainManagerBase = None
 
     def __init__(self):
         super().__init__()
 
-    def load(self, host, file_system, options, train_manager_reference):
-        current_host = host
-        file_system = file_system
-        current_options = options
+    def load(self, host: 'HostInterface', file_system: 'FileSystem', options: BaseOptions,
+             train_manager_reference: object):
+        Plugin.CurrentHost = host
+        Plugin.FileSystem = file_system
+        Plugin.CurrentOptions = options
 
         # Check if train_manager_reference is of type TrainManagerBase
         if isinstance(train_manager_reference, TrainManagerBase):
-            self.TrainManager = train_manager_reference
+            Plugin.TrainManager = train_manager_reference
 
         # Set TrainDownloadLocation to an empty string
-        current_options.TrainDownloadLocation = ""
+        Plugin.CurrentOptions.TrainDownloadLocation = ""
 
     def CanLoadRoute(self, path: str) -> bool:
         if not path or not os.path.exists(path):
@@ -51,7 +55,6 @@ class Plugin(RouteInterface):
                 for i in range(30):
                     try:
                         line = file.readline()
-                        print('s')
                         if not line:
                             break  # 파일 끝에 도달하면 종료
                         if "meshbuilder" in line.lower():
@@ -68,6 +71,7 @@ class Plugin(RouteInterface):
     def LoadRoute(self, path: str, encoding: str, train_path: str,
                   object_path: str, sound_path: str,
                   preview_only: bool, route: object) -> bool:
+        Plugin.CurrentOptions.TrainDownloadLocation = ''
         if encoding is None:
             encoding = 'utf-8'
 
@@ -75,10 +79,8 @@ class Plugin(RouteInterface):
         self.Cancel = False
         self.CurrentProgress = 0.0
         self.IsLoading = True
-        if isinstance(route, CurrentRoute):
-            self.CurrentRoute = route
-        else:
-            raise TypeError("route must be a CurrentRoute instance.")
+        Plugin.CurrentRoute = route
+
         print(f"Loading route file: {path}")
         print(f"INFO: Route file hash {Path.get_checksum(path)}")
         print(f'Encoding: {encoding}')

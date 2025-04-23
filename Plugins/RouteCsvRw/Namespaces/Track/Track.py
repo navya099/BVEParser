@@ -45,11 +45,13 @@ class Parser7:
                           f' in file {expression.File}')
                     radius = 0.0
                 cant = 0.0
-                sucess, cant = NumberFormats.try_parse_double_vb6(arguments[1])
-                if len(arguments) >= 2 and len(arguments[1]) > 0 and not sucess:
-                    print(f'CantInMillimeters is invalid in {command} at line '
-                          f'{expression.Line} , column {expression.Column}'
-                          f' in file {expression.File}')
+
+                if len(arguments) >= 2 and len(arguments[1]) > 0:
+                    sucess, cant = NumberFormats.try_parse_double_vb6(arguments[1])
+                    if not sucess:
+                        print(f'CantInMillimeters is invalid in {command} at line '
+                              f'{expression.Line} , column {expression.Column}'
+                              f' in file {expression.File}')
                     cant = 0.0
                 else:
                     cant *= 0.001

@@ -34,7 +34,7 @@ class RouteData:
         # Blocks[0]을 추가하고 설정하는 코드
         self.Blocks.append(Block(preview_only))
         self.Blocks[0].Rails[0] = Rail(2.0, 1.0)
-        self.Blocks[0].RailType = 0
+        self.Blocks[0].RailType = []
         self.Blocks[0].CurrentTrackState = TrackElement(StartingTrackPosition=0.0)
         self.Blocks[0].RailCycles = [RailCycle()]
         self.Blocks[0].RailCycles[0].RailCycleIndex = -1
@@ -46,7 +46,7 @@ class RouteData:
                 if not preview_only:
                     pass
                 self.Blocks[i].RailCycles = self.Blocks[i - 1].RailCycles
-                self.Blocks[i].RailType = len(self.Blocks[i - 1].RailType)
+                self.Blocks[i].RailType = [0] * len(self.Blocks[i - 1].RailType)
                 if not preview_only:
                     pass
                 for j in range(len(self.Blocks[i - 1].Rails)):

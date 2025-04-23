@@ -266,129 +266,129 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
             if data.line_ending_fix:
                 if expressions[j].Text.endswith('_'):
                     expressions[j].Text = expressions[j].Text[:-1].strip()
-                if expressions[j].Text.startswith('[') and expressions[j].Text.endswith(']'):
-                    section = expressions[j].Text[1:-1].strip()
-                    if section.lower() == "object":
-                        section = "Structure"
-                    elif section.lower() == "railway":
-                        section = "Track"
-                    section_always_prefix = True
-                else:
-                    if self.IsRW:
-                        expressions[j].convert_rw_to_csv(section, section_always_prefix)
-                    # separate command and arguments
-                    command, argument_sequence = expressions[j].separate_commands_and_arguments(
-                        None, False, self.IsRW, section)
-                    # process command
-                    number_check = not self.IsRW or section.lower() == "track"
-                    success, current_track_position = NumberFormats.try_parse_double(command, unit_of_length)
-                    if number_check and success:
-                        # track position
-                        if len(argument_sequence) != 0:
-                            print(f'A track position must not contain any arguments at line '
-                                  f'{expressions[j].Line} , column {expressions[j].Column}'
-                                  f' in file {expressions[j].File}')
-                            if self.AllowTrackPositionArguments:
-                                data.TrackPosition = current_track_position
-
-                                block_index = int(math.floor(current_track_position / data.BlockInterval + 0.001))
-                                if data.FirstUsedBlock == -1:
-                                    data.FirstUsedBlock = block_index
-                                    data.create_missing_blocks(block_index, preview_only)
-                        elif current_track_position < 0.0:
-                            print(f'Negative track position encountered at line '
-                                  f'{expressions[j].Line} , column {expressions[j].Column}'
-                                  f' in file {expressions[j].File}')
-                        else:
-                            if self.Plugin.CurrentOptions.EnableBveTsHacks and \
-                                    self.IsRW \
-                                    and current_track_position == 4535545100:
-                                # WMATA Red line has an erroneous track position causing an out of memory cascade
-                                current_track_position = 45355
+            if expressions[j].Text.startswith('[') and expressions[j].Text.endswith(']'):
+                section = expressions[j].Text[1:-1].strip()
+                if section.lower() == "object":
+                    section = "Structure"
+                elif section.lower() == "railway":
+                    section = "Track"
+                section_always_prefix = True
+            else:
+                if self.IsRW:
+                    expressions[j].convert_rw_to_csv(section, section_always_prefix)
+                # separate command and arguments
+                command, argument_sequence = expressions[j].separate_commands_and_arguments(
+                    None, False, self.IsRW, section)
+                # process command
+                number_check = not self.IsRW or section.lower() == "track"
+                success, current_track_position = NumberFormats.try_parse_double(command, unit_of_length)
+                if number_check and success:
+                    # track position
+                    if len(argument_sequence) != 0:
+                        print(f'A track position must not contain any arguments at line '
+                              f'{expressions[j].Line} , column {expressions[j].Column}'
+                              f' in file {expressions[j].File}')
+                        if self.AllowTrackPositionArguments:
                             data.TrackPosition = current_track_position
+
                             block_index = int(math.floor(current_track_position / data.BlockInterval + 0.001))
                             if data.FirstUsedBlock == -1:
                                 data.FirstUsedBlock = block_index
                                 data.create_missing_blocks(block_index, preview_only)
+                    elif current_track_position < 0.0:
+                        print(f'Negative track position encountered at line '
+                              f'{expressions[j].Line} , column {expressions[j].Column}'
+                              f' in file {expressions[j].File}')
                     else:
-                        arguments = self.split_arguments(argument_sequence)
+                        if self.Plugin.CurrentOptions.EnableBveTsHacks and \
+                                self.IsRW \
+                                and current_track_position == 4535545100:
+                            # WMATA Red line has an erroneous track position causing an out of memory cascade
+                            current_track_position = 45355
+                        data.TrackPosition = current_track_position
+                        block_index = int(math.floor(current_track_position / data.BlockInterval + 0.001))
+                        if data.FirstUsedBlock == -1:
+                            data.FirstUsedBlock = block_index
+                        data.create_missing_blocks(block_index, preview_only)
+                else:
+                    arguments = self.split_arguments(argument_sequence)
 
-                        # preprocess command
-                        if command.lower() == "with":
-                            if len(arguments) >= 1:
-                                section = arguments[0]
-                                section_always_prefix = False
-                            else:
-                                section = ''
-                                section_always_prefix = False
-                            command = None
+                    # preprocess command
+                    if command.lower() == "with":
+                        if len(arguments) >= 1:
+                            section = arguments[0]
+                            section_always_prefix = False
                         else:
-                            if command.startswith('.'):
-                                command = section + command
-                            elif section_always_prefix:
-                                command = section + '.' + command
-                            command = command.replace('.Void', '')
+                            section = ''
+                            section_always_prefix = False
+                        command = ''
+                    else:
+                        if command.startswith('.'):
+                            command = section + command
+                        elif section_always_prefix:
+                            command = section + '.' + command
+                        command = command.replace('.Void', '')
 
-                        # process command
-                        if not command.isspace():
-                            period = command.find('.')
+                    # process command
+                    if not command.isspace():
+                        period = command.find('.')
+                        name_space = ''
+                        if period != 1:
+                            name_space = command[:period].lower()
+                            command = command[period + 1:]
+                        if name_space.lower().startswith('signal'):
                             name_space = ''
-                            if period != 1:
-                                name_space = command[:period].lower()
-                                command = command[period + 1:]
-                            if name_space.lower().startswith('signal'):
-                                name_space = ''
-                            command = command.lower()
+                        command = command.lower()
 
-                            match name_space:
-                                case 'track':
-                                    parsed_command, success = Util.try_parse_enum(TrackCommand, command)
-                                    if success:
-                                        data = self.parse_track_command(parsed_command, arguments, file_name,
-                                                                        unit_of_length,
-                                                                        expressions[j], data, block_index, preview_only,
-                                                                        self.IsRW)
-                                    else:
-                                        if self.IsHmmsim:
-                                            period = command.find('.')
-                                            railkey = command[:period]
-                                            railindex = len(data.RailKeys)
-                                            if railkey in data.RailKeys:
-                                                railindex = data.RailKeys[railkey]
-                                            else:
-                                                data.RailKeys[railkey] = railindex
-                                            command = command[period + 1:]
-                                            parsed_command, success = Util.try_parse_enum(TrackCommand, command)
-                                            if success:
-                                                data = self.parse_track_command(command, arguments, file_name,
-                                                                                unit_of_length,
-                                                                                expressions[j], data, block_index,
-                                                                                preview_only, self.IsRW)
-                                            else:
-                                                print(f'Hmmsim: Unrecognised command {command} encountered in the Route'
-                                                      f' namespace at line {expressions[j].Line}, '
-                                                      f'column {expressions[j].Column} '
-                                                      f'in file {expressions[j].File}')
+                        match name_space:
+                            case 'track':
+                                parsed_command, success = Util.try_parse_enum(TrackCommand, command)
+                                if success:
+                                    data = self.parse_track_command(parsed_command, arguments, file_name,
+                                                                    unit_of_length,
+                                                                    expressions[j], data, block_index, preview_only,
+                                                                    self.IsRW)
+                                else:
+                                    if self.IsHmmsim:
+                                        period = command.find('.')
+                                        railkey = command[:period]
+                                        railindex = len(data.RailKeys)
+                                        if railkey in data.RailKeys:
+                                            railindex = data.RailKeys[railkey]
                                         else:
-                                            print(f'OpenBVE: Unrecognised command {command} encountered in the Route '
-                                                  f'namespace at line {expressions[j].Line}, '
+                                            data.RailKeys[railkey] = railindex
+                                        command = command[period + 1:]
+                                        parsed_command, success = Util.try_parse_enum(TrackCommand, command)
+                                        if success:
+                                            data = self.parse_track_command(command, arguments, file_name,
+                                                                            unit_of_length,
+                                                                            expressions[j], data, block_index,
+                                                                            preview_only, self.IsRW)
+                                        else:
+                                            print(f'Hmmsim: Unrecognised command {command} encountered in the Route'
+                                                  f' namespace at line {expressions[j].Line}, '
                                                   f'column {expressions[j].Column} '
                                                   f'in file {expressions[j].File}')
-                                case "options":
-                                    pass
-                                case "route":
-                                    pass
-                                case "train":
-                                    pass
-                                case "structure":
-                                    pass
-                                case "texture":
-                                    pass
-                                case '':
-                                    pass
-                                case "cycle":
-                                    pass
-                                case _:
-                                    print(f'The command {command} is not supported at line {expressions[j].Line}, '
-                                          f'column {expressions[j].Column} in file {expressions[j].File}')
+                                    else:
+                                        print(f'OpenBVE: Unrecognised command {command} encountered in the Route '
+                                              f'namespace at line {expressions[j].Line}, '
+                                              f'column {expressions[j].Column} '
+                                              f'in file {expressions[j].File}')
+                            case "options":
+                                pass
+                            case "route":
+                                pass
+                            case "train":
+                                pass
+                            case "structure":
+                                pass
+                            case "texture":
+                                pass
+                            case '':
+                                pass
+                            case "cycle":
+                                pass
+                            case _:
+                                print(f'The command {command} is not supported at line {expressions[j].Line}, '
+                                      f'column {expressions[j].Column} in file {expressions[j].File}')
         return data

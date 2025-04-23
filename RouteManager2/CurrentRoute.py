@@ -4,22 +4,31 @@ from OpenBveApi.Routes.Track import Track
 
 
 class CurrentRoute:
-    def __init__(self):
-        self.currentHost = None
-        self.renderer = None
-        self.Information = RouteInformation()
-        self.Comment = ''
-        self.Image = ''
-        self.Tracks = {0: Track()}
-        self.Sections = None
-        self.Stations = None
-        self.BogusPreTrainInstructions = None
-        self.PointsOfInterest = None
-        self.CurrentBackground = None
-        self.TargetBackground = None
-        self.NoFogStart = f'800.:0f'
-        self.NoFogEnd = f'1600.:0f'
-        self.PreviousFog = None
-        self.CurrentFog = None
-        self.NextFog = None
-        self.Atmosphere = Atmosphere()
+    def __init__(self, host: 'HostInterface' = None, renderer: 'BaseRenderer' = None):
+        self.currentHost: 'HostInterface' = None
+        self.renderer: 'BaseRenderer' = None
+        self.Information: RouteInformation = RouteInformation()
+        self.Comment: str = ''
+        self.Image: str = ''
+        self.Tracks: dict[int, Track] = {0: Track()}
+        self.Sections: list['Section'] = []
+        self.Stations: list['RouteStation'] = []
+        self.InitialStationName: str = ''
+        self.InitialStationTime: int = -1
+        self.BogusPreTrainInstructions: list['BogusPreTrainInstruction'] = []
+        self.PointsOfInterest: list['PointOfInterest'] = []
+        self.CurrentBackground: 'BackgroundHandle' = None
+        self.TargetBackground: 'BackgroundHandle' = None
+        self.NoFogStart: float = 800.0
+        self.NoFogEnd: float = 1600.0
+        self.PreviousFog: 'Fog' = None
+        self.CurrentFog: 'Fog' = None
+        self.NextFog: 'Fog' = None
+        self.Atmosphere: Atmosphere = Atmosphere()
+        self.BufferTrackPositions: list['BufferStop'] = []
+        self.SecondsSinceMidnight: float = 0.0
+        self.UnitOfLength: list[float] = [1.0]
+        self.BlockLength: float = 25.0
+        self.AccurateObjectDisposal: 'ObjectDisposalMode' = None
+        self.Switches: dict['Guid', 'Switch'] = {}
+

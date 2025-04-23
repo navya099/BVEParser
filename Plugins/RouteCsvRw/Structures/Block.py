@@ -3,6 +3,7 @@ from typing import List, Dict
 from OpenBveApi.Routes.LightDefinition import LightDefinition
 from Plugins.RouteCsvRw.Structures.Route.Rail import Rail
 from Plugins.RouteCsvRw.Structures.Route.RailCycle import RailCycle
+from OpenBveApi.Routes.TrackElement import TrackElement
 
 
 class Block:
@@ -33,7 +34,7 @@ class Block:
         self.DestinationChanges: List['DestinationEvent'] = []
         self.PointsOfInterest: List['PointOfInterest'] = []
         self.HornBlows: List['HornBlowEvent'] = []
-        self.CurrentTrackState: 'TrackElement' = None
+        self.CurrentTrackState: TrackElement = TrackElement()
         self.Pitch: float = 0.0
         self.Turn: float = 0.0
         self.Station: int = -1

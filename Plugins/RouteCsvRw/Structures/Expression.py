@@ -274,8 +274,8 @@ class Expression:
                             text_lower.startswith("announce") or
                             ".load" in text_lower):
                         # put back any temp removed brackets
-                        argument_sequence.replace('<', '(')
-                        argument_sequence.replace('>', ')')
+                        argument_sequence = argument_sequence.replace('<', '(')
+                        argument_sequence = argument_sequence.replace('>', ')')
                         if argument_sequence.endswith(')'):
                             argument_sequence.rstrip(')')
                 else:

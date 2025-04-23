@@ -67,7 +67,7 @@ class Parser2:
                         elif section_always_prefix:
                             command = section + '.' + command
 
-                        command.replace('.Void', '')
+                        command = command.replace('.Void', '')
 
                     # handle indices
                     if command is not None and command.endswith(')'):

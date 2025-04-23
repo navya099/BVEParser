@@ -1,13 +1,17 @@
 class RouteInformation:
     def __init__(self):
-        self.RouteBriefing = ''
-        self.RouteFile = ''
-        self.TrainFolder = ''
-        self.FilesNotFound = ''
-        self.ErrorsAndWarnings = ''
-        self.GradientMinTrack , self.GradientMaxTrack = 0,0
-        self.DefaultTimetableDescription = ''
-        self.RouteMinX, self.RouteMinY, self.RouteMinZ, self.RouteMaxZ = 0,0,0,0
+        self.RouteBriefing: str = ''
+        self.RouteFile: str = ''
+        self.TrainFolder: str = ''
+        self.FilesNotFound: str = ''
+        self.ErrorsAndWarnings: str = ''
+        self.GradientMinTrack: float = 0.0
+        self.GradientMaxTrack: float = 0.0
+        self.DefaultTimetableDescription: str = ''
+        self.RouteMinX: float = 0.0
+        self.RouteMinY: float = 0.0
+        self.RouteMinZ: float = 0.0
+        self.RouteMaxZ: float = 0.0
 
     def LoadInformation(self):
         pass

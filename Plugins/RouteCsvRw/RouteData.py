@@ -3,6 +3,7 @@ from .Structures.Route.Rail import Rail
 from Plugins.RouteCsvRw.Structures.StructureData import StructureData
 from OpenBveApi.Routes.TrackElement import TrackElement
 from .Structures.Route.RailCycle import RailCycle
+from OpenBveApi.Math.Vectors.Vector2 import Vector2
 
 
 class RouteData:
@@ -37,4 +38,34 @@ class RouteData:
         self.Blocks[0].CurrentTrackState = TrackElement(StartingTrackPosition=0.0)
         self.Blocks[0].RailCycles = [RailCycle()]
         self.Blocks[0].RailCycles[0].RailCycleIndex = -1
+
+    def create_missing_blocks(self, toindex: int, preview_only: bool):
+        if toindex >= len(self.Blocks):
+            for i in range(len(self.Blocks), toindex + 1):
+                self.Blocks.append(Block(preview_only))
+                if not preview_only:
+                    pass
+                self.Blocks[i].RailCycles = self.Blocks[i - 1].RailCycles
+                self.Blocks[i].RailType = len(self.Blocks[i - 1].RailType)
+                if not preview_only:
+                    pass
+                for j in range(len(self.Blocks[i - 1].Rails)):
+                    key = list(self.Blocks[i - 1].Rails.keys())[j]
+
+                    rail = Rail(self.Blocks[i - 1].Rails[key].Accuracy,
+                                self.Blocks[i - 1].Rails[key].AdhesionMultiplier,
+                                RailStarted=self.Blocks[i - 1].Rails[key].RailStarted,
+                                RailStart=Vector2(self.Blocks[i - 1].Rails[key].RailStart),
+                                RailStartRefreshed=False,
+                                RailEnded=False,
+                                RailEnd=Vector2(self.Blocks[i - 1].Rails[key].RailStart),
+                                IsDriveable=self.Blocks[i - 1].Rails[key].IsDriveable
+                                )
+                    self.Blocks[i].Rails[key] = rail
+                if not preview_only:
+                    pass
+                self.Blocks[i].Pitch = self.Blocks[i - 1].Pitch
+                self.Blocks[i].CurrentTrackState = self.Blocks[i - 1].CurrentTrackState
+                self.Blocks[i].Turn = 0.0
+
 

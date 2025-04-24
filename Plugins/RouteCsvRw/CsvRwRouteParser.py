@@ -37,8 +37,8 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         self.SoundPath: str = ''
         self.TrainPath: str = ''
         self.CompatibilityFolder: str = ''
-        self.IsRW: bool
-        self.IsHmmsim: bool
+        self.IsRW: bool = False
+        self.IsHmmsim: bool = False
         self.CurrentRoute: CurrentRoute = None
         self.Plugin: 'Plugin' = None  # 여긴 직접 생성 X
         self.AllowTrackPositionArguments = False

@@ -14,7 +14,8 @@ class Parser7:
         self.CurrentSection: int = 0
         self.DepartureSignalUsed: bool = False
 
-    def parse_track_command(self, command: TrackCommand, arguments: list[str], filename: str,
+    @staticmethod
+    def parse_track_command(command: TrackCommand, arguments: list[str], filename: str,
                             unit_of_lngth: list[float], expression: Expression, data: RouteData, block_index: int,
                             preview_only: bool, is_rw: bool, rail_index: int = 0) -> RouteData:
         match command:
@@ -29,23 +30,25 @@ class Parser7:
             case TrackCommand.Accuracy:
                 pass
             case TrackCommand.Pitch:
-                sucess, p = NumberFormats.try_parse_double_vb6(arguments[0])
-                if len(arguments) >= 1 and len(arguments[0]) > 0 and not sucess:
-                    print(f'ValueInPermille is invalid in {command} at line '
-                          f'{expression.Line} , column {expression.Column}'
-                          f' in file {expression.File}')
-                    p = 0.0
+                p = 0.0
+                if len(arguments) >= 1 and len(arguments[0]) > 0:
+                    sucess, p = NumberFormats.try_parse_double_vb6(arguments[0])
+                    if not sucess:
+                        print(f'ValueInPermille is invalid in {command} at line '
+                              f'{expression.Line} , column {expression.Column}'
+                              f' in file {expression.File}')
+                        p = 0.0
                 data.Blocks[block_index].Pitch = 0.001 * p
             case TrackCommand.Curve:
                 radius = 0.0
-                sucess, radius = NumberFormats.try_parse_double_vb6(arguments[0])
-                if len(arguments) >= 1 and len(arguments[0]) > 0 and not sucess:
-                    print(f'Radius is invalid in {command} at line '
-                          f'{expression.Line} , column {expression.Column}'
-                          f' in file {expression.File}')
-                    radius = 0.0
+                if len(arguments) >= 1 and len(arguments[0]) > 0:
+                    sucess, radius = NumberFormats.try_parse_double_vb6(arguments[0])
+                    if not sucess:
+                        print(f'Radius is invalid in {command} at line '
+                              f'{expression.Line} , column {expression.Column}'
+                              f' in file {expression.File}')
+                        radius = 0.0
                 cant = 0.0
-
                 if len(arguments) >= 2 and len(arguments[1]) > 0:
                     sucess, cant = NumberFormats.try_parse_double_vb6(arguments[1])
                     if not sucess:
@@ -134,12 +137,14 @@ class Parser7:
                 pass
             case TrackCommand.Height:
                 if not preview_only:
-                    success, h = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_lngth)
-                    if len(arguments) >= 1 and len(arguments[0]) > 0 and not success:
-                        print(f'Height is invalid in Track.Height at line '
-                              f'{expression.Line} , column {expression.Column}'
-                              f' in file {expression.File}')
-                        h = 0.0
+                    h = 0.0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, h = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_lngth)
+                        if not success:
+                            print(f'Height is invalid in Track.Height at line '
+                                  f'{expression.Line} , column {expression.Column}'
+                                  f' in file {expression.File}')
+                            h = 0.0
                     data.Blocks[block_index].Height = h + 0.3 if is_rw else h
             case TrackCommand.Ground:
                 pass

@@ -52,7 +52,7 @@ class Parser7:
                         print(f'CantInMillimeters is invalid in {command} at line '
                               f'{expression.Line} , column {expression.Column}'
                               f' in file {expression.File}')
-                    cant = 0.0
+                        cant = 0.0
                 else:
                     cant *= 0.001
                 if data.SignedCant:

@@ -290,11 +290,10 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                               f' in file {expressions[j].File}')
                         if self.AllowTrackPositionArguments:
                             data.TrackPosition = current_track_position
-
                             block_index = int(math.floor(current_track_position / data.BlockInterval + 0.001))
                             if data.FirstUsedBlock == -1:
                                 data.FirstUsedBlock = block_index
-                                data.create_missing_blocks(block_index, preview_only)
+                            data.create_missing_blocks(block_index, preview_only)
                     elif current_track_position < 0.0:
                         print(f'Negative track position encountered at line '
                               f'{expressions[j].Line} , column {expressions[j].Column}'

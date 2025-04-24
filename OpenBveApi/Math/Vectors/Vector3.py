@@ -38,6 +38,21 @@ class Vector3:
     def Up(cls):
         return cls(0.0, -1.0, 0.0)
 
+    @staticmethod
+    def get_vector3(vector2, y):
+        norm = math.sqrt(vector2.x ** 2 + vector2.y ** 2 + y ** 2)
+        if norm == 0.0:
+            raise ZeroDivisionError("Cannot normalize a zero-length vector.")
+        t = 1.0 / norm
+        return Vector3(t * vector2.x, t * y, t * vector2.y)
+
+    @staticmethod
+    def cross(a, b):
+        return Vector3(
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x
+        )
     @classmethod
     def from_vector(cls, v: 'Vector3') -> 'Vector3':
         return cls(v.x, v.y, v.z)

@@ -13,3 +13,13 @@ class Util:
 
         result = enum_dict.get(value, None)
         return result, result is not None
+
+    @staticmethod
+    def write_all_lines(path, text_list):
+        with open(path, 'w', encoding='utf-8') as f:
+            for txt in text_list:
+                f.write(txt + '\n')
+
+
+
+

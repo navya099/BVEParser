@@ -81,7 +81,6 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         start_time = time.time()
         expressions = self.preprocess_split_into_expressions(file_name, lines, True)
         expressions = self.preprocess_chr_rnd_sub(file_name, encoding, expressions)
-        print('루프탈출')
         unit_of_length = [1.0]
         # Set units of speed initially to km/h
         # This represents 1km/h in m/s
@@ -90,9 +89,12 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         expressions = self.preprocess_sort_by_track_position(unit_of_length, expressions)
         data = self.parse_route_for_data2(file_name, encoding, expressions, unit_of_length, data, preview_only)
         self.CurrentRoute.UnitOfLength = unit_of_length
-        print('정렬성공')
         end_time = time.time()
         elapsed = end_time - start_time
+
+        # 익스프레션추출 테스트
+        Util.test(expressions)
+
         return data
 
     freeObjCount: int = 0

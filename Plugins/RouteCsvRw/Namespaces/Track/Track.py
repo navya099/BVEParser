@@ -135,7 +135,7 @@ class Parser7:
             case TrackCommand.Height:
                 if not preview_only:
                     success, h = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_lngth)
-                    if len(arguments) >= 1 and len(arguments[0]) > 0 and not sucess:
+                    if len(arguments) >= 1 and len(arguments[0]) > 0 and not success:
                         print(f'Height is invalid in Track.Height at line '
                               f'{expression.Line} , column {expression.Column}'
                               f' in file {expression.File}')

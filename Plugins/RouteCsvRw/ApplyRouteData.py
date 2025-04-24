@@ -7,12 +7,15 @@ from OpenBveApi.Routes.Track import Track
 
 import math
 import numpy as np
+from tqdm import tqdm
 
 from uitl import Util
 
 
 class Parser8:
     def apply_route_data(self, filename: str, data: RouteData, preview_only: bool) -> RouteData:
+
+
 
         last_block = int(math.floor((data.TrackPosition + 600.0) / data.BlockInterval + 0.001) + 1)
         if abs(data.Blocks[len(data.Blocks) - 1].CurrentTrackState.CurveRadius) < 300:
@@ -55,7 +58,7 @@ class Parser8:
                 if key not in self.CurrentRoute.Tracks:
                     self.CurrentRoute.Tracks[key] = Track()
         # process blocks
-        progress_factor = 0.5 if len(data.Blocks) - data.FirstUsedBlock == 0 else 0.5 / (
+        progress_factor = 1.0 if len(data.Blocks) - data.FirstUsedBlock == 0 else 1.0 / (
                 len(data.Blocks) - data.FirstUsedBlock)
 
         # initial list
@@ -67,6 +70,10 @@ class Parser8:
         stacoordinates = []
         extrac_height_list = []
         freeobjcoordinates = []
+
+        # 블록 처리용 프로그레스 바 준비
+        total_blocks = len(data.Blocks) - data.FirstUsedBlock
+        pbar = tqdm(total=total_blocks, desc="Processing Blocks")
 
         for i in range(data.FirstUsedBlock, len(data.Blocks)):
             self.Plugin.CurrentProgress = 0.6667 + (i - data.FirstUsedBlock) * progress_factor
@@ -154,7 +161,8 @@ class Parser8:
 
             if a != 0.0:
                 direction.rotate(math.cos(-a), math.sin(-a))
-
+            pbar.update(1)
+        pbar.close()
         # Write x and z values to a TXT file
         Util.write_all_lines(r"c:\temp\pitch_info.txt", pitch_info)
         Util.write_all_lines(r"c:\temp\curve_info.txt", curve_info)

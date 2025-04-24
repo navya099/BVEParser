@@ -5,6 +5,8 @@ from OpenBveApi.Routes.TrackElement import TrackElement
 from .Structures.Route.RailCycle import RailCycle
 from OpenBveApi.Math.Vectors.Vector2 import Vector2
 
+import copy
+
 
 class RouteData:
     def __init__(self, preview_only):
@@ -65,7 +67,8 @@ class RouteData:
                 if not preview_only:
                     pass
                 self.Blocks[i].Pitch = self.Blocks[i - 1].Pitch
-                self.Blocks[i].CurrentTrackState = self.Blocks[i - 1].CurrentTrackState
+
+                self.Blocks[i].CurrentTrackState = copy.deepcopy(self.Blocks[i - 1].CurrentTrackState)
                 self.Blocks[i].Turn = 0.0
 
 

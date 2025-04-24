@@ -20,6 +20,13 @@ class Util:
             for txt in text_list:
                 f.write(txt + '\n')
 
+    @staticmethod
+    def test(expressions):
+        with open("C:/TEMP/expressions_all.csv", "w", encoding="utf-8-sig") as f:
+            f.write(f"인덱스,줄,텍스트,오프셋,파일\n")
+            for i, expr in enumerate(expressions):
+                f.write(f"{i},{expr.Line},{expr.Text},{expr.TrackPositionOffset},{expr.File}\n")
+
 
 
 

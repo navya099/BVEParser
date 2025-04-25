@@ -2,6 +2,7 @@ import os
 import random
 
 import chardet
+
 from RouteManager2.CurrentRoute import CurrentRoute
 from TrainManager.TrainManager import TrainManagerBase
 from OpenBveApi.Routes.RouteInterface import RouteInterface

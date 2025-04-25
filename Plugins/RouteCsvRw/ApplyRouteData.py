@@ -83,9 +83,7 @@ class Parser8:
         extrac_height_list = []
         freeobjcoordinates = []
 
-        # 블록 처리용 프로그레스 바 준비
-        total_blocks = len(data.Blocks) - data.FirstUsedBlock
-        pbar = tqdm(total=total_blocks, desc="Processing Blocks")
+
 
         for i in range(data.FirstUsedBlock, len(data.Blocks)):
             self.Plugin.CurrentProgress = 0.6667 + (i - data.FirstUsedBlock) * progress_factor
@@ -173,8 +171,7 @@ class Parser8:
 
             if a != 0.0:
                 direction.rotate(math.cos(-a), math.sin(-a))
-            pbar.update(1)
-        pbar.close()
+
         # Write x and z values to a TXT file
         Util.write_all_lines(r"c:\temp\pitch_info.txt", pitch_info)
         Util.write_all_lines(r"c:\temp\curve_info.txt", curve_info)

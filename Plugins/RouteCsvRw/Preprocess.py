@@ -2,7 +2,6 @@ import re
 import os
 import random
 from typing import List
-from tqdm import tqdm
 
 from .Structures.Expression import Expression
 from OpenBveApi.Math.Math import NumberFormats
@@ -39,7 +38,7 @@ class Parser1:
                                 j = len(lines[i])
 
         # parse
-        for i in tqdm(range(len(lines)), desc="preprocess_split_into_expressions"):
+        for i in range(len(lines)):
             # Remove empty null characters
             # Found these in a couple of older routes, harmless but generate errors
             # Possibly caused by BVE-RR (DOS version)
@@ -397,7 +396,7 @@ class Parser1:
         a = -1.0
         number_check = not self.IsRW
 
-        for i in tqdm(range(len(expressions)), desc="Processing expressions"):
+        for i in range(len(expressions)):
             if self.IsRW:
                 # only check for track positions in the railway section for RW routes
                 if expressions[i].Text.startswith('[') and expressions[i].Text.endswith(']'):

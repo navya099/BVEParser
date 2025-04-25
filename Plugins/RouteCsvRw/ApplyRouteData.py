@@ -107,7 +107,7 @@ class Parser8:
                     track.Elements.extend([None] * (new_length - len(track.Elements)))
             current_track_length += 1
             self.CurrentRoute.Tracks[0].Elements[n] = world_track_element
-            self.CurrentRoute.Tracks[0].Elements[n].WorldPosition = position
+            self.CurrentRoute.Tracks[0].Elements[n].WorldPosition = Vector3(position.x, position.y, position.z)
 
             coordinates.append(f'{position.x}, {position.z}, {position.y}')
             self.CurrentRoute.Tracks[0].Elements[n].WorldDirection = Vector3.get_vector3(direction,

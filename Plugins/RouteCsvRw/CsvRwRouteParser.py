@@ -119,7 +119,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         block_index = 0
 
         self.CurrentRoute.Tracks[0].Direction = TrackDirection.Forwards
-        self.CurrentRoute.Stations = List[RouteStation]
+        self.CurrentRoute.Stations: List[RouteStation] = []
 
         data.RequestStops = List[StopRequest]
         progress_factor = 0.3333 if len(expressions) == 0 else 0.3333 / len(expressions)

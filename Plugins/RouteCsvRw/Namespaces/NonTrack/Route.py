@@ -65,7 +65,7 @@ class Parser6:
                                     column {expression.Column} in file {expression.File}')
 
                     else:
-                        self.CurrentRoute.Atmosphere.PositionX = sf
+                        self.CurrentRoute.Atmosphere.InitialX = sf
             case RouteCommand.PositionY:
                 if len(arguments) < 1:
                     print(f'{command} is expected to have one argument at line {expression.Line},\
@@ -78,7 +78,20 @@ class Parser6:
                                                 column {expression.Column} in file {expression.File}')
 
                     else:
-                        self.CurrentRoute.Atmosphere.PositionY = cerc
+                        self.CurrentRoute.Atmosphere.InitialY = cerc
+            case RouteCommand.Direction:
+                if len(arguments) < 1:
+                    print(f'{command} is expected to have one argument at line {expression.Line},\
+                                                            column {expression.Column} in file {expression.File}')
+                else:
+
+                    success, cerc = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_length)
+                    if not success:
+                        print(f'Direction is invalid in {command} at line {expression.Line},\
+                                                            column {expression.Column} in file {expression.File}')
+
+                    else:
+                        self.CurrentRoute.Atmosphere.InitialDirection = cerc
             case RouteCommand.Temperature:
                 pass
             case RouteCommand.Pressure:

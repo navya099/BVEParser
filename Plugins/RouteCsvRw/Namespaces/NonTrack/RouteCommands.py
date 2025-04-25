@@ -50,3 +50,4 @@ class RouteCommand(Enum):
     # 초기x좌표
     PositionX = 21
     PositionY = 22
+    Direction = 23

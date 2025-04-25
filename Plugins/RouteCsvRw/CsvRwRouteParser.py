@@ -2,7 +2,7 @@ import math
 from typing import List
 import time
 
-from uitl import Util
+from uitl import Util , RecursiveEncoder
 
 from RouteManager2.Climate.Fog import Fog
 from RouteManager2.CurrentRoute import CurrentRoute
@@ -73,6 +73,9 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
             self.Plugin.IsLoading = False
             return
         data = self.apply_route_data(file_name, data, preview_only)
+
+        # json dump후 확인
+        RecursiveEncoder.save(r'c:\temp\route_data.json', data, False)
 
     def parse_route_for_data(self, file_name: str, encoding: str, data: RouteData,
                              preview_only: bool) -> RouteData:
@@ -236,9 +239,9 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                             case 'route':
                                 parsed_route_command, success = Util.try_parse_enum(RouteCommand, command)
                                 if success:
-                                    data = self.parse_rout_command(parsed_route_command, arguments, command_indices[0],
-                                                                   file_name,
-                                                                   unit_of_length, expressions[j], data, preview_only)
+                                    data = self.parse_route_command(parsed_route_command, arguments, command_indices[0],
+                                                                    file_name,
+                                                                    unit_of_length, expressions[j], data, preview_only)
                                 else:
                                     print(f'Unrecognised command {command} encountered in the Route namespace at line'
                                           f'{expressions[j].Line} , column {expressions[j].Column}'

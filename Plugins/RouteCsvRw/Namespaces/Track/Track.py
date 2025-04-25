@@ -2,9 +2,15 @@ from Plugins.RouteCsvRw.Namespaces.Track.TrackCommands import TrackCommand
 from Plugins.RouteCsvRw.RouteData import RouteData
 from Plugins.RouteCsvRw.Structures.Expression import Expression
 from OpenBveApi.Math.Math import NumberFormats
+from Plugins.RouteCsvRw.Structures.Route.RailCycle import RailCycle
+from Plugins.RouteCsvRw.Structures.Route.StationStop import Stop
+
 
 import math
 import numpy as np
+
+from Plugins.RouteCsvRw.Structures.Route.Rail import Rail
+from RouteManager2.Stations.RouteStation import RouteStation
 
 
 class Parser7:
@@ -14,19 +20,200 @@ class Parser7:
         self.CurrentSection: int = 0
         self.DepartureSignalUsed: bool = False
 
-    @staticmethod
-    def parse_track_command(command: TrackCommand, arguments: list[str], filename: str,
+    def parse_track_command(self, command: TrackCommand, arguments: list[str], filename: str,
                             unit_of_lngth: list[float], expression: Expression, data: RouteData, block_index: int,
                             preview_only: bool, is_rw: bool, rail_index: int = 0) -> RouteData:
         match command:
-            case TrackCommand.RailStart:
-                pass
-            case TrackCommand.Rail:
-                pass
+            case TrackCommand.RailStart | TrackCommand.Rail:
+                idx = 0
+                if len(arguments) >= 1 and len(arguments[0]) > 0:
+                    sucess, idx = NumberFormats.try_parse_int_vb6(arguments[0])
+                    if not sucess:
+                        print(f'RailIndex is invalid in {command} at line '
+                              f'{expression.Line} , column {expression.Column}'
+                              f' in file {expression.File}')
+                if idx < 1:
+                    print(f'RailIndex is expected to be positive in {command} at line '
+                          f'{expression.Line} , column {expression.Column}'
+                          f' in file {expression.File}')
+                if command == TrackCommand.RailStart:
+                    if idx in data.Blocks[block_index].Rails and data.Blocks[block_index].Rails[idx].RailStarted:
+                        print(f'RailIndex {idx} is required to reference a non-existing rail in {command} at line '
+                              f'{expression.Line} , column {expression.Column} in file {expression.File}')
+                if idx not in data.Blocks[block_index].Rails:
+                    data.Blocks[block_index].Rails[idx] = Rail(2.0, 1.0)
+                    if idx >= len(data.Blocks[block_index].RailCycles):
+                        ol = len(data.Blocks[block_index].RailCycles)
+                        # 늘려주기
+                        data.Blocks[block_index].RailCycles.extend([RailCycle() for _ in range(idx + 1 - ol)])
+                        for rc in range(ol, len(data.Blocks[block_index].RailCycles)):
+                            data.Blocks[block_index].RailCycles[rc].RailCycleIndex = -1
+
+                current_rail = data.Blocks[block_index].Rails[idx]
+                if current_rail.RailStartRefreshed:
+                    current_rail.RailEnded = True
+
+                current_rail.RailStarted = True
+                current_rail.RailStartRefreshed = True
+                if len(arguments) >= 2:
+                    if len(arguments[1]) > 0:
+                        success, current_rail.RailStart.x = NumberFormats.try_parse_double_vb6(
+                            arguments[1], unit_of_lngth
+                        )
+                        if not success:
+                            print(f'X is invalid in {command} at line {expression.Line} , column {expression.Column}'
+                                  f'in file {expression.File}')
+                            current_rail.RailStart.x = 0.0
+                    if not current_rail.RailEnded:
+                        current_rail.RailEnd.x = current_rail.RailStart.x
+
+                if len(arguments) >= 3:
+                    if len(arguments[2]) > 0:
+                        success, current_rail.RailStart.y = NumberFormats.try_parse_double_vb6(
+                            arguments[2], unit_of_lngth
+                        )
+                        if not success:
+                            print(f'Y is invalid in {command} at line {expression.Line} , column {expression.Column}'
+                                  f'in file {expression.File}')
+                            current_rail.RailStart.y = 0.0
+                    if not current_rail.RailEnded:
+                        current_rail.RailEnd.y = current_rail.RailStart.y
+
+                if idx >= len(data.Blocks[block_index].RailType):
+                    data.Blocks[block_index].RailType.extend([0] * (idx + 1 - len(data.Blocks[block_index].RailType)))
+                # Ignore the RailStructureIndex in previewmode, obviously not visible!
+                sttype = 0
+                if not preview_only and len(arguments) >= 4 and len(arguments[3]) != 0:
+                    success, sttype = NumberFormats.try_parse_int_vb6(arguments[3])
+                    if not success:
+                        print(f'RailStructureIndex is invalid in {command} at line {expression.Line} ,'
+                              f' column {expression.Column} in file {expression.File}')
+                        sttype = 0
+                    if sttype < 0:
+                        print(
+                            f'RailStructureIndex is expected to be non-negative in {command} at line {expression.Line}'
+                            f', column {expression.Column} in file {expression.File}')
+                        sttype = 0
+                    elif sttype in data.Structure.RailObjects:
+                        print(
+                            f'RailStructureIndex {sttype} references an object not loaded in {command} at line '
+                            f'{expression.Line} ,column {expression.Column} in file {expression.File}')
+                    else:
+                        if sttype < len(data.Structure.RailCycles) and data.Structure.RailCycles[sttype] is not None:
+                            data.Blocks[block_index].RailType[idx] = data.Structure.RailCycles[sttype][0]
+                            data.Blocks[block_index].RailCycles[idx].RailCycleIndex = sttype
+                            data.Blocks[block_index].RailCycles[idx].CurrentCycle = 0
+
+                        else:
+                            data.Blocks[block_index].RailType[idx] = sttype
+                            data.Blocks[block_index].RailCycles[idx].RailCycleIndex = -1
+                cant = 0.0
+                if len(arguments) >= 5 and len(arguments[4]) > 0:
+                    success, cant = NumberFormats.try_parse_double_vb6(arguments[4])
+                    if not success:
+                        if arguments[4] != "id 0":  # RouteBuilder inserts these, harmless so let's ignore
+                            print(f'CantInMillimeters is invalid in {command} at line {expression.Line}'
+                                  f', column {expression.Column} in file {expression.File}')
+                        cant = 0.0
+                else:
+                    cant *= 0.001
+                current_rail.CurveCant = cant
+                data.Blocks[block_index].Rails[idx] = current_rail
             case TrackCommand.RailEnd:
-                pass
+                idx = 0
+                if len(arguments) >= 1 and len(arguments[0]) > 0:
+                    sucess, idx = NumberFormats.try_parse_int_vb6(arguments[0])
+                    if not sucess:
+                        print(f'RailIndex {idx} is invalid in {command} at line '
+                              f'{expression.Line} , column {expression.Column}'
+                              f' in file {expression.File}')
+                if idx == 0:
+                    print(f'The command {command} is invalid for Rail 0 at line '
+                          f'{expression.Line} , column {expression.Column}'
+                          f' in file {expression.File}')
+                if idx < 0 or idx not in data.Blocks[block_index].Rails \
+                        or not data.Blocks[block_index].Rails[idx].RailStarted:
+                    print(f'RailIndex {idx} references a non-existing rail in {command} at line '
+                          f'{expression.Line} , column {expression.Column} in file {expression.File}')
+                if idx not in data.Blocks[block_index].Rails:
+                    data.Blocks[block_index].Rails[idx] = Rail(2.0, 1.0)
+
+                current_rail = data.Blocks[block_index].Rails[idx]
+                current_rail.RailStarted = False
+                current_rail.RailStartRefreshed = False
+                current_rail.RailEnded = False
+                current_rail.IsDriveable = False
+
+                if len(arguments) >= 2 and len(arguments[1]) > 0:
+                    success, current_rail.RailEnd.x = NumberFormats.try_parse_double_vb6(arguments[1], unit_of_lngth)
+                    if not success:
+                        print(f'X is invalid in {command} at line {expression.Line} , column {expression.Column}'
+                              f'in file {expression.File}')
+                        current_rail.RailEnd.x = 0.0
+
+                if len(arguments) >= 3 and len(arguments[2]) > 0:
+                    success, current_rail.RailStart.y = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
+                    if not success:
+                        print(f'Y is invalid in {command} at line {expression.Line} , column {expression.Column}'
+                              f'in file {expression.File}')
+                        current_rail.RailEnd.y = 0.0
+                data.Blocks[block_index].Rails[idx] = current_rail
             case TrackCommand.RailType:
-                pass
+                if not preview_only:
+                    idx = 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        sucess, idx = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not sucess:
+                            print(f'RailIndex is invalid in {command} at line '
+                                  f'{expression.Line} , column {expression.Column} in file {expression.File}')
+                            idx = 0
+                    sttype = 0
+                    if len(arguments) >= 2 and len(arguments[1]) > 0:
+                        success, sttype = NumberFormats.try_parse_int_vb6(arguments[1])
+                        if not success:
+                            print(f'RailStructureIndex is invalid in {command} at line {expression.Line}' 
+                                  f'column {expression.Column} in file {expression.File}')
+                            sttype = 0
+                    if idx < 0:
+                        print(
+                            f'RailStructureIndex is expected to be non-negative in {command} at line {expression.Line}'
+                            f', column {expression.Column} in file {expression.File}')
+                    else:
+                        if idx not in data.Blocks[block_index].Rails:
+                            print(
+                                f'RailIndex {idx} could be out of range in {command} at line {expression.Line}'
+                                f', column {expression.Column} in file {expression.File}')
+                        if sttype < 0:
+                            print(
+                                f'RailStructureIndex is expected to be non-negative in {command} at line'
+                                f' {expression.Line}, column {expression.Column} in file {expression.File}')
+                        elif sttype not in data.Structure.RailObjects:
+                            print(f'RailStructureIndex {sttype} references an object not loaded in {command} at line '
+                                  f'{expression.Line} , column {expression.Column} in file {expression.File}')
+                        else:
+                            if len(data.Blocks[block_index].RailType) <= idx:
+                                # RailType 확장
+                                data.Blocks[block_index].RailType.extend(
+                                    [0] * (idx + 1 - len(data.Blocks[block_index].RailType))
+                                )
+
+                                # RailCycles 확장
+                                old_len = len(data.Blocks[block_index].RailCycles)
+                                data.Blocks[block_index].RailCycles.extend(
+                                    RailCycle() for _ in range(idx + 1 - old_len)
+                                )
+
+                                # 새로 추가된 RailCycles의 RailCycleIndex 초기화
+                                for rc in range(old_len, len(data.Blocks[block_index].RailCycles)):
+                                    data.Blocks[block_index].RailCycles[rc].RailCycleIndex = -1
+                            if sttype < len(data.Structure.RailCycles) and data.Structure.RailCycles[sttype] \
+                                    is not None:
+                                data.Blocks[block_index].RailType[idx] = data.Structure.RailCycles[sttype][0]
+                                data.Blocks[block_index].RailCycles[idx].RailCycleIndex = sttype
+                                data.Blocks[block_index].RailCycles[idx].CurrentCycle = 0
+                            else:
+                                data.Blocks[block_index].RailType[idx] = sttype
+                                data.Blocks[block_index].RailCycles[idx].RailCycleIndex = -1
             case TrackCommand.Accuracy:
                 pass
             case TrackCommand.Pitch:
@@ -105,12 +292,75 @@ class Parser7:
                 pass
             case TrackCommand.Limit:
                 pass
-            case TrackCommand.Stop:
-                pass
-            case TrackCommand.StopPos:
-                pass
+            case TrackCommand.Stop | TrackCommand.StopPos:
+                if self.CurrentStation == -1:
+                    print(f"A stop without a station is invalid in Track.Stop at line "
+                          f'{expression.Line} , column {expression.Column} in file {expression.File}')
+                else:
+                    # Direction
+                    dir = 0
+                    if len(arguments) >= 1 and arguments[0]:
+                        success, dir = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            print(f"Direction is invalid in Track.Stop at line "
+                                  f'{expression.Line} , column {expression.Column} in file {expression.File}')
+                            dir = 0
+
+                    # Backward Tolerance
+                    backw = 5.0
+                    if len(arguments) >= 2 and arguments[1]:
+                        success, backw_val = NumberFormats.try_parse_double_vb6(arguments[1], unit_of_lngth)
+                        if not success:
+                            print(f"BackwardTolerance is invalid in Track.Stop at line"
+                                  f'{expression.Line} , column {expression.Column} in file {expression.File}')
+                        elif backw_val <= 0.0:
+                            print(f"BackwardTolerance is expected to be positive in Track.Stop at line"
+                                  f'{expression.Line} , column {expression.Column} in file {expression.File}')
+                        else:
+                            backw = backw_val
+
+                    # Forward Tolerance
+                    forw = 5.0
+                    if len(arguments) >= 3 and arguments[2]:
+                        success, forw_val = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
+                        if not success:
+                            print(f"ForwardTolerance is invalid in Track.Stop at line"
+                                  f'{expression.Line} , column {expression.Column} in file {expression.File}')
+                        elif forw_val <= 0.0:
+                            print(f"ForwardTolerance is expected to be positive in Track.Stop at line "
+                                  f'{expression.Line} , column {expression.Column} in file {expression.File}')
+                        else:
+                            forw = forw_val
+
+                    # Cars
+                    cars = 0
+                    if len(arguments) >= 4 and arguments[3]:
+                        success, cars_val = NumberFormats.try_parse_int_vb6(arguments[3])
+                        if not success:
+                            print("Cars is invalid in Track.Stop at line "
+                                  f'{expression.Line} , column {expression.Column} in file {expression.File}')
+                        else:
+                            cars = cars_val
+
+                    # Append Stop
+
+                    stop = Stop(data.TrackPosition, self.CurrentStation, dir, forw, backw, cars)
+                    data.Blocks[block_index].StopPositions.append(stop)
+                    self.CurrentStop = cars
+
             case TrackCommand.Sta:
-                pass
+                self.CurrentStation += 1
+
+                # Station 리스트가 존재하지 않거나 부족할 경우 확장
+                if len(self.CurrentRoute.Stations) <= self.CurrentStation:
+                    self.CurrentRoute.Stations.append(RouteStation())
+                else:
+                    self.CurrentRoute.Stations[self.CurrentStation] = RouteStation()
+
+                # 인자가 있으면 이름 지정
+                if len(arguments) >= 1 and arguments[0]:
+                    self.CurrentRoute.Stations[self.CurrentStation].Name = arguments[0]
+
             case TrackCommand.Station:
                 pass
             case TrackCommand.StationXML:
@@ -205,6 +455,3 @@ class Parser7:
             case TrackCommand.RailAdhesion:
                 pass
         return data
-
-
-

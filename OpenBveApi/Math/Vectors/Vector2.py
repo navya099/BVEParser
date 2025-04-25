@@ -45,3 +45,6 @@ class Vector2:
         y = sine_of_angle * self.x + cosine_of_angle * self.y
         self.x = x
         self.y = y
+
+    def __sub__(self, other: 'Vector2') -> 'Vector2':
+        return Vector2(self.x - other.x, self.y - other.y)

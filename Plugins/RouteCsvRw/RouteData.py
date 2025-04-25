@@ -57,10 +57,10 @@ class RouteData:
                     rail = Rail(self.Blocks[i - 1].Rails[key].Accuracy,
                                 self.Blocks[i - 1].Rails[key].AdhesionMultiplier,
                                 RailStarted=self.Blocks[i - 1].Rails[key].RailStarted,
-                                RailStart=Vector2(self.Blocks[i - 1].Rails[key].RailStart),
+                                RailStart=copy.deepcopy(self.Blocks[i - 1].Rails[key].RailStart),
                                 RailStartRefreshed=False,
                                 RailEnded=False,
-                                RailEnd=Vector2(self.Blocks[i - 1].Rails[key].RailStart),
+                                RailEnd=copy.deepcopy(self.Blocks[i - 1].Rails[key].RailStart),
                                 IsDriveable=self.Blocks[i - 1].Rails[key].IsDriveable
                                 )
                     self.Blocks[i].Rails[key] = rail

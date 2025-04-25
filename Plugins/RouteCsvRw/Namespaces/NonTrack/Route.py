@@ -5,9 +5,9 @@ from OpenBveApi.Math.Math import NumberFormats
 
 
 class Parser6:
-    def parse_rout_command(self, command: RouteCommand, arguments: list[str], index: int, filename: str,
-                           unit_of_length: list[float], expression: 'Expression', data: RouteData,
-                           preview_only: bool) -> RouteData:
+    def parse_route_command(self, command: RouteCommand, arguments: list[str], index: int, filename: str,
+                            unit_of_length: list[float], expression: 'Expression', data: RouteData,
+                            preview_only: bool) -> RouteData:
         match command:
             case RouteCommand.DeveloperID:
                 pass

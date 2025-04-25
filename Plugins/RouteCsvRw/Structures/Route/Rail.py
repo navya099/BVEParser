@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
+from OpenBveApi.Math.Vectors.Vector2 import Vector2
+
 
 @dataclass
 class Rail:
@@ -8,9 +10,9 @@ class Rail:
     AdhesionMultiplier: float
     RailStarted: bool = False
     RailStartRefreshed: bool = False
-    RailStart: Optional['Vector2'] = None
+    RailStart: Vector2 = field(default_factory=Vector2)
     RailEnded: bool = False
-    RailEnd: Optional['Vector2'] = None
+    RailEnd: Vector2 = field(default_factory=Vector2)
     CurveCant: float = 0.0
     IsDriveable: bool = False
 

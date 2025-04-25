@@ -3,6 +3,9 @@ from Plugins.RouteCsvRw.Structures.Expression import Expression
 
 
 class Parser4:
+    def __init__(self):
+        super().__init__()  # 💡 중요!
+
     def split_arguments(self, argument_sequence: str) -> list[str]:
         arguments = []
         a = 0
@@ -58,6 +61,3 @@ class Parser4:
                     break
 
         return command_indices
-
-
-

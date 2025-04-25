@@ -15,6 +15,7 @@ from RouteManager2.Stations.RouteStation import RouteStation
 
 class Parser7:
     def __init__(self):
+        super().__init__()  # 💡 중요!
         self.CurrentStation: int = -1
         self.CurrentStop: int = -1
         self.CurrentSection: int = 0

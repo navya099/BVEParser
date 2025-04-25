@@ -4,7 +4,6 @@ import random
 import chardet
 from RouteManager2.CurrentRoute import CurrentRoute
 from TrainManager.TrainManager import TrainManagerBase
-from .CsvRwRouteParser import Parser
 from OpenBveApi.Routes.RouteInterface import RouteInterface
 from OpenBveApi.System.BaseOptions import BaseOptions
 from OpenBveApi.System.Path import Path
@@ -89,6 +88,7 @@ class Plugin(RouteInterface):
         isrw = path.lower().endswith(".rw")
         print(f"Route file format is: {'RW' if isrw else 'CSV'}\n")
         try:
+            from .CsvRwRouteParser import Parser
             parser = Parser()
             parser.parse_route(path, isrw, encoding,
                                train_path, object_path, sound_path,

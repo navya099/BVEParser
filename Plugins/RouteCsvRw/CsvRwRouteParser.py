@@ -2,7 +2,7 @@ import math
 from typing import List
 import time
 
-from uitl import Util , RecursiveEncoder
+from uitl import Util, RecursiveEncoder
 
 from RouteManager2.Climate.Fog import Fog
 from RouteManager2.CurrentRoute import CurrentRoute
@@ -14,6 +14,7 @@ from .Namespaces.NonTrack.OptionsCommands import OptionsCommand
 from .Namespaces.NonTrack.Route import Parser6
 from .Namespaces.NonTrack.RouteCommands import RouteCommand
 from .Namespaces.Track.Track import Parser7
+
 from .PreprocessOptions import Parser2
 from .Functions import Parser4
 from .RouteData import RouteData
@@ -44,10 +45,12 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         self.AllowTrackPositionArguments = False
         self.SplitLineHack = True
 
+    from .Plugin import Plugin
     def parse_route(self, file_name: str, is_rw: bool, encoding: str, train_path: str,
                     object_path: str, sound_path: str, preview_only: bool, host_plugin: "Plugin"):
         self.Plugin = host_plugin
-        self.CurrentRoute = self.Plugin.CurrentRoute
+
+        self.CurrentRoute = host_plugin.CurrentRoute
 
         # Store paths for later use
         self.ObjectPath = object_path
@@ -128,7 +131,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         for j in range(len(expressions)):
             self.Plugin.CurrentProgress = j * progress_factor
             if j & 255 == 0:
-                #time.sleep(1)
+                # time.sleep(1)
                 if self.Plugin.Cancel:
                     self.Plugin.IsLoading = False
                     return
@@ -264,7 +267,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         for j in range(len(expressions)):
             self.Plugin.CurrentProgress = 0.3333 + j * progress_factor
             if j & 255 == 0:
-                #time.sleep(1)
+                # time.sleep(1)
                 if self.Plugin.Cancel:
                     self.Plugin.IsLoading = False
                     return

@@ -5,6 +5,9 @@ from OpenBveApi.Math.Math import NumberFormats
 
 
 class Parser6:
+    def __init__(self):
+        super().__init__()  # 💡 중요!
+
     def parse_route_command(self, command: RouteCommand, arguments: list[str], index: int, filename: str,
                             unit_of_length: list[float], expression: 'Expression', data: RouteData,
                             preview_only: bool) -> RouteData:
@@ -50,7 +53,32 @@ class Parser6:
 
                     else:
                         self.CurrentRoute.Atmosphere.InitialElevation = a
+            case RouteCommand.PositionX:
+                if len(arguments) < 1:
+                    print(f'{command} is expected to have one argument at line {expression.Line},\
+                                    column {expression.Column} in file {expression.File}')
+                else:
 
+                    success, sf = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_length)
+                    if not success:
+                        print(f'PositionX is invalid in {command} at line {expression.Line},\
+                                    column {expression.Column} in file {expression.File}')
+
+                    else:
+                        self.CurrentRoute.Atmosphere.PositionX = sf
+            case RouteCommand.PositionY:
+                if len(arguments) < 1:
+                    print(f'{command} is expected to have one argument at line {expression.Line},\
+                                                column {expression.Column} in file {expression.File}')
+                else:
+
+                    success, cerc = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_length)
+                    if not success:
+                        print(f'PositionY is invalid in {command} at line {expression.Line},\
+                                                column {expression.Column} in file {expression.File}')
+
+                    else:
+                        self.CurrentRoute.Atmosphere.PositionY = cerc
             case RouteCommand.Temperature:
                 pass
             case RouteCommand.Pressure:

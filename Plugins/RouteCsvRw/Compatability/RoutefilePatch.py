@@ -5,9 +5,9 @@ from OpenBveApi.System.Path import Path
 from loggermodule import logger
 
 
-
 class Parser3:
     def __init__(self):
+        super().__init__()  # 💡 중요!
         self.available_routefile_patches: dict[str, RoutefilePatch] = {'': RoutefilePatch()}
 
     def check_for_available_patch(self, file_name: str, data: RouteData,

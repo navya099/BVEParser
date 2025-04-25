@@ -5,6 +5,7 @@ class RouteCommand(Enum):
     """Enum to represent various route commands for BVE and OpenBVE"""
 
     # Used by BVE to allow for debugging, unused by OpenBVE
+
     DeveloperID = 0
     # A textual description of the route to be displayed in the main menu
     Comment = 1
@@ -46,3 +47,6 @@ class RouteCommand(Enum):
     InitialViewPoint = 19
     # Adds AI trains
     TfoXML = 20
+    # 초기x좌표
+    PositionX = 21
+    PositionY = 22

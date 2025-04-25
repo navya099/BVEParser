@@ -1,6 +1,7 @@
 from RouteManager2.Climate.Atmosphere import Atmosphere
 from RouteManager2.RouteInformation import RouteInformation
 from OpenBveApi.Routes.Track import Track
+from RouteManager2.Stations.RouteStation import RouteStation
 
 
 class CurrentRoute:
@@ -12,7 +13,7 @@ class CurrentRoute:
         self.Image: str = ''
         self.Tracks: dict[int, Track] = {0: Track()}
         self.Sections: list['Section'] = []
-        self.Stations: list['RouteStation'] = []
+        self.Stations: list[RouteStation] = []
         self.InitialStationName: str = ''
         self.InitialStationTime: int = -1
         self.BogusPreTrainInstructions: list['BogusPreTrainInstruction'] = []

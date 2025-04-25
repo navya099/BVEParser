@@ -13,9 +13,10 @@ from uitl import Util
 
 
 class Parser8:
+    def __init__(self):
+        super().__init__()  # 💡 중요!
+
     def apply_route_data(self, filename: str, data: RouteData, preview_only: bool) -> RouteData:
-
-
 
         last_block = int(math.floor((data.TrackPosition + 600.0) / data.BlockInterval + 0.001) + 1)
         if abs(data.Blocks[len(data.Blocks) - 1].CurrentTrackState.CurveRadius) < 300:
@@ -49,7 +50,18 @@ class Parser8:
         # create objects and track
 
         position = Vector3.Zero()
+        position.y = self.CurrentRoute.Atmosphere.InitialElevation  # elvation 설정
+        position.x = self.CurrentRoute.Atmosphere.InitialX  # X 좌표
+        position.z = self.CurrentRoute.Atmosphere.InitialY  # Z 좌표
         direction = Vector2.Down()
+
+        # 여기서부터 코드 수정
+        degree = self.CurrentRoute.Atmosphere.InitialDirection
+        rad = degree * math.pi / 180.0 # 각도를 라디안으로 변환
+        dx241 = math.cos(rad) # 임시변수
+        dy241 = math.sin(rad) # 임시변수
+        direction = Vector2(dx241, dy241)
+
         if data.FirstUsedBlock < 0:
             data.FirstUsedBlock = 0
         current_track_length = 0

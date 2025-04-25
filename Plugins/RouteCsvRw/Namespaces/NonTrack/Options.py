@@ -5,6 +5,9 @@ from OpenBveApi.Math.Math import NumberFormats
 
 
 class Parser5:
+    def __init__(self):
+        super().__init__()  # 💡 중요!
+
     @staticmethod
     def parse_option_command(command: OptionsCommand, arguments: list[str],
                              unit_of_length: [float], expression: Expression,

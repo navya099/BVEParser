@@ -2,6 +2,7 @@ from Plugins.RouteCsvRw.RouteData import RouteData
 from .Structures.Expression import Expression
 from typing import List
 from OpenBveApi.Math.Math import NumberFormats
+from loggermodule import logger
 
 
 class Parser2:
@@ -100,7 +101,8 @@ class Parser2:
                             # options
                             case 'options.unitoflength':
                                 if len(arguments) == 0:
-                                    print(f'At least 1 argument is expected in {command} at line '
+
+                                    logger.error(f'At least 1 argument is expected in {command} at line '
                                           f'{str(expressions[j].Line)}, column {str(expressions[j].Column)} in file '
                                           f'{expressions[j].File}')
                                 else:
@@ -112,14 +114,14 @@ class Parser2:
                                             value = float(arg) if arg.strip() else (
                                                 1.0 if i == len(arguments) - 1 else 0.0)
                                         except ValueError:
-                                            print(
+                                            logger.error(
                                                 f"🚫 FactorInMeters{i} is invalid in {command} at line "
                                                 f"{expressions[j].Line}, column {expressions[j].Column} in file "
                                                 f"{expressions[j].File}")
                                             value = 1.0 if i == 0 else 0.0
 
                                         if value <= 0.0:
-                                            print(
+                                            logger.error(
                                                 f"⚠️  FactorInMeters{i} is expected to be positive in {command} at line "
                                                 f"{expressions[j].Line}, column {expressions[j].Column} in file "
                                                 f"{expressions[j].File}")
@@ -129,24 +131,24 @@ class Parser2:
 
                             case "options.unitofspeed":
                                 if len(arguments) < 1:
-                                    print(f'Exactly 1 argument is expected in {command} at line '
+                                    logger.error(f'Exactly 1 argument is expected in {command} at line '
                                           f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                           f'{expressions[j].File}')
                                 else:
                                     if len(arguments) > 1:
-                                        print(f'Exactly 1 argument is expected in {command} at line '
+                                        logger.warning(f'Exactly 1 argument is expected in {command} at line '
                                               f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
 
                                     suceesss, out = NumberFormats.try_parse_double_vb6(arguments[0])
                                     data.UnitOfSpeed = out
                                     if len(arguments[0]) > 0 and not suceesss:
-                                        print(f'Factor InKmph is invalid in {command} at line '
+                                        logger.error(f'Factor InKmph is invalid in {command} at line '
                                               f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
                                         data.UnitOfSpeed = 0.277777777777778
                                     elif data.UnitOfSpeed <= 0:
-                                        print(f'Factor InKmph is expected to be positive in {command} at line '
+                                        logger.error(f'Factor InKmph is expected to be positive in {command} at line '
                                               '{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
                                         data.UnitOfSpeed = 0.277777777777778
@@ -155,23 +157,23 @@ class Parser2:
                                         data.UnitOfSpeed *= 0.277777777777778
                             case "options.objectvisibility":
                                 if len(arguments) == 0:
-                                    print(f'Exactly 1 argument is expected in {command} at line '
+                                    logger.error(f'Exactly 1 argument is expected in {command} at line '
                                           f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                           f'{expressions[j].File}')
                                 else:
                                     if len(arguments) > 1:
-                                        print(f'Exactly 1 argument is expected in {command} at line '
+                                        logger.warning(f'Exactly 1 argument is expected in {command} at line '
                                               f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
 
                                     suceesss, mode = NumberFormats.try_parse_int_vb6(arguments[0])
                                     if len(arguments) >= 1 and len(arguments[0]) != 0 and not suceesss:
-                                        print(f'Mode is invalid in {command} at line '
+                                        logger.error(f'Mode is invalid in {command} at line '
                                               f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
                                         mode = 0
                                     elif mode < 0 or mode > 2:
-                                        print(f'The specified Mode is not supported in {command} at line '
+                                        logger.error(f'The specified Mode is not supported in {command} at line '
                                               f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
                                         mode = 0
@@ -184,23 +186,23 @@ class Parser2:
                                 if preview_only:
                                     continue
                                 if len(arguments) == 0:
-                                    print(f'Exactly 1 argument is expected in {command} at line '
+                                    logger.error(f'Exactly 1 argument is expected in {command} at line '
                                           f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                           f'{expressions[j].File}')
                                 else:
                                     if len(arguments) > 1:
-                                        print(f'Exactly 1 argument is expected in {command} at line '
+                                        logger.warning(f'Exactly 1 argument is expected in {command} at line '
                                               f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
 
                                     suceesss, mode = NumberFormats.try_parse_int_vb6(arguments[0])
                                     if len(arguments) >= 1 and len(arguments[0]) != 0 and not suceesss:
-                                        print(f'Mode is invalid in {command} at line '
+                                        logger.error(f'Mode is invalid in {command} at line '
                                               f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
                                         mode = 0
                                     elif mode != 0 and mode != 1:
-                                        print(f'The specified Mode is not supported in {command} at line '
+                                        logger.error(f'The specified Mode is not supported in {command} at line '
                                               f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
                                         mode = 0
@@ -216,22 +218,22 @@ class Parser2:
                                 if preview_only:
                                     continue
                                 if len(arguments) == 0:
-                                    print(f'Exactly 1 argument is expected in {command} at line '
+                                    logger.error(f'Exactly 1 argument is expected in {command} at line '
                                           f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                           f'{expressions[j].File}')
                                 else:
                                     if len(arguments) > 1:
-                                        print(f'Exactly 1 argument is expected in {command} at line '
+                                        logger.warning(f'Exactly 1 argument is expected in {command} at line '
                                               f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
                                     suceesss, mode = NumberFormats.try_parse_int_vb6(arguments[0])
                                     if len(arguments) >= 1 and len(arguments[0]) != 0 and not suceesss:
-                                        print(f'Mode is invalid in {command} at line '
+                                        logger.error(f'Mode is invalid in {command} at line '
                                               f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
                                         mode = 0
                                     elif mode != 0 and mode != 1:
-                                        print(f'The specified Mode is not supported in {command} at line '
+                                        logger.error(f'The specified Mode is not supported in {command} at line '
                                               f'{expressions[j].Line}, column {expressions[j].Column} in file '
                                               f'{expressions[j].File}')
                                         mode = 0

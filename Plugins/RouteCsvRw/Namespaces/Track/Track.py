@@ -11,6 +11,7 @@ import numpy as np
 
 from Plugins.RouteCsvRw.Structures.Route.Rail import Rail
 from RouteManager2.Stations.RouteStation import RouteStation
+from loggermodule import logger
 
 
 class Parser7:
@@ -30,16 +31,16 @@ class Parser7:
                 if len(arguments) >= 1 and len(arguments[0]) > 0:
                     sucess, idx = NumberFormats.try_parse_int_vb6(arguments[0])
                     if not sucess:
-                        print(f'RailIndex is invalid in {command} at line '
+                        logger.error(f'RailIndex is invalid in {command} at line '
                               f'{expression.Line} , column {expression.Column}'
                               f' in file {expression.File}')
                 if idx < 1:
-                    print(f'RailIndex is expected to be positive in {command} at line '
+                    logger.error(f'RailIndex is expected to be positive in {command} at line '
                           f'{expression.Line} , column {expression.Column}'
                           f' in file {expression.File}')
                 if command == TrackCommand.RailStart:
                     if idx in data.Blocks[block_index].Rails and data.Blocks[block_index].Rails[idx].RailStarted:
-                        print(f'RailIndex {idx} is required to reference a non-existing rail in {command} at line '
+                        logger.error(f'RailIndex {idx} is required to reference a non-existing rail in {command} at line '
                               f'{expression.Line} , column {expression.Column} in file {expression.File}')
                 if idx not in data.Blocks[block_index].Rails:
                     data.Blocks[block_index].Rails[idx] = Rail(2.0, 1.0)
@@ -62,7 +63,7 @@ class Parser7:
                             arguments[1], unit_of_lngth
                         )
                         if not success:
-                            print(f'X is invalid in {command} at line {expression.Line} , column {expression.Column}'
+                            logger.error(f'X is invalid in {command} at line {expression.Line} , column {expression.Column}'
                                   f'in file {expression.File}')
                             current_rail.RailStart.x = 0.0
                     if not current_rail.RailEnded:
@@ -74,7 +75,7 @@ class Parser7:
                             arguments[2], unit_of_lngth
                         )
                         if not success:
-                            print(f'Y is invalid in {command} at line {expression.Line} , column {expression.Column}'
+                            logger.error(f'Y is invalid in {command} at line {expression.Line} , column {expression.Column}'
                                   f'in file {expression.File}')
                             current_rail.RailStart.y = 0.0
                     if not current_rail.RailEnded:
@@ -87,16 +88,16 @@ class Parser7:
                 if not preview_only and len(arguments) >= 4 and len(arguments[3]) != 0:
                     success, sttype = NumberFormats.try_parse_int_vb6(arguments[3])
                     if not success:
-                        print(f'RailStructureIndex is invalid in {command} at line {expression.Line} ,'
+                        logger.error(f'RailStructureIndex is invalid in {command} at line {expression.Line} ,'
                               f' column {expression.Column} in file {expression.File}')
                         sttype = 0
                     if sttype < 0:
-                        print(
+                        logger.error(
                             f'RailStructureIndex is expected to be non-negative in {command} at line {expression.Line}'
                             f', column {expression.Column} in file {expression.File}')
                         sttype = 0
                     elif sttype in data.Structure.RailObjects:
-                        print(
+                        logger.error(
                             f'RailStructureIndex {sttype} references an object not loaded in {command} at line '
                             f'{expression.Line} ,column {expression.Column} in file {expression.File}')
                     else:
@@ -113,7 +114,7 @@ class Parser7:
                     success, cant = NumberFormats.try_parse_double_vb6(arguments[4])
                     if not success:
                         if arguments[4] != "id 0":  # RouteBuilder inserts these, harmless so let's ignore
-                            print(f'CantInMillimeters is invalid in {command} at line {expression.Line}'
+                            logger.error(f'CantInMillimeters is invalid in {command} at line {expression.Line}'
                                   f', column {expression.Column} in file {expression.File}')
                         cant = 0.0
                 else:
@@ -125,16 +126,16 @@ class Parser7:
                 if len(arguments) >= 1 and len(arguments[0]) > 0:
                     sucess, idx = NumberFormats.try_parse_int_vb6(arguments[0])
                     if not sucess:
-                        print(f'RailIndex {idx} is invalid in {command} at line '
+                        logger.error(f'RailIndex {idx} is invalid in {command} at line '
                               f'{expression.Line} , column {expression.Column}'
                               f' in file {expression.File}')
                 if idx == 0:
-                    print(f'The command {command} is invalid for Rail 0 at line '
+                    logger.error(f'The command {command} is invalid for Rail 0 at line '
                           f'{expression.Line} , column {expression.Column}'
                           f' in file {expression.File}')
                 if idx < 0 or idx not in data.Blocks[block_index].Rails \
                         or not data.Blocks[block_index].Rails[idx].RailStarted:
-                    print(f'RailIndex {idx} references a non-existing rail in {command} at line '
+                    logger.error(f'RailIndex {idx} references a non-existing rail in {command} at line '
                           f'{expression.Line} , column {expression.Column} in file {expression.File}')
                 if idx not in data.Blocks[block_index].Rails:
                     data.Blocks[block_index].Rails[idx] = Rail(2.0, 1.0)
@@ -148,14 +149,14 @@ class Parser7:
                 if len(arguments) >= 2 and len(arguments[1]) > 0:
                     success, current_rail.RailEnd.x = NumberFormats.try_parse_double_vb6(arguments[1], unit_of_lngth)
                     if not success:
-                        print(f'X is invalid in {command} at line {expression.Line} , column {expression.Column}'
+                        logger.error(f'X is invalid in {command} at line {expression.Line} , column {expression.Column}'
                               f'in file {expression.File}')
                         current_rail.RailEnd.x = 0.0
 
                 if len(arguments) >= 3 and len(arguments[2]) > 0:
                     success, current_rail.RailStart.y = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
                     if not success:
-                        print(f'Y is invalid in {command} at line {expression.Line} , column {expression.Column}'
+                        logger.error(f'Y is invalid in {command} at line {expression.Line} , column {expression.Column}'
                               f'in file {expression.File}')
                         current_rail.RailEnd.y = 0.0
                 data.Blocks[block_index].Rails[idx] = current_rail
@@ -165,31 +166,31 @@ class Parser7:
                     if len(arguments) >= 1 and len(arguments[0]) > 0:
                         sucess, idx = NumberFormats.try_parse_int_vb6(arguments[0])
                         if not sucess:
-                            print(f'RailIndex is invalid in {command} at line '
+                            logger.error(f'RailIndex is invalid in {command} at line '
                                   f'{expression.Line} , column {expression.Column} in file {expression.File}')
                             idx = 0
                     sttype = 0
                     if len(arguments) >= 2 and len(arguments[1]) > 0:
                         success, sttype = NumberFormats.try_parse_int_vb6(arguments[1])
                         if not success:
-                            print(f'RailStructureIndex is invalid in {command} at line {expression.Line}' 
+                            logger.error(f'RailStructureIndex is invalid in {command} at line {expression.Line}' 
                                   f'column {expression.Column} in file {expression.File}')
                             sttype = 0
                     if idx < 0:
-                        print(
+                        logger.error(
                             f'RailStructureIndex is expected to be non-negative in {command} at line {expression.Line}'
                             f', column {expression.Column} in file {expression.File}')
                     else:
                         if idx not in data.Blocks[block_index].Rails:
-                            print(
+                            logger.warning(
                                 f'RailIndex {idx} could be out of range in {command} at line {expression.Line}'
                                 f', column {expression.Column} in file {expression.File}')
                         if sttype < 0:
-                            print(
+                            logger.error(
                                 f'RailStructureIndex is expected to be non-negative in {command} at line'
                                 f' {expression.Line}, column {expression.Column} in file {expression.File}')
                         elif sttype not in data.Structure.RailObjects:
-                            print(f'RailStructureIndex {sttype} references an object not loaded in {command} at line '
+                            logger.error(f'RailStructureIndex {sttype} references an object not loaded in {command} at line '
                                   f'{expression.Line} , column {expression.Column} in file {expression.File}')
                         else:
                             if len(data.Blocks[block_index].RailType) <= idx:
@@ -222,7 +223,7 @@ class Parser7:
                 if len(arguments) >= 1 and len(arguments[0]) > 0:
                     sucess, p = NumberFormats.try_parse_double_vb6(arguments[0])
                     if not sucess:
-                        print(f'ValueInPermille is invalid in {command} at line '
+                        logger.error(f'ValueInPermille is invalid in {command} at line '
                               f'{expression.Line} , column {expression.Column}'
                               f' in file {expression.File}')
                         p = 0.0
@@ -232,7 +233,7 @@ class Parser7:
                 if len(arguments) >= 1 and len(arguments[0]) > 0:
                     sucess, radius = NumberFormats.try_parse_double_vb6(arguments[0])
                     if not sucess:
-                        print(f'Radius is invalid in {command} at line '
+                        logger.error(f'Radius is invalid in {command} at line '
                               f'{expression.Line} , column {expression.Column}'
                               f' in file {expression.File}')
                         radius = 0.0
@@ -240,7 +241,7 @@ class Parser7:
                 if len(arguments) >= 2 and len(arguments[1]) > 0:
                     sucess, cant = NumberFormats.try_parse_double_vb6(arguments[1])
                     if not sucess:
-                        print(f'CantInMillimeters is invalid in {command} at line '
+                        logger.error(f'CantInMillimeters is invalid in {command} at line '
                               f'{expression.Line} , column {expression.Column}'
                               f' in file {expression.File}')
                         cant = 0.0
@@ -295,7 +296,7 @@ class Parser7:
                 pass
             case TrackCommand.Stop | TrackCommand.StopPos:
                 if self.CurrentStation == -1:
-                    print(f"A stop without a station is invalid in Track.Stop at line "
+                    logger.error(f"A stop without a station is invalid in Track.Stop at line "
                           f'{expression.Line} , column {expression.Column} in file {expression.File}')
                 else:
                     # Direction
@@ -303,7 +304,7 @@ class Parser7:
                     if len(arguments) >= 1 and arguments[0]:
                         success, dir = NumberFormats.try_parse_int_vb6(arguments[0])
                         if not success:
-                            print(f"Direction is invalid in Track.Stop at line "
+                            logger.error(f"Direction is invalid in Track.Stop at line "
                                   f'{expression.Line} , column {expression.Column} in file {expression.File}')
                             dir = 0
 
@@ -312,10 +313,10 @@ class Parser7:
                     if len(arguments) >= 2 and arguments[1]:
                         success, backw_val = NumberFormats.try_parse_double_vb6(arguments[1], unit_of_lngth)
                         if not success:
-                            print(f"BackwardTolerance is invalid in Track.Stop at line"
+                            logger.error(f"BackwardTolerance is invalid in Track.Stop at line"
                                   f'{expression.Line} , column {expression.Column} in file {expression.File}')
                         elif backw_val <= 0.0:
-                            print(f"BackwardTolerance is expected to be positive in Track.Stop at line"
+                            logger.error(f"BackwardTolerance is expected to be positive in Track.Stop at line"
                                   f'{expression.Line} , column {expression.Column} in file {expression.File}')
                         else:
                             backw = backw_val
@@ -325,10 +326,10 @@ class Parser7:
                     if len(arguments) >= 3 and arguments[2]:
                         success, forw_val = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
                         if not success:
-                            print(f"ForwardTolerance is invalid in Track.Stop at line"
+                            logger.error(f"ForwardTolerance is invalid in Track.Stop at line"
                                   f'{expression.Line} , column {expression.Column} in file {expression.File}')
                         elif forw_val <= 0.0:
-                            print(f"ForwardTolerance is expected to be positive in Track.Stop at line "
+                            logger.error(f"ForwardTolerance is expected to be positive in Track.Stop at line "
                                   f'{expression.Line} , column {expression.Column} in file {expression.File}')
                         else:
                             forw = forw_val
@@ -338,7 +339,7 @@ class Parser7:
                     if len(arguments) >= 4 and arguments[3]:
                         success, cars_val = NumberFormats.try_parse_int_vb6(arguments[3])
                         if not success:
-                            print("Cars is invalid in Track.Stop at line "
+                            logger.error("Cars is invalid in Track.Stop at line "
                                   f'{expression.Line} , column {expression.Column} in file {expression.File}')
                         else:
                             cars = cars_val

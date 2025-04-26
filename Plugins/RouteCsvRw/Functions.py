@@ -1,5 +1,6 @@
 from OpenBveApi.Math.Math import NumberFormats
 from Plugins.RouteCsvRw.Structures.Expression import Expression
+from loggermodule import logger
 
 
 class Parser4:
@@ -36,7 +37,7 @@ class Parser4:
 
                         success_a, val_a = NumberFormats.try_parse_int_vb6(a)
                         if a and not success_a:
-                            print(
+                            logger.error(
                                 f"Invalid first index at line {expression.Line}, column {expression.Column} in file {expression.File}")
                             command = ''
                         else:
@@ -44,7 +45,7 @@ class Parser4:
 
                         success_b, val_b = NumberFormats.try_parse_int_vb6(b)
                         if b and not success_b:
-                            print(
+                            logger.error(
                                 f"Invalid second index at line {expression.Line}, column {expression.Column} in file {expression.File}")
                             command = ''
                         else:
@@ -53,8 +54,8 @@ class Parser4:
                         success, val = NumberFormats.try_parse_int_vb6(indices)
                         if indices and not success:
                             if indices.lower() != 'c' or command.lower() != 'route.comment':
-                                print(
-                                    f"Invalid index at line {expression.Line}, column {expression.Column} in file {expression.File}")
+                                logger.error(
+                                    f"Invalid index appeared at line {expression.Line}, column {expression.Column} in file {expression.File}")
                                 command = ''
                         else:
                             command_indices[0] = val

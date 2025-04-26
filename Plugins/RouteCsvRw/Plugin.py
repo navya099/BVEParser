@@ -2,7 +2,7 @@ import os
 import random
 
 import chardet
-
+from loggermodule import logger
 from RouteManager2.CurrentRoute import CurrentRoute
 from TrainManager.TrainManager import TrainManagerBase
 from OpenBveApi.Routes.RouteInterface import RouteInterface
@@ -61,7 +61,8 @@ class Plugin(RouteInterface):
                             # 첫 30줄 내에 'meshbuilder'가 포함되어 있으면 False 반환
                             return False
                     except Exception as ex:
-                        print(ex)
+
+                        logger.critical(ex)
                         return False
 
             return True
@@ -81,13 +82,13 @@ class Plugin(RouteInterface):
         self.IsLoading = True
         Plugin.CurrentRoute = route
 
-        print(f"Loading route file: {path}")
-        print(f"INFO: Route file hash {Path.get_checksum(path)}")
-        print(f'Encoding: {encoding}')
+        logger.info(f"Loading route file: {path}")
+        logger.info(f"INFO: Route file hash {Path.get_checksum(path)}")
+        logger.info(f'Encoding: {encoding}')
         # First, check the format of the route file
         # RW routes were written for BVE1 / 2, and have a different command syntax
         isrw = path.lower().endswith(".rw")
-        print(f"Route file format is: {'RW' if isrw else 'CSV'}\n")
+        logger.info(f"Route file format is: {'RW' if isrw else 'CSV'}\n")
         try:
             from .CsvRwRouteParser import Parser
             parser = Parser()
@@ -99,11 +100,10 @@ class Plugin(RouteInterface):
 
         except Exception as ex:
             route = None
-            print("An unexpected error occured whilst attempting to load the following routefile: " + path)
+            logger.critical("An unexpected error occured whilst attempting to load the following routefile: " + path)
             self.IsLoading = False
             self.LastException = ex
-            print("Error loading route:", ex)
-            traceback.print_exc()
+            logger.critical(ex)
             return False
 
     def Unload(self):

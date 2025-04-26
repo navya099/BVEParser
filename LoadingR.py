@@ -2,6 +2,7 @@ import threading
 import time
 from tkinter import filedialog
 import traceback
+from loggermodule import logger
 
 from OpenBveApi.System.BaseOptions import BaseOptions
 from Plugins.RouteCsvRw.Plugin import Plugin
@@ -23,7 +24,7 @@ class Loading:
         try:
             file = askfile()
             if file is None:
-                print("파일이 선택되지 않았습니다.")
+                logger.error("파일이 선택되지 않았습니다.")
                 return
 
             path = file.name
@@ -41,7 +42,7 @@ class Loading:
                     plugin.load(None, None, options, None)
 
                     if not plugin.CanLoadRoute(path):
-                        print('유효한 루트 파일이 아닙니다.')
+                        logger.warning('유효한 루트 파일이 아닙니다.')
                         plugin.Unload()
                         self.status.config(text="유효하지 않은 루트 파일입니다.")
                         return
@@ -66,18 +67,19 @@ class Loading:
                     result = plugin.LoadRoute(path, encoding, '', '', '', True, current_route)
 
                     if result:
-                        print('루트 로딩에 성공했습니다.')
+
+                        logger.info('루트 로딩에 성공했습니다.')
                     else:
-                        print('루트 로딩 실패.')
+                        logger.error('루트 로딩 실패.')
                 except Exception as ex_inner:
-                    print("내부 오류 발생:", ex_inner)
-                    traceback.print_exc()
+                    logger.critical("내부 오류 발생:", ex_inner)
+                    logger.critical(traceback.print_exc())
                     self.status.config(text="오류 발생!")
 
             # ✅ 전체 루트 로딩을 백그라운드에서 실행
             threading.Thread(target=background_task, daemon=True).start()
 
         except Exception as ex:
-            print("오류가 발생했습니다:", ex)
-            traceback.print_exc()
+            logger.error("오류가 발생했습니다:", ex)
+            logger.critical(traceback.print_exc())
             self.status.config(text="오류 발생!")

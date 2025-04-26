@@ -1,7 +1,7 @@
 import math
 from typing import List
-import time
 
+from loggermodule import logger
 from uitl import Util, RecursiveEncoder
 
 from RouteManager2.Climate.Fog import Fog
@@ -47,7 +47,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
 
     from .Plugin import Plugin
     def parse_route(self, file_name: str, is_rw: bool, encoding: str, train_path: str,
-                    object_path: str, sound_path: str, preview_only: bool, host_plugin: "Plugin"):
+                    object_path: str, sound_path: str, preview_only: bool, host_plugin: Plugin):
         self.Plugin = host_plugin
 
         self.CurrentRoute = host_plugin.CurrentRoute
@@ -68,7 +68,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         data = RouteData(preview_only)
         if not preview_only:
             data.Blocks[0].Background = 0
-            data.Blocks[0].Fog = Fog(CurrentRoute.NoFogStart, CurrentRoute.NoFogEnd, Color24.Grey, 0)
+            data.Blocks[0].Fog = Fog(self.CurrentRoute.NoFogStart, self.CurrentRoute.NoFogEnd, Color24.Grey, 0)
 
         data = self.parse_route_for_data(file_name, encoding, data, preview_only)
 
@@ -84,7 +84,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                              preview_only: bool) -> RouteData:
         with open(file_name, 'r', encoding=encoding) as f:
             lines: List[str] = f.readlines()
-        start_time = time.time()
+
         expressions = self.preprocess_split_into_expressions(file_name, lines, True)
         expressions = self.preprocess_chr_rnd_sub(file_name, encoding, expressions)
         unit_of_length = [1.0]
@@ -95,8 +95,6 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         expressions = self.preprocess_sort_by_track_position(unit_of_length, expressions)
         data = self.parse_route_for_data2(file_name, encoding, expressions, unit_of_length, data, preview_only)
         self.CurrentRoute.UnitOfLength = unit_of_length
-        end_time = time.time()
-        elapsed = end_time - start_time
 
         # 익스프레션추출 테스트
         Util.test(expressions)
@@ -236,7 +234,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                                     data = self.parse_option_command(parsed_option_command, arguments, unit_of_length,
                                                                      expressions[j], data, preview_only)
                                 else:
-                                    print(f'Unrecognised command {command} encountered in the Options namespace at line'
+                                    logger.error(f'Unrecognised command {command} encountered in the Options namespace at line'
                                           f'{expressions[j].Line} , column {expressions[j].Column}'
                                           f' in file {expressions[j].File}')
                             case 'route':
@@ -246,7 +244,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                                                                     file_name,
                                                                     unit_of_length, expressions[j], data, preview_only)
                                 else:
-                                    print(f'Unrecognised command {command} encountered in the Route namespace at line'
+                                    logger.error(f'Unrecognised command {command} encountered in the Route namespace at line'
                                           f'{expressions[j].Line} , column {expressions[j].Column}'
                                           f' in file {expressions[j].File}')
                             case "train":
@@ -293,7 +291,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                 if number_check and success:
                     # track position
                     if len(argument_sequence) != 0:
-                        print(f'A track position must not contain any arguments at line '
+                        logger.error(f'A track position must not contain any arguments at line '
                               f'{expressions[j].Line} , column {expressions[j].Column}'
                               f' in file {expressions[j].File}')
                         if self.AllowTrackPositionArguments:
@@ -303,7 +301,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                                 data.FirstUsedBlock = block_index
                             data.create_missing_blocks(block_index, preview_only)
                     elif current_track_position < 0.0:
-                        print(f'Negative track position encountered at line '
+                        logger.error(f'Negative track position encountered at line '
                               f'{expressions[j].Line} , column {expressions[j].Column}'
                               f' in file {expressions[j].File}')
                     else:
@@ -372,12 +370,12 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                                                                             expressions[j], data, block_index,
                                                                             preview_only, self.IsRW)
                                         else:
-                                            print(f'Hmmsim: Unrecognised command {command} encountered in the Route'
+                                            logger.error(f'Hmmsim: Unrecognised command {command} encountered in the Route'
                                                   f' namespace at line {expressions[j].Line}, '
                                                   f'column {expressions[j].Column} '
                                                   f'in file {expressions[j].File}')
                                     else:
-                                        print(f'OpenBVE: Unrecognised command {command} encountered in the Route '
+                                        logger.error(f'OpenBVE: Unrecognised command {command} encountered in the Route '
                                               f'namespace at line {expressions[j].Line}, '
                                               f'column {expressions[j].Column} '
                                               f'in file {expressions[j].File}')
@@ -396,6 +394,6 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                             case "cycle":
                                 pass
                             case _:
-                                print(f'The command {command} is not supported at line {expressions[j].Line}, '
+                                logger.warning(f'The command {command} is not supported at line {expressions[j].Line}, '
                                       f'column {expressions[j].Column} in file {expressions[j].File}')
         return data

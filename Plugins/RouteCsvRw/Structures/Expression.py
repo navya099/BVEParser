@@ -1,4 +1,5 @@
 from OpenBveApi.Math.Math import NumberFormats
+from loggermodule import logger
 
 
 class Expression:
@@ -101,7 +102,7 @@ class Expression:
                                         self.Text = self.Text[:i] + "<" + self.Text[i + 1:]
 
                                     else:
-                                        print(f'Invalid opening parenthesis encountered at line {str(self.Line)},'
+                                        logger.error(f'Invalid opening parenthesis encountered at line {str(self.Line)},'
                                               f'column {str(self.Column)} in file{self.File}')
                                         opening_error = True
 
@@ -111,11 +112,11 @@ class Expression:
                                     if self.Text.lower().startswith('sta'):
                                         self.Text = self.Text[:i] + "<" + self.Text[i + 1:]
                                     else:
-                                        print(f'Invalid opening parenthesis encountered at line {str(self.Line)},'
+                                        logger.error(f'Invalid opening parenthesis encountered at line {str(self.Line)},'
                                               f'column {str(self.Column)} in file{self.File}')
                                         opening_error = True
                                 case _:
-                                    print(f'Invalid opening parenthesis encountered at line {str(self.Line)},'
+                                    logger.error(f'Invalid opening parenthesis encountered at line {str(self.Line)},'
                                           f'column {str(self.Column)} in file{self.File}')
                                     opening_error = True
 
@@ -157,14 +158,14 @@ class Expression:
 
                 if not found:
                     if raise_errors and not closing_error:
-                        print(f'Missing closing parenthesis encountered at line {str(self.Line)},'
+                        logger.error(f'Missing closing parenthesis encountered at line {str(self.Line)},'
                               f'column {str(self.Column)} in file{self.File}')
                         closing_error = True
 
                     self.Text += ")"
             elif self.Text[i] == ')':
                 if raise_errors and not closing_error:
-                    print(f'Invalid closing parenthesis encountered at line {str(self.Line)},'
+                    logger.error(f'Invalid closing parenthesis encountered at line {str(self.Line)},'
                           f'column {str(self.Column)} in file{self.File}')
                     closing_error = True
             elif self.Text[i].isspace():
@@ -191,7 +192,7 @@ class Expression:
                 elif argument_sequence.startswith('('):
                     # only opening parenthesis found
                     if raise_errors and not closing_error:
-                        print(f'Missing closing parenthesis encountered at line {str(self.Line)}'
+                        logger.error(f'Missing closing parenthesis encountered at line {str(self.Line)}'
                               f'column {str(self.Column)} in file{self.File}')
                     argument_sequence = argument_sequence[1:].lstrip()
             else:
@@ -225,7 +226,7 @@ class Expression:
 
                             if not found:
                                 if raise_errors and not opening_error and not closing_error:
-                                    print(f'Invalid syntax encountered at line {str(self.Line)},'
+                                    logger.error(f'Invalid syntax encountered at line {str(self.Line)},'
                                           f'column {str(self.Column)} in file{self.File}')
                                     closing_error = True
 
@@ -238,13 +239,13 @@ class Expression:
                             elif argument_sequence.startswith('('):
                                 # only opening parenthesis found
                                 if raise_errors and not closing_error:
-                                    print(f'Missing closing parenthesis encountered at line {str(self.Line)},'
+                                    logger.error(f'Missing closing parenthesis encountered at line {str(self.Line)},'
                                           f'column {str(self.Column)} in file{self.File}')
                                 argument_sequence = argument_sequence[1:].lstrip()
                     else:
                         # no closing parenthesis found
                         if raise_errors and not closing_error:
-                            print(f'Missing closing parenthesis encountered at line {str(self.Line)},'
+                            logger.error(f'Missing closing parenthesis encountered at line {str(self.Line)},'
                                   f'column {str(self.Column)} in file{self.File}')
                         command = self.Text[:i].rstrip()
                         argument_sequence = self.Text[i + 2:].lstrip()
@@ -258,7 +259,7 @@ class Expression:
                     elif argument_sequence.startswith('('):
                         # only opening parenthesis found
                         if raise_errors and not closing_error:
-                            print(f'Missing closing parenthesis encountered at line {str(self.Line)},'
+                            logger.error(f'Missing closing parenthesis encountered at line {str(self.Line)},'
                                   f'column {str(self.Column)} in file{self.File}')
                         argument_sequence = argument_sequence[1:].lstrip()
         else:
@@ -285,7 +286,7 @@ class Expression:
                 i = self.Text.find('(')
                 if i >= 0:
                     if raise_errors and not closing_error:
-                        print(f'Missing closing parenthesis encountered at line {str(self.Line)},'
+                        logger.error(f'Missing closing parenthesis encountered at line {str(self.Line)},'
                               f'column {str(self.Column)} in file{self.File}')
                     command = self.Text[:i].rstrip()
                     argument_sequence = self.Text[i + 1:].lstrip()
@@ -293,7 +294,7 @@ class Expression:
                     if raise_errors:
                         i = self.Text.find(')')
                         if i >= 0 and not closing_error:
-                            print(f'Invalid closing parenthesis encountered at line {str(self.Line)},'
+                            logger.error(f'Invalid closing parenthesis encountered at line {str(self.Line)},'
                                   f'column {str(self.Column)} in file{self.File}')
                     command = self.Text
                     argument_sequence = ''
@@ -301,7 +302,7 @@ class Expression:
         # invalid trailing characters
         if command.endswith(';'):
             if raise_errors:
-                print(f'Invalid trailing semicolon encountered at line {str(self.Line)},'
+                logger.error(f'Invalid trailing semicolon encountered at line {str(self.Line)},'
                       f'column {str(self.Column)} in file{self.File}')
             while command.endswith(";"):
                 command = command[:-1]

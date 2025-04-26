@@ -2,6 +2,7 @@ from Plugins.RouteCsvRw.Namespaces.NonTrack.RouteCommands import RouteCommand
 from Plugins.RouteCsvRw.RouteData import RouteData
 from Plugins.RouteCsvRw.Structures.Expression import Expression
 from OpenBveApi.Math.Math import NumberFormats
+from loggermodule import logger
 
 
 class Parser6:
@@ -16,7 +17,7 @@ class Parser6:
                 pass
             case RouteCommand.Comment:
                 if len(arguments) < 1:
-                    print(f'{command} is expected to have one argument at line {expression.Line},\
+                    logger.error(f'{command} is expected to have one argument at line {expression.Line},\
                             column {expression.Column} in file {expression.File}')
                 else:
                     self.CurrentRoute.Comment = arguments[0]
@@ -42,52 +43,52 @@ class Parser6:
                 pass
             case RouteCommand.Elevation:
                 if len(arguments) < 1:
-                    print(f'{command} is expected to have one argument at line {expression.Line},\
+                    logger.error(f'{command} is expected to have one argument at line {expression.Line},\
                                 column {expression.Column} in file {expression.File}')
                 else:
 
                     success , a = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_length)
                     if not success:
-                        print(f'Height is invalid in {command} at line {expression.Line},\
+                        logger.error(f'Height is invalid in {command} at line {expression.Line},\
                                 column {expression.Column} in file {expression.File}')
 
                     else:
                         self.CurrentRoute.Atmosphere.InitialElevation = a
             case RouteCommand.PositionX:
                 if len(arguments) < 1:
-                    print(f'{command} is expected to have one argument at line {expression.Line},\
+                    logger.error(f'{command} is expected to have one argument at line {expression.Line},\
                                     column {expression.Column} in file {expression.File}')
                 else:
 
                     success, sf = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_length)
                     if not success:
-                        print(f'PositionX is invalid in {command} at line {expression.Line},\
+                        logger.error(f'PositionX is invalid in {command} at line {expression.Line},\
                                     column {expression.Column} in file {expression.File}')
 
                     else:
                         self.CurrentRoute.Atmosphere.InitialX = sf
             case RouteCommand.PositionY:
                 if len(arguments) < 1:
-                    print(f'{command} is expected to have one argument at line {expression.Line},\
+                    logger.error(f'{command} is expected to have one argument at line {expression.Line},\
                                                 column {expression.Column} in file {expression.File}')
                 else:
 
                     success, cerc = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_length)
                     if not success:
-                        print(f'PositionY is invalid in {command} at line {expression.Line},\
+                        logger.error(f'PositionY is invalid in {command} at line {expression.Line},\
                                                 column {expression.Column} in file {expression.File}')
 
                     else:
                         self.CurrentRoute.Atmosphere.InitialY = cerc
             case RouteCommand.Direction:
                 if len(arguments) < 1:
-                    print(f'{command} is expected to have one argument at line {expression.Line},\
+                    logger.error(f'{command} is expected to have one argument at line {expression.Line},\
                                                             column {expression.Column} in file {expression.File}')
                 else:
 
                     success, cerc = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_length)
                     if not success:
-                        print(f'Direction is invalid in {command} at line {expression.Line},\
+                        logger.error(f'Direction is invalid in {command} at line {expression.Line},\
                                                             column {expression.Column} in file {expression.File}')
 
                     else:

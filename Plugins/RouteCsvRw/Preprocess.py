@@ -3,6 +3,7 @@ import os
 import random
 from typing import List
 
+from loggermodule import logger
 from .Structures.Expression import Expression
 from OpenBveApi.Math.Math import NumberFormats
 from .Structures.PositionedExpression import PositionedExpression
@@ -104,7 +105,7 @@ class Parser1:
                                 # when extra closing brackets are encountere
                                 level -= 1
                             else:
-                                print(
+                                logger.warning(
                                     f"Invalid additional closing parenthesis encountered at line {i} character {j} in file {file_name}")
                         else:
                             level -= 1
@@ -177,20 +178,20 @@ class Parser1:
                                     l -= 1
                                     if l < 0:
                                         continue_with_next_expression = True
-                                        print(f"Invalid parenthesis structure in {t} {epilog}")
+                                        logger.error(f"Invalid parenthesis structure in {t} {epilog}")
 
                             if l <= 0:
                                 break
                         if continue_with_next_expression:
                             break
                         if l != 0:
-                            print(f"Invalid parenthesis structure in {t} {epilog}")
+                            logger.error(f"Invalid parenthesis structure in {t} {epilog}")
                             break
                         s = expressions[i].Text[k + 1:h].strip()
                         match t.lower():
                             case "$if":
                                 if j != 0:
-                                    print(f"The $If directive must not appear within another statement {epilog}")
+                                    logger.error(f"The $If directive must not appear within another statement {epilog}")
                                 else:
                                     try:
                                         num = float(s)  # Try to convert string s to a float
@@ -219,12 +220,12 @@ class Parser1:
                                                     expressions[i].Text = ""
                                                 i += 1
                                             if level != 0:
-                                                print(f"$EndIf missing at the end of the file {epilog}")
+                                                logger.error(f"$EndIf missing at the end of the file {epilog}")
                                         continue_with_next_expression = True
 
 
                                     except ValueError:
-                                        print(f"The $If condition does not evaluate to a number {epilog}")
+                                        logger.error(f"The $If condition does not evaluate to a number {epilog}")
 
                             case "$else":
                                 # * Blank every expression until the matching $EndIf
@@ -240,7 +241,7 @@ class Parser1:
                                         elif expressions[i].Text.lower().startswith("$else"):
                                             expressions[i].Text = ""
                                             if level == 1:
-                                                print(f"Duplicate $Else encountered {epilog}")
+                                                logger.error(f"Duplicate $Else encountered {epilog}")
 
                                         elif expressions[i].Text.lower().startswith("$endif"):
                                             expressions[i].Text = ""
@@ -252,9 +253,9 @@ class Parser1:
                                             expressions[i].Text = ""
                                         i += 1
                                     if level != 0:
-                                        print(f"$EndIf missing at the end of the file {epilog}")
+                                        logger.error(f"$EndIf missing at the end of the file {epilog}")
                                 else:
-                                    print(f"$Else without matching $If encountered {epilog}")
+                                    logger.error(f"$Else without matching $If encountered {epilog}")
                                 continue_with_next_expression = True
 
                             case "$endif":
@@ -262,12 +263,12 @@ class Parser1:
                                 if open_ifs != 0:
                                     open_ifs -= 1
                                 else:
-                                    print(f"$EndIf without matching $If encountered {epilog}")
+                                    logger.error(f"$EndIf without matching $If encountered {epilog}")
                                 continue_with_next_expression = True
 
                             case "$include":
                                 if j != 0:
-                                    print(f"The $Include directive must not appear within another statement {epilog}")
+                                    logger.error(f"The $Include directive must not appear within another statement {epilog}")
                                     continue_with_next_expression = True
 
                                 args = s.split(';')
@@ -289,7 +290,7 @@ class Parser1:
                                             offset = float(value)
                                         except ValueError:
                                             continue_with_next_expression = True  # or any default value you want to assign in case of failure
-                                            print(f"The track position offset {value} is invalid in {t} {epilog}")
+                                            logger.error(f"The track position offset {value} is invalid in {t} {epilog}")
                                             break
                                     else:
                                         file = args[2 * ia]
@@ -299,7 +300,7 @@ class Parser1:
                                         files.append(os.path.join(os.path.dirname(file_name), file))
                                     except Exception as ex:
                                         continue_with_next_expression = True
-                                        print(f"The filename {file} contains invalid characters in {t} {epilog}")
+                                        logger.error(f"The filename {file} contains invalid characters in {t} {epilog}")
                                         expressions.pop(i)
                                         i -= 1
                                         break
@@ -307,7 +308,7 @@ class Parser1:
                                     offsets.append(offset)
                                     if not os.path.exists(files[ia]):
                                         continue_with_next_expression = True
-                                        print(f"The file {file} could not be found in {t} {epilog}")
+                                        logger.error(f"The file {file} could not be found in {t} {epilog}")
                                         expressions.pop(i)
                                         i -= 1
                                         break
@@ -317,11 +318,11 @@ class Parser1:
                                         weights.append(out)
                                         if not success:
                                             continue_with_next_expression = True
-                                            print(f"A weight is invalid in {t} {epilog}")
+                                            logger.error(f"A weight is invalid in {t} {epilog}")
                                             break
                                         if weights[ia] <= 0.0:
                                             continue_with_next_expression = True
-                                            print(f"A weight is not positive in {t} {epilog}")
+                                            logger.error(f"A weight is not positive in {t} {epilog}")
                                             break
                                         weights_total += weights[ia]
                                     else:
@@ -329,7 +330,7 @@ class Parser1:
                                         weights_total += 1.0
                                 if count == 0:
                                     continue_with_next_expression = True
-                                    print(f"No file was specified in {t} {epilog}")
+                                    logger.error(f"No file was specified in {t} {epilog}")
 
                                 if not continue_with_next_expression:
                                     number = random.random() * weights_total
@@ -348,7 +349,7 @@ class Parser1:
                                         # If the encodings do not match, add a warning
                                         # This is not critical, but it's a bad idea to mix and match character
                                         # encodings within a routefile, as the auto-detection may sometimes be wrong
-                                        print(f"The text encoding of the $Include file "
+                                        logger.warning(f"The text encoding of the $Include file "
                                               f"{str(files[chosen_index])} does not match that of the base routefile.")
                                     with open(files[chosen_index], 'r', encoding=include_encoding) as f:
                                         lines = f.readlines()
@@ -420,7 +421,7 @@ class Parser1:
                         else:
                             a = x
                     else:
-                        print(
+                        logger.error(
                             f'Negative track position encountered at line {str(expressions[i].Line)}, column {str(expressions[i].Column)} in file {expressions[i].File}')
                 except ValueError as ex:
                     p.append(PositionedExpression(a, expressions[i]))

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from ..Structures.Expression import Expression
 from ..RouteData import RouteData
 from OpenBveApi.System.Path import Path

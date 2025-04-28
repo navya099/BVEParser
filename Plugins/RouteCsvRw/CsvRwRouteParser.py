@@ -9,11 +9,15 @@ from RouteManager2.CurrentRoute import CurrentRoute
 from RouteManager2.Stations.RouteStation import RouteStation
 from .ApplyRouteData import Parser8
 from .Compatability.RoutefilePatch import Parser3
+from .CompatibilityObjects import Parser11
 from .Namespaces.NonTrack.Options import Parser5
 from .Namespaces.NonTrack.OptionsCommands import OptionsCommand
 from .Namespaces.NonTrack.Route import Parser6
 from .Namespaces.NonTrack.RouteCommands import RouteCommand
+from .Namespaces.NonTrack.Structure import Parser10
+from .Namespaces.NonTrack.StructureCommands import StructureCommand
 from .Namespaces.Track.Track import Parser7
+from Plugins.RouteCsvRw.ObjectDictionary import ObjectDictionary
 
 from .PreprocessOptions import Parser2
 from .Functions import Parser4
@@ -30,7 +34,7 @@ from .Structures.Expression import Expression
 from OpenBveApi.Math.Math import NumberFormats
 
 
-class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Parser8, Parser9):
+class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Parser8, Parser9, Parser10, Parser11):
     EnabledHacks: CompatabilityHacks = None
 
     def __init__(self):
@@ -66,12 +70,59 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
 
         self.Plugin.CurrentOptions.ObjectDisposalMode = ObjectDisposalMode.Legacy
 
+        self.freeObjCount: int = 0
+        self.missingObjectCount: int = 0
+        self.railtypeCount: int = 0
+
         data = RouteData(preview_only)
         if not preview_only:
             data.Blocks[0].Background = 0
             data.Blocks[0].Fog = Fog(self.CurrentRoute.NoFogStart, self.CurrentRoute.NoFogEnd, Color24.Grey, 0)
+            data.Blocks[0].Cycle = [-1]
             data.Blocks[0].Height = 0.3 if self.IsRW else 0
+            data.Blocks[0].GroundFreeObj = []  # Empty list
+            data.Blocks[0].RailFreeObj = {}
+            data.Blocks[0].RailWall = {}  # Empty dictionary
+            data.Blocks[0].RailDike = {}  # Empty dictionary
+            data.Blocks[0].RailPole = []  # Empty list (equivalent to empty array in C#)
+            data.Markers = []  # Empty list
+            data.RequestStops = []  # Empty list
+            #PoleFolder = os.path.join(CompatibilityFolder, "Poles")  # Path.Combine equivalent in Python
+            data.Structure.Poles = {}  # Empty dictionary (PoleDictionary)
 
+            data.Structure.Poles[0] = ObjectDictionary()
+            data.Structure.Poles[1] = ObjectDictionary()
+            data.Structure.Poles[2] = ObjectDictionary()
+            data.Structure.Poles[3] = ObjectDictionary()
+
+            data.Structure.RailObjects = ObjectDictionary()
+            data.Structure.RailObjects = ObjectDictionary()
+            data.Structure.Ground = ObjectDictionary()
+            data.Structure.WallL = ObjectDictionary()
+            data.Structure.WallR = ObjectDictionary()
+            data.Structure.DikeL = ObjectDictionary()
+            data.Structure.DikeR = ObjectDictionary()
+            data.Structure.FormL = ObjectDictionary()
+            data.Structure.FormR = ObjectDictionary()
+            data.Structure.FormCL = ObjectDictionary()
+            data.Structure.FormCR = ObjectDictionary()
+            data.Structure.RoofL = ObjectDictionary()
+            data.Structure.RoofR = ObjectDictionary()
+            data.Structure.RoofCL = ObjectDictionary()
+            data.Structure.RoofCR = ObjectDictionary()
+            data.Structure.CrackL = ObjectDictionary()
+            data.Structure.CrackR = ObjectDictionary()
+            data.Structure.FreeObjects = ObjectDictionary()
+            data.Structure.Beacon = ObjectDictionary()
+            data.Structure.Cycles = ObjectDictionary()
+            data.Structure.RailCycles = [[]]
+            data.Structure.Run = []
+            data.Structure.Flange = []
+            data.Backgrounds = ObjectDictionary()
+            data.TimetableDaytime = 'Texture(None, None, None, None)'
+            data.TimetableNighttime = 'Texture(None, None, None, None)'
+            data.Structure.WeatherObjects = ObjectDictionary()
+            data.Structure.LightDefinitions = {}
         data = self.parse_route_for_data(file_name, encoding, data, preview_only)
 
         if self.Plugin.Cancel:
@@ -103,9 +154,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
 
         return data
 
-    freeObjCount: int = 0
-    missingObjectCount: int = 0
-    railtypeCount: int = 0
+
 
     # parse route for data
     def parse_route_for_data2(self, file_name: str, encoding: str, expressions: List["Expression"],
@@ -253,10 +302,17 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                                         f' in file {expressions[j].File}')
                             case "train":
                                 pass
-                            case "structure":
-                                pass
-                            case "texture":
-                                pass
+                            case 'structure' | "texture":
+                                parsed_structure_command, success = Util.try_parse_enum(StructureCommand, command)
+                                if success:
+                                    data = self.parse_route_command(parsed_route_command, arguments, command_indices[0],
+                                                                    file_name,
+                                                                    unit_of_length, expressions[j], data, preview_only)
+                                else:
+                                    logger.error(
+                                        f'Unrecognised command {command} encountered in the Route namespace at line'
+                                        f'{expressions[j].Line} , column {expressions[j].Column}'
+                                        f' in file {expressions[j].File}')
                             case "":
                                 pass
                             case "cycle":

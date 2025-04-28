@@ -4,6 +4,7 @@ from Plugins.RouteCsvRw.Namespaces.Track.TrackCommands import TrackCommand
 from Plugins.RouteCsvRw.RouteData import RouteData
 from Plugins.RouteCsvRw.Structures.Expression import Expression
 from OpenBveApi.Math.Math import NumberFormats
+from Plugins.RouteCsvRw.Structures.Route.Pole import Pole
 from Plugins.RouteCsvRw.Structures.Route.RailCycle import RailCycle
 from Plugins.RouteCsvRw.Structures.Route.StationStop import Stop
 from Plugins.RouteCsvRw.Structures.Direction import Direction
@@ -368,7 +369,6 @@ class Parser7:
                     self.CurrentRoute.Stations.append(RouteStation())
                 else:
                     self.CurrentRoute.Stations[self.CurrentStation] = RouteStation()
-
 
                 # 인자가 있으면 이름 지정
                 if len(arguments) >= 1 and arguments[0]:
@@ -876,7 +876,7 @@ class Parser7:
                     else:
                         self.CurrentRoute.Stations[self.CurrentStation] = RouteStation()
                         sr = StopRequest(self.CurrentStation, 0, data.TrackPosition)
-                        #self.CurrentRoute.Stations[self.CurrentStation] = StationXMLParser.ReadStationXML(CurrentRoute, fn, PreviewOnly, Data.TimetableDaytime, Data.TimetableNighttime, CurrentStation, ref Data.Blocks[BlockIndex].StationPassAlarm, ref sr);
+                        # self.CurrentRoute.Stations[self.CurrentStation] = StationXMLParser.ReadStationXML(CurrentRoute, fn, PreviewOnly, Data.TimetableDaytime, Data.TimetableNighttime, CurrentStation, ref Data.Blocks[BlockIndex].StationPassAlarm, ref sr);
                         if self.CurrentRoute.Stations[self.CurrentStation].Type == StationType.RequestStop:
                             data.RequestStops.append(sr)
                     data.Blocks[block_index].Station = self.CurrentStation
@@ -888,9 +888,111 @@ class Parser7:
             case TrackCommand.Pole:
                 if not preview_only:
                     idx = 0
-                    
+                    if len(arguments) >= 1 and len(arguments[0] > 0):
+                        success, idx = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(f'RailIndex is invalid in Track.Pole at line '
+                                         f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                            idx = 0
+                        else:
+                            if idx < 0:
+                                logger.error(f'RailIndex is expected to be non-negative in Track.Pole at line '
+                                             f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                            else:
+                                if idx not in data.Blocks[block_index].Rails or not \
+                                        data.Blocks[block_index].Rails[idx].RailStarted:
+                                    logger.warning(f'RailIndex {idx} could be out of range in Track.Pole at line '
+                                                   f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                                # Make sure RailPole is a list of proper RailPole objects
+                                if idx >= len(data.Blocks[block_index].RailPole):
+                                    # Extend with *new* RailPole instances
+                                    missing = idx + 1 - len(data.Blocks[block_index].RailPole)
+                                    data.Blocks[block_index].RailPole.extend(Pole() for _ in range(missing))
+
+                                # Now safe to assign
+                                data.Blocks[block_index].RailPole[idx].Mode = 0
+                                data.Blocks[block_index].RailPole[idx].Location = 0
+                                data.Blocks[block_index].RailPole[idx].Interval = 2.0 * data.BlockInterval
+                                data.Blocks[block_index].RailPole[idx].Type = 0
+
+                            typ = data.Blocks[block_index].RailPole[idx].Mode
+                            sttype = data.Blocks[block_index].RailPole[idx].Type
+                            if len(arguments) >= 2 and len(arguments[1]) > 0:
+                                success, typ = NumberFormats.try_parse_int_vb6(arguments[1])
+                                if not success:
+                                    logger.error(f'AdditionalRailsCovered is invalid in Track.Pole at line '
+                                                 f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                                    typ = 0
+                            if len(arguments) >= 3 and len(arguments[2]) > 0:
+                                success, loc = NumberFormats.try_parse_double_vb6(arguments[2])
+                                if not success:
+                                    logger.error(f'Location is invalid in Track.Pole at line '
+                                                 f"{expression.Line},"
+                                                 f"column {expression.Column} "
+                                                 f"in file {expression.File}")
+                                    loc = 0.0
+                                data.Blocks[block_index].RailPole[idx].Location = loc
+
+                            if len(arguments) >= 4 and len(arguments[3]) > 0:
+                                success, dist = NumberFormats.try_parse_double_vb6(arguments[3], unit_of_lngth)
+                                if not success:
+                                    logger.error(f'Interval is invalid in Track.Pole at line '
+                                                 f"{expression.Line},"
+                                                 f"column {expression.Column} "
+                                                 f"in file {expression.File}")
+                                    dist = data.BlockInterval
+
+                                data.Blocks[block_index].RailPole[idx].Interval = dist
+
+                            if len(arguments) >= 5 and len(arguments[4]) > 0:
+                                success, sttype = NumberFormats.try_parse_int_vb6(arguments[4], unit_of_lngth)
+                                if not success:
+                                    logger.error(f'PoleStructureIndex is invalid in Track.Pole at line '
+                                                 f"{expression.Line},"
+                                                 f"column {expression.Column} "
+                                                 f"in file {expression.File}")
+                                    sttype = 0
+
+                            if typ < 0 or type not in data.Structure.Poles or data.Structure.Poles[typ] is None:
+                                logger.error(f'PoleStructureIndex {typ} references an object '
+                                             f'not loaded in Track.Pole at line '
+                                             f"{expression.Line},"
+                                             f"column {expression.Column} "
+                                             f"in file {expression.File}")
+                            elif sttype < 0 or sttype not in data.Structure.Poles[typ] or \
+                                data.Structure.Poles[typ][sttype] is None:
+                                logger.error(f'PoleStructureIndex {typ} references an object '
+                                             f'not loaded in Track.Pole at line '
+                                             f"{expression.Line},"
+                                             f"column {expression.Column} "
+                                             f"in file {expression.File}")
+                            else:
+                                data.Blocks[block_index].RailPole[idx].Mode = typ
+                                data.Blocks[block_index].RailPole[idx].Type = sttype
+                                data.Blocks[block_index].RailPole[idx].Exists = True
+
             case TrackCommand.PoleEnd:
-                pass
+                if not preview_only:
+                    idx = 0
+                    if len(arguments) >= 1 and len(arguments[0] > 0):
+                        success, idx = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(f'RailIndex is invalid in Track.Pole at line '
+                                         f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                            idx = 0
+
+                    if idx < 0 or idx >= len(data.Blocks[block_index].RailPole):
+                        logger.error(f'RailIndex {idx} does not reference an existing pole in Track.PoleEnd at line '
+                                     f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                    else:
+                        if idx not in data.Blocks[block_index].Rails or \
+                            not data.Blocks[block_index].Rails[idx].RailStarted and \
+                                not data.Blocks[block_index].Rails[idx].RailEnded:
+                            logger.warning(
+                                f'RailIndex {idx} could be out of range in Track.PoleEnd at line '
+                                f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+
+                        data.Blocks[block_index].RailPole[idx].Exists = False
             case TrackCommand.Wall:
                 pass
             case TrackCommand.WallEnd:

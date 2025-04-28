@@ -3,6 +3,8 @@ import time
 from tkinter import filedialog
 import traceback
 from loggermodule import logger
+import os
+import sys
 
 from OpenBveApi.System.BaseOptions import BaseOptions
 from Plugins.RouteCsvRw.Plugin import Plugin
@@ -28,6 +30,8 @@ class Loading:
                 return
 
             path = file.name
+            railway_path = Loading.get_railway_folder(path)
+            object_path = os.path.join(railway_path, 'Object')
 
             # ✅ 프로그레스바 초기화 (즉시 적용)
             self.progress["value"] = 0
@@ -64,7 +68,7 @@ class Loading:
                     threading.Thread(target=update_progress, daemon=True).start()
 
                     # ✅ 루트 로드 (백그라운드에서 실행)
-                    result = plugin.LoadRoute(path, encoding, '', '', '', True, current_route)
+                    result = plugin.LoadRoute(path, encoding, '', object_path, '', False, current_route)
 
                     if result:
 
@@ -83,3 +87,54 @@ class Loading:
             logger.error("오류가 발생했습니다:", ex)
             logger.critical(traceback.print_exc())
             self.status.config(text="오류 발생!")
+
+    @staticmethod
+    def get_railway_folder(route_file: str) -> str:
+        try:
+            folder = os.path.dirname(route_file)
+
+            while True:
+                subfolder = os.path.join(folder, "Railway")
+                if os.path.isdir(subfolder):
+                    # Ignore completely empty directories
+                    if any(os.scandir(subfolder)):
+                        return subfolder
+
+                if not folder:
+                    continue
+                parent = os.path.dirname(folder)
+                if not parent or parent == folder:
+                    break
+                folder = parent
+        except Exception:
+            pass
+
+        # If the Route, Object and Sound folders exist, but are not inside a Railway folder
+        try:
+            folder = os.path.dirname(route_file)
+            if not folder:
+                # Fallback: Return application base path
+                return os.path.dirname(sys.argv[0])
+
+            candidate = None
+            while True:
+                route_folder = os.path.join(folder, "Route")
+                object_folder = os.path.join(folder, "Object")
+                sound_folder = os.path.join(folder, "Sound")
+
+                if os.path.isdir(route_folder) and os.path.isdir(object_folder) and os.path.isdir(sound_folder):
+                    return folder
+
+                if os.path.isdir(route_folder) and os.path.isdir(object_folder):
+                    candidate = folder
+
+                parent = os.path.dirname(folder)
+                if not parent or parent == folder:
+                    if candidate:
+                        return candidate
+                    break
+                folder = parent
+        except Exception:
+            pass
+
+        return os.path.dirname(sys.argv[0])

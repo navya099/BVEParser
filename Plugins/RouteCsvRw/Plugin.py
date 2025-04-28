@@ -104,6 +104,7 @@ class Plugin(RouteInterface):
             self.IsLoading = False
             self.LastException = ex
             logger.critical(ex)
+            logger.critical(traceback.print_exc())
             return False
 
     def Unload(self):

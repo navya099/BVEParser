@@ -1,61 +1,41 @@
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
-# 의존 타입들은 외부에서 정의되어야 합니다
-# 예시:
-# ObjectDictionary = dict[int, str]  # 필요시 실제 타입 정의
-# PoleDictionary = dict[int, str]
-# LightDefinition = ...  # 별도 정의 필요
+# Define ObjectDictionary and PoleDictionary properly first
+# Here as simple dicts for now:
+ObjectDictionary = Dict[int, 'UnifiedObject']
+PoleDictionary = Dict[int, 'UnifiedObject']
+LightDefinition = object  # Placeholder
+
 
 @dataclass
 class StructureData:
     # All currently defined Structure.Rail objects
-    RailObjects: Optional['ObjectDictionary'] = None
+    RailObjects: Optional[ObjectDictionary] = field(default_factory=dict)
     # All currently defined Structure.Pole objects
-    Poles: Optional['PoleDictionary'] = None
+    Poles: Optional[PoleDictionary] = field(default_factory=dict)
     # All currently defined Structure.Ground objects
-    Ground: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.WallL objects
-    WallL: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.WallR objects
-    WallR: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.DikeL objects
-    DikeL: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.DikeR objects
-    DikeR: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.FormL objects
-    FormL: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.FormR objects
-    FormR: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.FormCL objects
-    FormCL: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.FormCR objects
-    FormCR: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.RoofL objects
-    RoofL: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.RoofR objects
-    RoofR: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.RoofCL objects
-    RoofCL: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.RoofCR objects
-    RoofCR: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.CrackL objects
-    CrackL: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.CrackR objects
-    CrackR: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.FreeObj objects
-    FreeObjects: Optional['ObjectDictionary'] = None
-    # All currently defined Structure.Beacon objects
-    Beacon: Optional['ObjectDictionary'] = None
-    # All currenly defined Structure.Weather objects
-    WeatherObjects: Optional['ObjectDictionary'] = None
-    # All currently defined cycles
-    Cycles: Optional[List[List[int]]] = None
-    # All currently defined RailCycles
-    RailCycles: Optional[List[List[int]]] = None
-    # The Run sound index to be played for each railtype idx
-    Run: Optional[List[int]] = None
-    # The flange sound index to be played for each railtype idx
-    Flange: Optional[List[int]] = None
-    # Contains the available dynamic lighting sets
-    LightDefinitions: Optional[Dict[int, List['LightDefinition']]] = None
+    Ground: Optional[ObjectDictionary] = field(default_factory=dict)
+    WallL: Optional[ObjectDictionary] = field(default_factory=dict)
+    WallR: Optional[ObjectDictionary] = field(default_factory=dict)
+    DikeL: Optional[ObjectDictionary] = field(default_factory=dict)
+    DikeR: Optional[ObjectDictionary] = field(default_factory=dict)
+    FormL: Optional[ObjectDictionary] = field(default_factory=dict)
+    FormR: Optional[ObjectDictionary] = field(default_factory=dict)
+    FormCL: Optional[ObjectDictionary] = field(default_factory=dict)
+    FormCR: Optional[ObjectDictionary] = field(default_factory=dict)
+    RoofL: Optional[ObjectDictionary] = field(default_factory=dict)
+    RoofR: Optional[ObjectDictionary] = field(default_factory=dict)
+    RoofCL: Optional[ObjectDictionary] = field(default_factory=dict)
+    RoofCR: Optional[ObjectDictionary] = field(default_factory=dict)
+    CrackL: Optional[ObjectDictionary] = field(default_factory=dict)
+    CrackR: Optional[ObjectDictionary] = field(default_factory=dict)
+    FreeObjects: Optional[ObjectDictionary] = field(default_factory=dict)
+    Beacon: Optional[ObjectDictionary] = field(default_factory=dict)
+    WeatherObjects: Optional[ObjectDictionary] = field(default_factory=dict)
+    # Cycles
+    Cycles: Optional[List[List[int]]] = field(default_factory=list)
+    RailCycles: Optional[List[List[int]]] = field(default_factory=list)
+    Run: Optional[List[int]] = field(default_factory=list)
+    Flange: Optional[List[int]] = field(default_factory=list)
+    LightDefinitions: Optional[Dict[int, List[LightDefinition]]] = field(default_factory=dict)

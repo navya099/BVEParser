@@ -15,7 +15,7 @@ class RouteData:
         self.UnitOfSpeed: float = 0.0
         self.SignedCant: bool = False
         self.FogTransitionMode: bool = False
-        self.Structure: 'StructureData' = StructureData()
+        self.Structure: StructureData = StructureData()
         self.Signals: 'SignalDictionary' = None
         self.CompatibilitySignals: list['CompatibilitySignalObject'] = []
         self.TimetableDaytime: list['Texture'] = []
@@ -46,11 +46,28 @@ class RouteData:
             for i in range(len(self.Blocks), toindex + 1):
                 self.Blocks.append(Block(preview_only))
                 if not preview_only:
-                    pass
+                    self.Blocks[i].Cycle = self.Blocks[i - 1].Cycle
+                    self.Blocks[i].Height = 0.0
                 self.Blocks[i].RailCycles = self.Blocks[i - 1].RailCycles
                 self.Blocks[i].RailType = [0] * len(self.Blocks[i - 1].RailType)
                 if not preview_only:
-                    pass
+                    for j in range(len(self.Blocks[i].RailType)):
+                        rc = -1
+                        if len(self.Blocks[i].RailCycles) > j:
+                            rc = self.Blocks[i].RailCycles[j].RailCycleIndex
+                        if rc != -1 and len(self.Structure.RailCycles) > rc and \
+                            len(self.Structure.RailCycles[rc]) > 1:
+                            cc = self.Blocks[i].RailCycles[j].CurrentCycle
+                            if cc == len(self.Structure.RailCycles[rc]) - 1:
+                                self.Blocks[i].RailType[j] = self.Structure.RailCycles[rc][0]
+                                self.Blocks[i].RailCycles[j].CurrentCycle = 0
+                            else:
+                                cc += 1
+                                self.Blocks[i].RailType[j] = self.Structure.RailCycles[rc][cc]
+                                self.Blocks[i].RailCycles[j].CurrentCycle += 1
+                        else:
+                            self.Blocks[i].RailType[j] = self.Blocks[i - 1].RailType[j]
+
                 for j in range(len(self.Blocks[i - 1].Rails)):
                     key = list(self.Blocks[i - 1].Rails.keys())[j]
 
@@ -65,7 +82,9 @@ class RouteData:
                                 )
                     self.Blocks[i].Rails[key] = rail
                 if not preview_only:
-                    pass
+                    self.Blocks[i].RailPole = len(self.Blocks[i - 1].RailPole) * []
+                    for j in range(len(self.Blocks[i].RailPole)):
+                        self.Blocks[i].RailPole[j] = self.Blocks[i - 1].RailPole[j]
                 self.Blocks[i].Pitch = self.Blocks[i - 1].Pitch
 
                 self.Blocks[i].CurrentTrackState = copy.deepcopy(self.Blocks[i - 1].CurrentTrackState)

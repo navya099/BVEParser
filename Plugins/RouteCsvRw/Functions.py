@@ -62,3 +62,41 @@ class Parser4:
                     break
 
         return command_indices
+
+    @staticmethod
+    def try_parse_time(expression: str):
+        expression = expression.strip()
+        if not expression:
+            return False, 0.0
+
+        if '.' in expression:
+            parts = expression.split('.')
+        elif ':' in expression:
+            parts = expression.split(':')
+        else:
+            parts = [expression]
+
+        try:
+            if len(parts) == 1:
+                h = int(parts[0])
+                return True, h * 3600.0
+
+            elif len(parts) == 2:
+                h = int(parts[0])
+                m = int(parts[1])
+                return True, h * 3600.0 + m * 60.0
+
+            elif len(parts) >= 3:
+                h = int(parts[0])
+                m = int(parts[1])
+                # 세 번째는 초(second)로 해석
+                s_str = ''.join(parts[2:])  # 소수점 안쪽 이어붙이기
+                if s_str.startswith('.'):
+                    s_str = s_str[1:]
+                s = int(s_str)
+                return True, h * 3600.0 + m * 60.0 + s
+
+        except ValueError:
+            pass
+
+        return False, 0.0

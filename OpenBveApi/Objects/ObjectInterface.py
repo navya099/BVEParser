@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+from OpenBveApi.Objects.ObjectTypes.UnifiedObject import UnifiedObject
+
 
 class CompatabilityHacks:
     """Controls various hacks used with older content."""
@@ -16,14 +18,16 @@ class ObjectInterface(ABC):
     """Represents the interface for loading objects. Plugins must implement this interface if they wish to expose objects."""
 
     @property
+    @abstractmethod
     def SupportedAnimatedObjectExtensions(self) -> List[str]:
         """Array of supported animated object extensions."""
-        return []
+        pass
 
     @property
+    @abstractmethod
     def SupportedStaticObjectExtensions(self) -> List[str]:
         """Array of supported static object extensions."""
-        return []
+        pass
 
     @abstractmethod
     def CanLoadObject(self, path: str) -> bool:
@@ -31,7 +35,7 @@ class ObjectInterface(ABC):
         pass
 
     @abstractmethod
-    def LoadObject(self, path: str, encoding: str) -> bool:
+    def LoadObject(self, path: str, encoding: str) -> tuple[bool, UnifiedObject]:
         """Loads the specified object."""
         pass
 

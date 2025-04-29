@@ -129,7 +129,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
             self.Plugin.IsLoading = False
             return
         data = self.apply_route_data(file_name, data, preview_only)
-
+        logger.debug('루트적용완료')
         # json dump후 확인
         RecursiveEncoder.save(r'c:\temp\route_data.json', data, False)
 
@@ -146,7 +146,9 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         data.UnitOfSpeed = 0.277777777777778
         data = self.pre_process_options(expressions, data, unit_of_length, preview_only)
         expressions = self.preprocess_sort_by_track_position(unit_of_length, expressions)
+        logger.debug('expressions 추출완료')
         data = self.parse_route_for_data2(file_name, encoding, expressions, unit_of_length, data, preview_only)
+        logger.debug('루트파싱완료')
         self.CurrentRoute.UnitOfLength = unit_of_length
 
         # 익스프레션추출 테스트

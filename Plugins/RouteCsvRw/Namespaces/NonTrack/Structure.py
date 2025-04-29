@@ -36,7 +36,7 @@ class Parser10:
                             self.missingObjectCount += 1
                         else:
                             if not preview_only:
-                                obj = self.Plugin.CurrentHost.LoadObject(f, encoding)
+                                result, obj = self.Plugin.CurrentHost.LoadObject(f, encoding)
                                 if obj is not None:
                                     data.Structure.RailObjects.Add(command_indices[0], obj, 'RailStructure')
                             else:

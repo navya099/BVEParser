@@ -219,8 +219,7 @@ class Parser7:
                                 # 새로 추가된 RailCycles의 RailCycleIndex 초기화
                                 for rc in range(old_len, len(data.Blocks[block_index].RailCycles)):
                                     data.Blocks[block_index].RailCycles[rc].RailCycleIndex = -1
-                            if sttype < len(data.Structure.RailCycles) and data.Structure.RailCycles[sttype] \
-                                    is not None:
+                            if sttype < len(data.Structure.RailCycles) and data.Structure.RailCycles[sttype]:
                                 data.Blocks[block_index].RailType[idx] = data.Structure.RailCycles[sttype][0]
                                 data.Blocks[block_index].RailCycles[idx].RailCycleIndex = sttype
                                 data.Blocks[block_index].RailCycles[idx].CurrentCycle = 0
@@ -945,7 +944,7 @@ class Parser7:
                                 data.Blocks[block_index].RailPole[idx].Interval = dist
 
                             if len(arguments) >= 5 and len(arguments[4]) > 0:
-                                success, sttype = NumberFormats.try_parse_int_vb6(arguments[4], unit_of_lngth)
+                                success, sttype = NumberFormats.try_parse_int_vb6(arguments[4])
                                 if not success:
                                     logger.error(f'PoleStructureIndex is invalid in Track.Pole at line '
                                                  f"{expression.Line},"

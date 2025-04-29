@@ -2,6 +2,8 @@ import threading
 import time
 from tkinter import filedialog
 import traceback
+
+from RouteViewer.System.Host import Host
 from loggermodule import logger
 import os
 import sys
@@ -42,8 +44,9 @@ class Loading:
                     plugin = Plugin()
                     plugin.CurrentProgress = 0.0
                     current_route = CurrentRoute()
+                    host = Host()
                     options = BaseOptions()
-                    plugin.load(None, None, options, None)
+                    plugin.load(host, None, options, None)
 
                     if not plugin.CanLoadRoute(path):
                         logger.warning('유효한 루트 파일이 아닙니다.')

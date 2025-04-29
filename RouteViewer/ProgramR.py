@@ -2,4 +2,4 @@ from RouteViewer.System.Host import Host
 
 
 class Program:
-    CurrentHost: Host = None
+    CurrentHost: Host = Host()

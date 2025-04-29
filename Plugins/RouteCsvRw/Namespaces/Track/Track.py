@@ -41,12 +41,12 @@ class Parser7:
                         logger.error(f'RailIndex is invalid in {command} at line '
                                      f'{expression.Line} , column {expression.Column}'
                                      f' in file {expression.File}')
-                        return
+                        return data
                 if idx < 1:
                     logger.error(f'RailIndex is expected to be positive in {command} at line '
                                  f'{expression.Line} , column {expression.Column}'
                                  f' in file {expression.File}')
-                    return
+                    return data
                 if command == TrackCommand.RailStart:
                     if idx in data.Blocks[block_index].Rails and data.Blocks[block_index].Rails[idx].RailStarted:
                         logger.error(
@@ -141,17 +141,17 @@ class Parser7:
                         logger.error(f'RailIndex {idx} is invalid in {command} at line '
                                      f'{expression.Line} , column {expression.Column}'
                                      f' in file {expression.File}')
-                        return
+                        return data
                 if idx == 0:
                     logger.error(f'The command {command} is invalid for Rail 0 at line '
                                  f'{expression.Line} , column {expression.Column}'
                                  f' in file {expression.File}')
-                    return
+                    return data
                 if idx < 0 or idx not in data.Blocks[block_index].Rails \
                         or not data.Blocks[block_index].Rails[idx].RailStarted:
                     logger.error(f'RailIndex {idx} references a non-existing rail in {command} at line '
                                  f'{expression.Line} , column {expression.Column} in file {expression.File}')
-                    return
+                    return data
                 if idx not in data.Blocks[block_index].Rails:
                     data.Blocks[block_index].Rails[idx] = Rail(2.0, 1.0)
 

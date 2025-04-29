@@ -35,7 +35,7 @@ class RouteData:
         self.RailKeys: dict[str, int] = {}
         # Blocks[0]을 추가하고 설정하는 코드
         self.Blocks.append(Block(preview_only))
-        self.Blocks[0].Rails[0] = Rail(2.0, 1.0)
+        self.Blocks[0].Rails[0] = Rail(2.0, 1.0, RailStarted=True)
         self.Blocks[0].RailType = []
         self.Blocks[0].CurrentTrackState = TrackElement(StartingTrackPosition=0.0)
         self.Blocks[0].RailCycles = [RailCycle()]
@@ -82,9 +82,8 @@ class RouteData:
                                 )
                     self.Blocks[i].Rails[key] = rail
                 if not preview_only:
-                    self.Blocks[i].RailPole = len(self.Blocks[i - 1].RailPole) * []
-                    for j in range(len(self.Blocks[i].RailPole)):
-                        self.Blocks[i].RailPole[j] = self.Blocks[i - 1].RailPole[j]
+                    self.Blocks[i].RailPole = self.Blocks[i - 1].RailPole.copy()
+
                 self.Blocks[i].Pitch = self.Blocks[i - 1].Pitch
 
                 self.Blocks[i].CurrentTrackState = copy.deepcopy(self.Blocks[i - 1].CurrentTrackState)

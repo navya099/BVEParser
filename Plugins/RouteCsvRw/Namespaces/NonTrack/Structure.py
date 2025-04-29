@@ -67,7 +67,7 @@ class Parser10:
                                          f'{expression.Line}, column {expression.Column} in file {expression.File}')
                             self.missingObjectCount += 1
                         else:
-                            obj = self.Plugin.CurrentHost.LoadObject(f, encoding)
+                            success, obj = self.Plugin.CurrentHost.LoadObject(f, encoding)
                             overwrite_default = True if command_indices[1] >= 0 and command_indices[1] >= 3 else False
                             data.Structure.Poles[command_indices[0]].Add(command_indices[1], obj, overwrite_default)
 

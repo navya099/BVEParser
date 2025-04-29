@@ -17,7 +17,7 @@ from .Namespaces.NonTrack.RouteCommands import RouteCommand
 from .Namespaces.NonTrack.Structure import Parser10
 from .Namespaces.NonTrack.StructureCommands import StructureCommand
 from .Namespaces.Track.Track import Parser7
-from Plugins.RouteCsvRw.ObjectDictionary import ObjectDictionary
+from Plugins.RouteCsvRw.ObjectDictionary import ObjectDictionary, PoleDictionary
 
 from .PreprocessOptions import Parser2
 from .Functions import Parser4
@@ -88,14 +88,11 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
             data.Markers = []  # Empty list
             data.RequestStops = []  # Empty list
             #PoleFolder = os.path.join(CompatibilityFolder, "Poles")  # Path.Combine equivalent in Python
-            data.Structure.Poles = {}  # Empty dictionary (PoleDictionary)
-
+            data.Structure.Poles = PoleDictionary()
             data.Structure.Poles[0] = ObjectDictionary()
             data.Structure.Poles[1] = ObjectDictionary()
             data.Structure.Poles[2] = ObjectDictionary()
             data.Structure.Poles[3] = ObjectDictionary()
-
-            data.Structure.RailObjects = ObjectDictionary()
             data.Structure.RailObjects = ObjectDictionary()
             data.Structure.Ground = ObjectDictionary()
             data.Structure.WallL = ObjectDictionary()

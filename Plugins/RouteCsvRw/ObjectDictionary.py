@@ -1,4 +1,6 @@
-from typing import Dict
+from typing import Dict, Union
+
+from OpenBveApi.Objects.ObjectTypes.StaticObject import StaticObject
 from loggermodule import logger
 
 from OpenBveApi.Objects.ObjectTypes.UnifiedObject import UnifiedObject
@@ -10,18 +12,27 @@ class ObjectDictionary(Dict[int, UnifiedObject]):
     def __init__(self):
         super().__init__()
 
-    def Add(self, key: int, unified_object: UnifiedObject, Type: str, overwriteWarning: bool = False):
+    def Add(self, key: int, obj: Union[UnifiedObject, StaticObject], *args):
+        Type = "object"
+        overwriteWarning = True
+
+        # 추가 인자 처리
+        if len(args) == 1:
+            if isinstance(args[0], str):
+                Type = args[0]
+            elif isinstance(args[0], bool):
+                overwriteWarning = args[0]
+        elif len(args) == 2:
+            Type = args[0]
+            overwriteWarning = args[1]
+
         if key in self:
-            self[key] = unified_object
-            logger.error(f"The {Type} with an index of {key} has been declared twice: "
-                         f"The most recent declaration will be used.")
+            self[key] = obj
             if overwriteWarning:
-                # Poles contain 4 default objects
-                # Don't complain about overwriting these
-                logger.error(f"The object with an index of {key} has been declared twice: "
+                logger.error(f'The {Type} with an index of {key} has been declared twice: '
                              f"The most recent declaration will be used.")
         else:
-            self[key] = unified_object
+            self[key] = obj
 
 class SignalDictionary(Dict[int, SignalObject]):
     pass
@@ -30,10 +41,10 @@ class BackgroundDictionary(Dict[int, BackgroundHandle]):
     pass
 
 class PoleDictionary(Dict[int, ObjectDictionary]):
-    def Add(self, key: int, _dict: ObjectDictionary):
+    def Add(self, key: int, obj_dict: ObjectDictionary):
         if key in self:
-            self[key] = _dict
+            self[key] = obj_dict
             logger.error(f"The Pole with an index of {key} has been declared twice: "
-                         f"The most recent declaration will be used.")
+                  f"The most recent declaration will be used.")
         else:
-            self[key] = _dict
+            self[key] = obj_dict

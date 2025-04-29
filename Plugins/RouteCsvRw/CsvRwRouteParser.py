@@ -304,6 +304,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                             case 'structure' | "texture":
                                 parsed_structure_command, success = Util.try_parse_enum(StructureCommand, command)
                                 if success:
+
                                     data = self.parse_structure_command(parsed_structure_command, arguments,
                                                                         command_indices, file_name, encoding,
                                                                         expressions[j], data, preview_only)

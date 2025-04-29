@@ -12,6 +12,7 @@ class Host(HostInterface):
 
     def LoadObject(self, path: str, encoding: str) -> tuple[bool, UnifiedObject]:
         # Object 초기화하지 말고
+        '''
         result, Object = super().LoadObject(path, encoding)
 
         if result:
@@ -31,7 +32,8 @@ class Host(HostInterface):
                 key = path
                 self.AnimatedObjectCollectionCache[key] = aoc
                 return True, StaticObject(None) # 미구현
-            return True, StaticObject(None)  # 미구현
+            '''
+        return True, None  # 미구현
     def register_sound(self, path: str, handle: 'SoundHandle') -> bool:
         """Register a sound to the host platform."""
         handle = None  # handle is initialized to None

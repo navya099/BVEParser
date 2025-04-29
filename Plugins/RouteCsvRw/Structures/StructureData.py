@@ -12,7 +12,7 @@ class StructureData:
     # All currently defined Structure.Rail objects
     RailObjects: Optional[ObjectDictionary] = field(default_factory=ObjectDictionary)
     # All currently defined Structure.Pole objects
-    Poles: Optional[PoleDictionary] = field(default_factory=ObjectDictionary)
+    Poles: Optional[PoleDictionary] = field(default_factory=PoleDictionary)
     # All currently defined Structure.Ground objects
     Ground: Optional[ObjectDictionary] = field(default_factory=ObjectDictionary)
     WallL: Optional[ObjectDictionary] = field(default_factory=ObjectDictionary)

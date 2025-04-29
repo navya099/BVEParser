@@ -36,7 +36,8 @@ class Parser10:
                             self.missingObjectCount += 1
                         else:
                             if not preview_only:
-                                result, obj = self.Plugin.CurrentHost.LoadObject(f, encoding)
+                                # result, obj = self.Plugin.CurrentHost.LoadObject(f, encoding)
+                                obj = [f]
                                 if obj is not None:
                                     data.Structure.RailObjects.Add(command_indices[0], obj, 'RailStructure')
                             else:
@@ -59,7 +60,7 @@ class Parser10:
                                      f'{expression.Line}, column {expression.Column} in file {expression.File}')
                     else:
                         if command_indices[0] not in data.Structure.Poles:
-                            data.Structure.Poles[command_indices[0]] = ObjectDictionary()
+                            data.Structure.Poles.Add(command_indices[0], ObjectDictionary())
                         f = arguments[0]
                         success, f = self.locate_object(f, self.ObjectPath)
                         if not success:
@@ -67,7 +68,8 @@ class Parser10:
                                          f'{expression.Line}, column {expression.Column} in file {expression.File}')
                             self.missingObjectCount += 1
                         else:
-                            success, obj = self.Plugin.CurrentHost.LoadObject(f, encoding)
+                            #success, obj = self.Plugin.CurrentHost.LoadObject(f, encoding)
+                            obj = [f]
                             overwrite_default = True if command_indices[1] >= 0 and command_indices[1] >= 3 else False
                             data.Structure.Poles[command_indices[0]].Add(command_indices[1], obj, overwrite_default)
 
@@ -95,7 +97,8 @@ class Parser10:
                                          f'{expression.Line}, column {expression.Column} in file {expression.File}')
                             self.missingObjectCount += 1
                         else:
-                            obj = self.Plugin.CurrentHost.LoadObject(f, encoding)
+                            # obj = self.Plugin.CurrentHost.LoadObject(f, encoding)
+                            obj = f
                             if obj is not None:
                                 data.Structure.FreeObjects.Add(command_indices[0], obj, 'FreeObject')
                             else:

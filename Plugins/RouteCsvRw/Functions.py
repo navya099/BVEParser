@@ -20,7 +20,7 @@ class Parser4:
         return arguments
 
     @staticmethod
-    def find_indices(command: str, expression):
+    def find_indices(command: str, expression: Expression) -> tuple[list[int], str]:
         command_indices = [0, 0]
 
         if command and command.endswith(")"):
@@ -61,7 +61,7 @@ class Parser4:
                             command_indices[0] = val
                     break
 
-        return command_indices
+        return command_indices, command
 
     @staticmethod
     def try_parse_time(expression: str):

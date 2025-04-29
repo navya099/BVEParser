@@ -111,7 +111,7 @@ class Parser7:
                             f'RailStructureIndex {sttype} references an object not loaded in {command} at line '
                             f'{expression.Line} ,column {expression.Column} in file {expression.File}')
                     else:
-                        if sttype < len(data.Structure.RailCycles) and data.Structure.RailCycles[sttype] is not None:
+                        if sttype < len(data.Structure.RailCycles) and data.Structure.RailCycles[sttype]:
                             data.Blocks[block_index].RailType[idx] = data.Structure.RailCycles[sttype][0]
                             data.Blocks[block_index].RailCycles[idx].RailCycleIndex = sttype
                             data.Blocks[block_index].RailCycles[idx].CurrentCycle = 0
@@ -888,7 +888,7 @@ class Parser7:
             case TrackCommand.Pole:
                 if not preview_only:
                     idx = 0
-                    if len(arguments) >= 1 and len(arguments[0] > 0):
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
                         success, idx = NumberFormats.try_parse_int_vb6(arguments[0])
                         if not success:
                             logger.error(f'RailIndex is invalid in Track.Pole at line '
@@ -974,7 +974,7 @@ class Parser7:
             case TrackCommand.PoleEnd:
                 if not preview_only:
                     idx = 0
-                    if len(arguments) >= 1 and len(arguments[0] > 0):
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
                         success, idx = NumberFormats.try_parse_int_vb6(arguments[0])
                         if not success:
                             logger.error(f'RailIndex is invalid in Track.Pole at line '

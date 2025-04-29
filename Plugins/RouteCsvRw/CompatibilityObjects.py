@@ -1,4 +1,5 @@
 import os
+from loggermodule import logger
 
 
 class Parser11:
@@ -11,11 +12,11 @@ class Parser11:
             # Catch completely malformed path references
             n = os.path.join(object_path, filename)
         except FileNotFoundError:
-            return False
+            return False, filename
         if os.path.exists(n):
             filename = n
             # The object exists, and does not require a compatibility object
-            return True
+            return True, filename
 
         if self.Plugin.CurrentOptions.EnableBveTsHacks:
             fn = ''
@@ -26,10 +27,10 @@ class Parser11:
                     # Catch completely malformed path references
                     n = os.path.join(object_path, fn)
                 except FileNotFoundError:
-                    return False
+                    return False, filename
                 if os.path.exists(n):
                     filename = n
-                    return True
+                    return True, filename
             # The Midland Suburban Line expects BRSema4Sigs to be placed in it's object folder,
             # but we've probably got them elsewhere
             if filename.lower().startswith("Midland Suburban Line\\BrSema4Sigs".lower()):
@@ -38,11 +39,11 @@ class Parser11:
                     # Catch completely malformed path references
                     n = os.path.join(object_path, fn)
                 except FileNotFoundError:
-                    return False
+                    return False, filename
                 if os.path.exists(n):
                     filename = n
                     # The object exists, and does not require a compatibility object
-                    return True
+                    return True, filename
             # Malformed First Brno Track: Origins downloads-
             # https://bveworldwide.forumotion.com/t2317-fbt-cannot-start-routes-missing-objects#21405
             if filename.lower().startswith("FirstBrnoTrack-Origins".lower()):
@@ -51,11 +52,11 @@ class Parser11:
                     # Catch completely malformed path references
                     n = os.path.join(object_path, fn)
                 except FileNotFoundError:
-                    return False
+                    return False, filename
                 if os.path.exists(n):
                     filename = n
                     # The object exists, and does not require a compatibility object
-                    return True
+                    return True, filename
             # Wood Lane (2010) looks for BRSigs inside the NWM folder
             # Later versions don't have these here, so let's try for the 'standard' copy.....
             if filename.lower().startswith("NWM\brsigs".lower()):
@@ -64,18 +65,28 @@ class Parser11:
                     # Catch completely malformed path references
                     n = os.path.join(object_path, fn)
                 except FileNotFoundError:
-                    return False
+                    return False, filename
                 if os.path.exists(n):
                     filename = n
                     # The object exists, and does not require a compatibility object
-                    return True
+                    return True, filename
         # We haven't found the object on-disk, so check the compatibility objects to see if a replacement is available
         for i in range(len(CompatibilityObjects.AvailableReplacements)):
             if len(CompatibilityObjects.AvailableReplacements[i].ObjectNames) == 0:
                 continue
             for j in range(len(CompatibilityObjects.AvailableReplacements[i].ObjectNames)):
                 if CompatibilityObjects.AvailableReplacements[i].ObjectNames[j].lower() == filename.lower():
-                    pass
+                    # Available replacement found
+                    filename = CompatibilityObjects.AvailableReplacements[i].ReplacementPath
+                    if CompatibilityObjects.AvailableReplacements[i].Message:
+                        logger.warning(f'{CompatibilityObjects.AvailableReplacements[i].Message}')
+                    Parser.CompatibilityObjectsUsed += 1
+                    return True, filename
+            return False, filename
+        return False, filename
+
+    # The total number of compatability objects used by the current route
+    CompatibilityObjectsUsed: int = 0
 
 
 class CompatibilityObjects:
@@ -104,5 +115,5 @@ class CompatibilityObjects:
 
     CompatabilityObjectsLoaded = False
 
-    AvailableReplacements: list[ReplacementObject]= []
+    AvailableReplacements: list[ReplacementObject] = []
     AvailableSounds: list[ReplacementObject] = []

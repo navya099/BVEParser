@@ -267,7 +267,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                         command = command.replace("timetable.day", "timetableday")
                         command = command.replace("timetable.night", "timetablenight")
 
-                    command_indices = self.find_indices(command, expressions[j])
+                    command_indices, command = self.find_indices(command, expressions[j])
 
                     # process command
                     if not command.isspace():
@@ -305,12 +305,12 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                             case 'structure' | "texture":
                                 parsed_structure_command, success = Util.try_parse_enum(StructureCommand, command)
                                 if success:
-                                    data = self.parse_route_command(parsed_route_command, arguments, command_indices[0],
-                                                                    file_name,
-                                                                    unit_of_length, expressions[j], data, preview_only)
+                                    data = self.parse_structure_command(parsed_structure_command, arguments,
+                                                                        command_indices, file_name, encoding,
+                                                                        expressions[j], data, preview_only)
                                 else:
                                     logger.error(
-                                        f'Unrecognised command {command} encountered in the Route namespace at line'
+                                        f'Unrecognised command {command} encountered in the Structure namespace at line'
                                         f'{expressions[j].Line} , column {expressions[j].Column}'
                                         f' in file {expressions[j].File}')
                             case "":

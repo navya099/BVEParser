@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
+from loggermodule import logger
 
 # 필요한 타입들은 외부에 정의되어야 합니다
 # 예시로 Vector3, Transformation은 별도로 만들어야 합니다
@@ -10,7 +11,6 @@ class UnifiedObject(ABC):
     """
     A unified object is the abstract class encompassing all object types within the sim.
     """
-
     def CreateObject1(self, Position: 'Vector3', StartingDistance: float, EndingDistance: float, TrackPosition: float):
         self.CreateObject(Position, 'Transformation.NullTransformation', 'Transformation.NullTransformation', -1, StartingDistance, EndingDistance, TrackPosition, 1.0)
 

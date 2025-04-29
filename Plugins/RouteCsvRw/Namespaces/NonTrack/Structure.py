@@ -101,5 +101,4 @@ class Parser10:
                             else:
                                 self.freeObjCount += 1
 
-
         return data

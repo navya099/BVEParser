@@ -3,6 +3,7 @@ import math
 from typing import List, Tuple
 
 
+
 @dataclass
 class Vector3:
     x: float = 0.0
@@ -158,11 +159,87 @@ class Vector3:
         self.y *= factor.y
         self.z *= factor.z
 
-    def rotate(self, direction, angle):
-        cos_a = math.cos(angle)
+    def rotate(self, *args):
+        """
+        Rotates the vector according to the given arguments.
 
-        sin_a = math.sin(angle)
-        self.rotate_with_cos_sin(direction, cos_a, sin_a)
+        Supported forms:
+        - rotate(direction: Vector3, angle: float)
+        - rotate(direction: Vector3, cosine: float, sine: float)
+        - rotate(direction: Vector3, up: Vector3, side: Vector3)
+        - rotate(orientation: Orientation3)
+        - rotate(transformation: Transformation)
+        """
+        from OpenBveApi.World.Transformations import Transformation
+        from OpenBveApi.World.Orientation3 import Orientation3
+        if len(args) == 2 and isinstance(args[0], Vector3) and isinstance(args[1], (int, float)):
+            # direction, angle
+            direction, angle = args
+            cosine = math.cos(angle)
+            sine = math.sin(angle)
+            self.rotate(direction, cosine, sine)
+
+        elif len(args) == 3 and all(isinstance(arg, Vector3) for arg in args):
+            # direction, up, side
+            direction, up, side = args
+            x = side.x * self.x + up.x * self.y + direction.x * self.z
+            y = side.y * self.x + up.y * self.y + direction.y * self.z
+            z = side.z * self.x + up.z * self.y + direction.z * self.z
+            self.x, self.y, self.z = x, y, z
+
+
+        elif len(args) == 3 and isinstance(args[0], Vector3):
+
+            direction = args[0]
+
+            cosineOfAngle = args[1]
+
+            sineOfAngle = args[2]
+
+            cosineComplement = 1.0 - cosineOfAngle
+
+            x = (cosineOfAngle + cosineComplement * direction.x * direction.x) * self.x + (
+
+                    cosineComplement * direction.x * direction.y - sineOfAngle * direction.z) * self.y + (
+
+                        cosineComplement * direction.x * direction.z + sineOfAngle * direction.y) * self.z
+
+            y = (cosineOfAngle + cosineComplement * direction.y * direction.y) * self.y + (
+
+                    cosineComplement * direction.x * direction.y + sineOfAngle * direction.z) * self.x + (
+
+                        cosineComplement * direction.y * direction.z - sineOfAngle * direction.x) * self.z
+
+            z = (cosineOfAngle + cosineComplement * direction.z * direction.z) * self.z + (
+
+                    cosineComplement * direction.x * direction.z - sineOfAngle * direction.y) * self.x + (
+
+                        cosineComplement * direction.y * direction.z + sineOfAngle * direction.x) * self.y
+
+            self.x = x
+
+            self.y = y
+
+            self.z = z
+
+        elif len(args) == 1 and isinstance(args[0], Orientation3):
+            # Rotate by orientation
+            o = args[0]
+            x = o.x.x * self.x + o.y.x * self.y + o.z.x * self.z
+            y = o.x.y * self.x + o.y.y * self.y + o.z.y * self.z
+            z = o.x.z * self.x + o.y.z * self.y + o.z.z * self.z
+            self.x, self.y, self.z = x, y, z
+
+        elif len(args) == 1 and isinstance(args[0], Transformation):
+            # Rotate by transformation
+            t = args[0]
+            x = t.x.x * self.x + t.y.x * self.y + t.z.x * self.z
+            y = t.x.y * self.x + t.y.y * self.y + t.z.y * self.z
+            z = t.x.z * self.x + t.y.z * self.y + t.z.z * self.z
+            self.x, self.y, self.z = x, y, z
+
+        else:
+            raise TypeError("Invalid arguments for rotate()")
 
     def rotate_with_cos_sin(self, direction, cos_a, sin_a):
         c = 1.0 - cos_a

@@ -1,6 +1,7 @@
 from OpenBveApi.Math.Math import NumberFormats
 from Plugins.RouteCsvRw.Structures.Expression import Expression
 from loggermodule import logger
+import math
 
 
 class Parser4:
@@ -100,3 +101,12 @@ class Parser4:
             pass
 
         return False, 0.0
+
+    @staticmethod
+    def normalize(x: float, y: float):
+        t = x * x + y * y
+        if t != 0.0:
+            t = 1.0 / math.sqrt(t)
+            x *= t
+            y *= t
+        return x, y

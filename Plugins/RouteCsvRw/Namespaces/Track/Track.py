@@ -1047,7 +1047,7 @@ class Parser7:
                                          f"{expression.Line} ,column {expression.Column} in file {expression.File}")
                             idx = 0
                     if len(arguments) >= 2 and len(arguments[1]) > 0:
-                        success, sttype = NumberFormats.try_parse_int_vb6(arguments[0])
+                        success, sttype = NumberFormats.try_parse_int_vb6(arguments[1])
                         if not success:
                             logger.error(f'FreeObjStructureIndex is invalid in Track.FreeObj at line '
                                          f"{expression.Line} ,column {expression.Column} in file {expression.File}")
@@ -1055,7 +1055,7 @@ class Parser7:
                     if idx < -1:
                         logger.error(f'RailIndex is expected to be non-negative or -1 in Track.FreeObj at line '
                                      f"{expression.Line} ,column {expression.Column} in file {expression.File}")
-                    elif sttype < -1:
+                    elif sttype < 0:
                         logger.error(f'FreeObjStructureIndex is expected to be non-negative in Track.FreeObj at line '
                                      f"{expression.Line} ,column {expression.Column} in file {expression.File}")
                     else:
@@ -1072,77 +1072,77 @@ class Parser7:
                             from OpenBveApi.Math.Vectors.Vector2 import Vector2
                             objectPosition = Vector2()
                             yaw, pitch, roll = 0.0, 0.0, 0.0
-                        if len(arguments) >= 3 and len(arguments[2]) > 0:
-                            success, objectPosition.x = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
-                            if not success:
-                                logger.error(f'X is invalid in Track.FreeObj at line '
-                                             f"{expression.Line} ,column {expression.Column} in file {expression.File}")
-                        if len(arguments) >= 4 and len(arguments[3]) > 0:
-                            success, objectPosition.y = NumberFormats.try_parse_double_vb6(arguments[3], unit_of_lngth)
-                            if not success:
-                                logger.error(f'Y is invalid in Track.FreeObj at line '
-                                             f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                            if len(arguments) >= 3 and len(arguments[2]) > 0:
+                                success, objectPosition.x = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
+                                if not success:
+                                    logger.error(f'X is invalid in Track.FreeObj at line '
+                                                 f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                            if len(arguments) >= 4 and len(arguments[3]) > 0:
+                                success, objectPosition.y = NumberFormats.try_parse_double_vb6(arguments[3], unit_of_lngth)
+                                if not success:
+                                    logger.error(f'Y is invalid in Track.FreeObj at line '
+                                                 f"{expression.Line} ,column {expression.Column} in file {expression.File}")
 
-                        if len(arguments) >= 5 and len(arguments[4]) > 0:
-                            success, yaw = NumberFormats.try_parse_double_vb6(arguments[4])
-                            if not success:
-                                logger.error(f'Yaw is invalid in Track.FreeObj at line '
-                                             f"{expression.Line} ,column {expression.Column} in file {expression.File}")
-                        if len(arguments) >= 6 and len(arguments[5]) > 0:
-                            success, pitch = NumberFormats.try_parse_double_vb6(arguments[5])
-                            if not success:
-                                logger.error(f'Pitch is invalid in Track.FreeObj at line '
-                                             f"{expression.Line} ,column {expression.Column} in file {expression.File}")
-                        if len(arguments) >= 7 and len(arguments[6]) > 0:
-                            success, roll = NumberFormats.try_parse_double_vb6(arguments[6])
-                            if not success:
-                                logger.error(f'Roll is invalid in Track.FreeObj at line '
-                                             f"{expression.Line} ,column {expression.Column} in file {expression.File}")
-                        if idx == -1:
-                            if not data.ignore_pitch_roll:
-                                data.Blocks[block_index].GroundFreeObj.append(
-                                    FreeObj(
-                                        data.TrackPosition,
-                                        sttype,
-                                        objectPosition,
-                                        math.radians(yaw),
-                                        math.radians(pitch),
-                                        math.radians(roll)
+                            if len(arguments) >= 5 and len(arguments[4]) > 0:
+                                success, yaw = NumberFormats.try_parse_double_vb6(arguments[4])
+                                if not success:
+                                    logger.error(f'Yaw is invalid in Track.FreeObj at line '
+                                                 f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                            if len(arguments) >= 6 and len(arguments[5]) > 0:
+                                success, pitch = NumberFormats.try_parse_double_vb6(arguments[5])
+                                if not success:
+                                    logger.error(f'Pitch is invalid in Track.FreeObj at line '
+                                                 f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                            if len(arguments) >= 7 and len(arguments[6]) > 0:
+                                success, roll = NumberFormats.try_parse_double_vb6(arguments[6])
+                                if not success:
+                                    logger.error(f'Roll is invalid in Track.FreeObj at line '
+                                                 f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                            if idx == -1:
+                                if not data.ignore_pitch_roll:
+                                    data.Blocks[block_index].GroundFreeObj.append(
+                                        FreeObj(
+                                            data.TrackPosition,
+                                            sttype,
+                                            objectPosition,
+                                            math.radians(yaw),
+                                            math.radians(pitch),
+                                            math.radians(roll)
+                                        )
                                     )
-                                )
 
+                                else:
+                                    data.Blocks[block_index].GroundFreeObj.append(
+                                        FreeObj(
+                                            data.TrackPosition,
+                                            sttype,
+                                            objectPosition,
+                                            math.radians(yaw)
+                                        )
+                                    )
                             else:
-                                data.Blocks[block_index].GroundFreeObj.append(
-                                    FreeObj(
-                                        data.TrackPosition,
-                                        sttype,
-                                        objectPosition,
-                                        math.radians(yaw)
+                                if idx not in data.Blocks[block_index].RailFreeObj:
+                                    data.Blocks[block_index].RailFreeObj[idx] = []
+                                if not data.ignore_pitch_roll:
+                                    data.Blocks[block_index].RailFreeObj[idx].append(
+                                        FreeObj(
+                                            data.TrackPosition,
+                                            sttype,
+                                            objectPosition,
+                                            math.radians(yaw),
+                                            math.radians(pitch),
+                                            math.radians(roll)
+                                        )
                                     )
-                                )
-                        else:
-                            if idx not in data.Blocks[block_index].RailFreeObj:
-                                data.Blocks[block_index].RailFreeObj[idx] = []
-                            if not data.ignore_pitch_roll:
-                                data.Blocks[block_index].RailFreeObj[idx].append(
-                                    FreeObj(
-                                        data.TrackPosition,
-                                        sttype,
-                                        objectPosition,
-                                        math.radians(yaw),
-                                        math.radians(pitch),
-                                        math.radians(roll)
+                                else:
+                                    data.Blocks[block_index].RailFreeObj[idx].append(
+                                        FreeObj(
+                                            data.TrackPosition,
+                                            sttype,
+                                            objectPosition,
+                                            math.radians(yaw)
+                                        )
                                     )
-                                )
-                            else:
-                                data.Blocks[block_index].RailFreeObj[idx].append(
-                                    FreeObj(
-                                        data.TrackPosition,
-                                        sttype,
-                                        objectPosition,
-                                        math.radians(yaw)
-                                    )
-                                )
             case TrackCommand.Back:
                 pass
             case TrackCommand.Background:

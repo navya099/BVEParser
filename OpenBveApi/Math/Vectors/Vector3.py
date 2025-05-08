@@ -77,6 +77,19 @@ class Vector3:
             return Vector3(self.x + other, self.y + other, self.z + other)
         return NotImplemented
 
+    def __iadd__(self, other):
+        if isinstance(other, Vector3):
+            self.x += other.x
+            self.y += other.y
+            self.z += other.z
+            return self
+        elif isinstance(other, (int, float)):
+            self.x += other
+            self.y += other
+            self.z += other
+            return self
+        return NotImplemented
+
     def __radd__(self, other):
         return self.__add__(other)
 

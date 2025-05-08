@@ -174,7 +174,7 @@ class Parser8:
             extrac_height_list.append(f"{starting_distance},{extrac_height}")
 
             # rail-aligned objects
-            print(i)
+
             for railInBlock in range(len(data.Blocks[i].Rails)):
                 railKey = list(data.Blocks[i].Rails.keys())[railInBlock]
                 if railKey > 0 and not data.Blocks[i].Rails[railKey].RailStarted and not \
@@ -276,9 +276,26 @@ class Parser8:
 
                     # extract key
                     if data.Blocks[i].Rails[railKey].RailStarted:
-                        rail_info.append(f'rail {railKey},{pos.x},{pos.y},{pos.z}')
+                        rail_info.append(f'{railKey},{pos.x},{pos.y},{pos.z}')
                     else:
                         continue
+                if not preview_only:
+                    # free objects
+                    if railKey in data.Blocks[i].RailFreeObj:
+                        for k in range(len(data.Blocks[i].RailFreeObj[railKey])):
+                            worldposition = data.Blocks[i].RailFreeObj[railKey][k].CreateRailAligned(
+                                data.Structure.FreeObjects,
+                                Vector3(pos),
+                                RailTransformation,
+                                starting_distance,
+                                ending_distance
+                            )
+                            freeobjtype = data.Blocks[i].RailFreeObj[railKey][k].Type
+                            extreact_TrackPosition = data.Blocks[i].RailFreeObj[railKey][k].TrackPosition
+                            freeobjcoordinates.append(f"{extreact_TrackPosition},{railKey},{freeobjtype},"
+                                                      f"{worldposition.x},{worldposition.z},{worldposition.y}")
+
+
             # finalize block
             position.x += direction.x * c
             position.y += h

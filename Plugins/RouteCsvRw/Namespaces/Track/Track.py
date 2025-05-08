@@ -4,6 +4,7 @@ from Plugins.RouteCsvRw.Namespaces.Track.TrackCommands import TrackCommand
 from Plugins.RouteCsvRw.RouteData import RouteData
 from Plugins.RouteCsvRw.Structures.Expression import Expression
 from OpenBveApi.Math.Math import NumberFormats
+from Plugins.RouteCsvRw.Structures.Route.FreeObject import FreeObj
 from Plugins.RouteCsvRw.Structures.Route.Pole import Pole
 from Plugins.RouteCsvRw.Structures.Route.RailCycle import RailCycle
 from Plugins.RouteCsvRw.Structures.Route.StationStop import Stop
@@ -964,7 +965,7 @@ class Parser7:
                                          f"column {expression.Column} "
                                          f"in file {expression.File}")
                         elif sttype < 0 or sttype not in data.Structure.Poles[typ] or \
-                            data.Structure.Poles[typ][sttype] is None:
+                                data.Structure.Poles[typ][sttype] is None:
                             logger.error(f'PoleStructureIndex {typ} references an object '
                                          f'not loaded in Track.Pole at line '
                                          f"{expression.Line},"
@@ -990,7 +991,7 @@ class Parser7:
                                      f"{expression.Line} ,column {expression.Column} in file {expression.File}")
                     else:
                         if idx not in data.Blocks[block_index].Rails or \
-                            not data.Blocks[block_index].Rails[idx].RailStarted and \
+                                not data.Blocks[block_index].Rails[idx].RailStarted and \
                                 not data.Blocks[block_index].Rails[idx].RailEnded:
                             logger.warning(
                                 f'RailIndex {idx} could be out of range in Track.PoleEnd at line '
@@ -1025,7 +1026,123 @@ class Parser7:
             case TrackCommand.Crack:
                 pass
             case TrackCommand.FreeObj:
-                pass
+                if not preview_only:
+                    if len(arguments) < 2:
+                        '''
+                        /*
+                        * If no / one arguments are supplied, this previously produced FreeObject 0 dropped on either
+                        * Rail 0 (no arguments) or on the rail specified by the first argument.
+                        *
+                         * BVE4 ignores these, and we should too.
+                        */
+                        '''
+                        logger.error(f'An insufficient number of arguments was supplied in Track.FreeObj at line '
+                                     f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                        return data
+                    idx, sttype = 0, 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, idx = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(f'RailIndex is invalid in Track.FreeObj at line '
+                                         f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                            idx = 0
+                    if len(arguments) >= 2 and len(arguments[1]) > 0:
+                        success, sttype = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(f'FreeObjStructureIndex is invalid in Track.FreeObj at line '
+                                         f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                            sttype = 0
+                    if idx < -1:
+                        logger.error(f'RailIndex is expected to be non-negative or -1 in Track.FreeObj at line '
+                                     f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                    elif sttype < -1:
+                        logger.error(f'FreeObjStructureIndex is expected to be non-negative in Track.FreeObj at line '
+                                     f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                    else:
+                        if idx >= 0 and idx not in data.Blocks[block_index].Rails or not \
+                                data.Blocks[block_index].Rails[idx].RailStarted:
+                            logger.warning(f'RailIndex {idx} could be out of range in Track.FreeObj at line '
+                                           f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+
+                        if sttype not in data.Structure.FreeObjects:
+                            logger.error(f'FreeObjStructureIndex {sttype} references an object '
+                                         f'not loaded in Track.FreeObj at line Track.FreeObj at line '
+                                         f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                        else:
+                            from OpenBveApi.Math.Vectors.Vector2 import Vector2
+                            objectPosition = Vector2()
+                            yaw, pitch, roll = 0.0, 0.0, 0.0
+                        if len(arguments) >= 3 and len(arguments[2]) > 0:
+                            success, objectPosition.x = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
+                            if not success:
+                                logger.error(f'X is invalid in Track.FreeObj at line '
+                                             f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                        if len(arguments) >= 4 and len(arguments[3]) > 0:
+                            success, objectPosition.y = NumberFormats.try_parse_double_vb6(arguments[3], unit_of_lngth)
+                            if not success:
+                                logger.error(f'Y is invalid in Track.FreeObj at line '
+                                             f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+
+                        if len(arguments) >= 5 and len(arguments[4]) > 0:
+                            success, yaw = NumberFormats.try_parse_double_vb6(arguments[4])
+                            if not success:
+                                logger.error(f'Yaw is invalid in Track.FreeObj at line '
+                                             f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                        if len(arguments) >= 6 and len(arguments[5]) > 0:
+                            success, pitch = NumberFormats.try_parse_double_vb6(arguments[5])
+                            if not success:
+                                logger.error(f'Pitch is invalid in Track.FreeObj at line '
+                                             f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                        if len(arguments) >= 7 and len(arguments[6]) > 0:
+                            success, roll = NumberFormats.try_parse_double_vb6(arguments[6])
+                            if not success:
+                                logger.error(f'Roll is invalid in Track.FreeObj at line '
+                                             f"{expression.Line} ,column {expression.Column} in file {expression.File}")
+                        if idx == -1:
+                            if not data.ignore_pitch_roll:
+                                data.Blocks[block_index].GroundFreeObj.append(
+                                    FreeObj(
+                                        data.TrackPosition,
+                                        sttype,
+                                        objectPosition,
+                                        math.radians(yaw),
+                                        math.radians(pitch),
+                                        math.radians(roll)
+                                    )
+                                )
+
+                            else:
+                                data.Blocks[block_index].GroundFreeObj.append(
+                                    FreeObj(
+                                        data.TrackPosition,
+                                        sttype,
+                                        objectPosition,
+                                        math.radians(yaw)
+                                    )
+                                )
+                        else:
+                            if idx not in data.Blocks[block_index].RailFreeObj:
+                                data.Blocks[block_index].RailFreeObj[idx] = []
+                            if not data.ignore_pitch_roll:
+                                data.Blocks[block_index].RailFreeObj[idx].append(
+                                    FreeObj(
+                                        data.TrackPosition,
+                                        sttype,
+                                        objectPosition,
+                                        math.radians(yaw),
+                                        math.radians(pitch),
+                                        math.radians(roll)
+                                    )
+                                )
+                            else:
+                                data.Blocks[block_index].RailFreeObj[idx].append(
+                                    FreeObj(
+                                        data.TrackPosition,
+                                        sttype,
+                                        objectPosition,
+                                        math.radians(yaw)
+                                    )
+                                )
             case TrackCommand.Back:
                 pass
             case TrackCommand.Background:

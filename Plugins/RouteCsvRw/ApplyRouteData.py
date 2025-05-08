@@ -285,7 +285,7 @@ class Parser8:
                         for k in range(len(data.Blocks[i].RailFreeObj[railKey])):
                             worldposition = data.Blocks[i].RailFreeObj[railKey][k].CreateRailAligned(
                                 data.Structure.FreeObjects,
-                                Vector3(pos),
+                                pos.clone(),
                                 RailTransformation,
                                 starting_distance,
                                 ending_distance

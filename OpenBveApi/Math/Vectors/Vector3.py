@@ -39,6 +39,9 @@ class Vector3:
     def Up(cls):
         return cls(0.0, -1.0, 0.0)
 
+    def clone(self):
+        return Vector3(self.x, self.y, self.z)
+
     @staticmethod
     def get_vector3(vector2, y):
         norm = math.sqrt(vector2.x ** 2 + vector2.y ** 2 + y ** 2)

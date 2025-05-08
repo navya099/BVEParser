@@ -35,9 +35,9 @@ class Transformation:
                 self.Y.rotate(self.Z, -roll)
         elif len(args) == 4 and isinstance(args[0], Transformation):
             base, yaw, pitch, roll = args
-            self.X = Vector3(base.X)
-            self.Y = Vector3(base.Y)
-            self.Z = Vector3(base.Z)
+            self.X = base.X.clone()  # base.X에서 clone()을 호출
+            self.Y = base.Y.clone()  # base.Y에서 clone()을 호출
+            self.Z = base.Z.clone()  # base.Z에서 clone()을 호출
             self.X.rotate(self.Y, yaw)
             self.Z.rotate(self.Y, yaw)
 

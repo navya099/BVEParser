@@ -6,11 +6,11 @@ from OpenBveApi.Math.Vectors.Vector2 import Vector2
 
 
 class FreeObj(AbstractStructure):
-    def __init__(self, track_position: float, type: int, position: Vector2,
+    def __init__(self, track_position: float, objtype: int, position: Vector2,
                  yaw: float, pitch: float = 0, roll: float = 0):
         super().__init__(track_position)
         self.Position = position
-        self.Type: int = type
+        self.Type: int = objtype
         self.Yaw: float = yaw
         self.Pitch: float = pitch
         self.Roll: float = roll
@@ -41,4 +41,3 @@ class FreeObj(AbstractStructure):
 
     def CreateGroundAligned(self):
         pass
-

@@ -1,8 +1,7 @@
 import threading
 import time
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import traceback
-
 from RouteViewer.System.Host import Host
 from loggermodule import logger
 import os
@@ -15,23 +14,23 @@ from OpenBveApi.System.TextEncoding import TextEncoding
 
 
 def askfile():
-    file = filedialog.askopenfile(title="루트 파일 선택", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
-    return file
+    return filedialog.askopenfilename(title="루트 파일 선택", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
 
 
 class Loading:
-    def __init__(self, progress_bar, status_label):
+    def __init__(self, progress_bar, status_label, button_to_disable):
         self.progress = progress_bar
         self.status = status_label
+        self.button = button_to_disable  # 새로 추가
 
     def run(self):
         try:
-            file = askfile()
-            if file is None:
-                logger.error("파일이 선택되지 않았습니다.")
+            path = askfile()
+            if not path:
+                messagebox.showerror("오류", "파일이 선택되지 않았습니다.")
+                self.button.config(state="normal")  # 선택 안 했으면 다시 활성화
                 return
 
-            path = file.name
             railway_path = Loading.get_railway_folder(path)
             object_path = os.path.join(railway_path, 'Object')
 
@@ -49,7 +48,7 @@ class Loading:
                     plugin.load(host, None, options, None)
 
                     if not plugin.CanLoadRoute(path):
-                        logger.warning('유효한 루트 파일이 아닙니다.')
+                        messagebox.showerror("오류", "유효하지 않은 루트 파일입니다.")
                         plugin.Unload()
                         self.status.config(text="유효하지 않은 루트 파일입니다.")
                         return
@@ -66,6 +65,7 @@ class Loading:
                             time.sleep(0.1)
                         self.progress["value"] = 100
                         self.status.config(text="루트 로딩 완료!")
+                        self.button.config(state="normal")  # 로딩 완료 후 다시 활성화
 
                     # ✅ UI 업데이트용 쓰레드
                     threading.Thread(target=update_progress, daemon=True).start()
@@ -75,20 +75,22 @@ class Loading:
 
                     if result:
 
-                        logger.info('루트 로딩에 성공했습니다.')
+                        messagebox.showinfo("정보", "루트 로딩 성공.")
                     else:
-                        logger.error('루트 로딩 실패.')
+                        messagebox.showerror("에러", "루트 로딩 실패.")
+                        self.button.config(state="normal")  # 실패 시 다시 활성화
                 except Exception as ex_inner:
                     logger.critical("내부 오류 발생:", ex_inner)
                     logger.critical(traceback.print_exc())
                     self.status.config(text="오류 발생!")
+                    self.button.config(state="normal")  # 실패 시 다시 활성화
 
             # ✅ 전체 루트 로딩을 백그라운드에서 실행
             threading.Thread(target=background_task, daemon=True).start()
 
         except Exception as ex:
             logger.error("오류가 발생했습니다:", ex)
-            logger.critical(traceback.print_exc())
+            logger.critical(traceback.format_exc())
             self.status.config(text="오류 발생!")
 
     @staticmethod

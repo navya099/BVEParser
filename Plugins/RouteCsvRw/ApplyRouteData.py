@@ -199,8 +199,8 @@ class Parser8:
                     pos = position + offset
                     if i < len(data.Blocks) - 1 and railKey in data.Blocks[i + 1].Rails:
                         # take orientation of upcoming block into account
-                        direction2 = direction
-                        position2 = position
+                        direction2 = direction.clone()
+                        position2 = position.clone()
                         position2.x += direction.x * c
                         position2.y += h
                         position2.z += direction.y * c

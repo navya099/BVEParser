@@ -26,7 +26,10 @@ class Program(tk.Tk):
 
     def file_open(self):
         """새 작업 마법사 창 시작"""
-        loading = Loading(self.progress, self.status)
+        # 버튼 비활성화
+        self.new_task_button.config(state="disabled")
+
+        loading = Loading(self.progress, self.status, self.new_task_button)
         loading.run()
     def close_application(self):
         """프로그램 종료"""

@@ -48,3 +48,6 @@ class Vector2:
 
     def __sub__(self, other: 'Vector2') -> 'Vector2':
         return Vector2(self.x - other.x, self.y - other.y)
+
+    def clone(self):
+        return Vector2(self.x, self.y)

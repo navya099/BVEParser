@@ -11,7 +11,7 @@ logger = logging.getLogger("my_app")  # 특정한 로거 이름 사용
 logger.setLevel(logging.DEBUG)  # 로깅 레벨 설정
 
 # 파일 핸들러 추가
-file_handler = logging.FileHandler(r"c:\temp\log.csv", mode ='w')
+file_handler = logging.FileHandler(r"c:\temp\log.csv", mode='w')
 file_handler.setLevel(logging.DEBUG)
 
 # 로그 포맷 설정

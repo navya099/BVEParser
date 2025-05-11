@@ -276,25 +276,32 @@ class Parser8:
 
                     # extract key
                     if data.Blocks[i].Rails[railKey].RailStarted:
-                        rail_info.append(f'{railKey},{pos.x},{pos.y},{pos.z}')
+                        rail_info.append(f'{railKey},{pos.x},{pos.z},{pos.y}')
                     else:
                         continue
                 if not preview_only:
                     # free objects
                     if railKey in data.Blocks[i].RailFreeObj:
-                        for k in range(len(data.Blocks[i].RailFreeObj[railKey])):
-                            worldposition = data.Blocks[i].RailFreeObj[railKey][k].CreateRailAligned(
+                        for free_obj in data.Blocks[i].RailFreeObj[railKey]:
+                            # Create rail-aligned object
+                            worldposition, obj_path = free_obj.CreateRailAligned(
                                 data.Structure.FreeObjects,
                                 pos.clone(),
                                 RailTransformation,
                                 starting_distance,
                                 ending_distance
                             )
-                            freeobjtype = data.Blocks[i].RailFreeObj[railKey][k].Type
-                            extreact_TrackPosition = data.Blocks[i].RailFreeObj[railKey][k].TrackPosition
-                            freeobjcoordinates.append(f"{extreact_TrackPosition},{railKey},{freeobjtype},"
-                                                      f"{worldposition.x},{worldposition.z},{worldposition.y}")
 
+                            # Extract name from file path
+                            from pathlib import Path
+                            name = Path(obj_path).name.rsplit('.', 1)[0]
+
+                            # Prepare output line
+                            track_pos = free_obj.TrackPosition
+                            obj_type = free_obj.Type
+                            coord_line = f"{track_pos},{railKey},{obj_type},{name},{worldposition.x},{worldposition.z},{worldposition.y}"
+
+                            freeobjcoordinates.append(coord_line)
 
             # finalize block
             position.x += direction.x * c

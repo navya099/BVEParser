@@ -16,7 +16,7 @@ class FreeObj(AbstractStructure):
         self.Roll: float = roll
 
     def CreateRailAligned(self, FreeObjects: ObjectDictionary, WorldPosition: Vector3,
-                          RailTransformation: Transformation, StartingDistance: float, EndingDistance: float):
+                          RailTransformation: Transformation, StartingDistance: float, EndingDistance: float) -> tuple[Vector3, str]:
         dz = self.TrackPosition - StartingDistance
         WorldPosition += self.Position.x * RailTransformation.X + \
                          self.Position.y * RailTransformation.Y + \
@@ -37,7 +37,7 @@ class FreeObj(AbstractStructure):
                 self.TrackPosition
             )
         '''
-        return WorldPosition
+        return WorldPosition ,obj
 
     def CreateGroundAligned(self):
         pass

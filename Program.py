@@ -15,7 +15,6 @@ class Program(tk.Tk):
         self.exit_button = tk.Button(self, text="종료", command=self.close_application)
         self.exit_button.pack(pady=10)
 
-        # 프로그레스바와 상태 라벨
         self.progress = ttk.Progressbar(self, orient="horizontal", length=400, mode="determinate")
         self.progress.pack(pady=5)
 
@@ -25,14 +24,10 @@ class Program(tk.Tk):
         logger.info('MainWindow 초기화 완료')
 
     def file_open(self):
-        """새 작업 마법사 창 시작"""
-        # 버튼 비활성화
         self.new_task_button.config(state="disabled")
-
         loading = Loading(self.progress, self.status, self.new_task_button)
         loading.run()
+
     def close_application(self):
-        """프로그램 종료"""
         self.quit()
         self.destroy()
-

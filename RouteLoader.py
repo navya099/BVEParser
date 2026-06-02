@@ -1,14 +1,7 @@
 import threading
 import time
 import os
-import sys
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# OpenBVE 폴더는 BASE_DIR의 상위 폴더에 있음
-OPENBVE_DIR = os.path.join(os.path.dirname(BASE_DIR), 'OpenBVE')
-
-if OPENBVE_DIR and OPENBVE_DIR not in sys.path:
-    sys.path.append(OPENBVE_DIR)
 from RouteViewer.System.Host import Host
 from OpenBveApi.System.BaseOptions import BaseOptions
 from Plugins.RouteCsvRw.Plugin import Plugin

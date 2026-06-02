@@ -118,7 +118,7 @@ class Parser8:
                 # station
                 s = data.Blocks[i].Station
                 t = self.CurrentRoute.Stations[s].Name
-                stacoordinates.append(f'{position.x},{position.z},{t}')
+                stacoordinates.append(f'{starting_distance},{position.x},{position.z},{t}')
 
             # Pitch
             self.CurrentRoute.Tracks[0].Elements[n].Pitch = data.Blocks[i].Pitch

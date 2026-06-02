@@ -76,15 +76,12 @@ class Parser8:
                 len(data.Blocks) - data.FirstUsedBlock)
 
         # initial list
-        # List to store x and z values
-        coordinates = []
-        pitch_info = []
-        curve_info = []
+        # list to store x and z values
         rail_info = []
         stacoordinates = []
-        extrac_height_list = []
         freeobjcoordinates = []
-
+        bvedatas = []
+        bvedatas.append(f'측점,X,Y,Z,Bearing,Radius,Cant,Pitch,height')
         for i in range(data.FirstUsedBlock, len(data.Blocks)):
             self.Plugin.CurrentProgress = 0.6667 + (i - data.FirstUsedBlock) * progress_factor
             if (i & 15) == 0:
@@ -108,7 +105,7 @@ class Parser8:
             self.CurrentRoute.Tracks[0].Elements[n] = world_track_element
             self.CurrentRoute.Tracks[0].Elements[n].WorldPosition = Vector3(position.x, position.y, position.z)
 
-            coordinates.append(f'{position.x}, {position.z}, {position.y}')
+
             self.CurrentRoute.Tracks[0].Elements[n].WorldDirection = Vector3.get_vector3(direction,
                                                                                          data.Blocks[i].Pitch)
             self.CurrentRoute.Tracks[0].Elements[n].WorldSide = Vector3(direction.y, 0.0, -direction.x)
@@ -126,9 +123,6 @@ class Parser8:
             # Pitch
             self.CurrentRoute.Tracks[0].Elements[n].Pitch = data.Blocks[i].Pitch
             extrac_pitch = data.Blocks[i].Pitch
-
-            # Add x and z values to the list
-            pitch_info.append(f"{starting_distance},{extrac_pitch}")
 
             # height txt
             extrac_height = data.Blocks[i].Height
@@ -168,11 +162,11 @@ class Parser8:
 
             extract_radius = world_track_element.CurveRadius
             extract_cant = world_track_element.CurveCant
-            # Add x and z values to the list
-            curve_info.append(f"{starting_distance},{extract_radius},{extract_cant}")
+            extract_bearing = math.atan2(direction.y, direction.x)
 
-            extrac_height_list.append(f"{starting_distance},{extrac_height}")
-
+            #선형데이터 수집 후 저장
+            bvedata = f'{starting_distance},{position.x},{position.z},{position.y},{extract_bearing},{extract_radius},{extract_cant},{extrac_pitch},{extrac_height}'
+            bvedatas.append(bvedata)
             # rail-aligned objects
 
             for railInBlock in range(len(data.Blocks[i].Rails)):
@@ -237,7 +231,7 @@ class Parser8:
                         // c2 = d2 / Math.Sqrt(1.0 + p2 * p2);
                         // h2 = c2 * p2;
                         // }
-
+                        
                         //These generate a compiler warning, as secondary tracks do not generate yaw, as they have no
                         //concept of a curve, but rather are a straight line between two points
                         //TODO: Revist the handling of secondary tracks ==> !!BACKWARDS INCOMPATIBLE!!
@@ -272,8 +266,7 @@ class Parser8:
                     self.CurrentRoute.Tracks[railKey].Elements[n].CurveCant = data.Blocks[i].Rails[railKey].CurveCant
                     self.CurrentRoute.Tracks[railKey].Elements[n].AdhesionMultiplier = data.Blocks[i].Rails[
                         railKey].AdhesionMultiplier
-                    self.CurrentRoute.Tracks[railKey].Elements[n].IsDriveable = data.Blocks[i].Rails[
-                        railKey].IsDriveable
+                    self.CurrentRoute.Tracks[railKey].Elements[n].IsDriveable = data.Blocks[i].Rails[railKey].IsDriveable
 
                     # extract key
                     rail_info.append((starting_distance, railKey, pos.x, pos.z, pos.y))
@@ -310,14 +303,12 @@ class Parser8:
                 direction.rotate(math.cos(-a), math.sin(-a))
 
         # Write x and z values to a TXT file
-        Util.write_all_lines(r"c:\temp\pitch_info.txt", pitch_info)
-        Util.write_all_lines(r"c:\temp\curve_info.txt", curve_info)
+
         rail_info.sort(key=lambda r: r[0])
         rail_info = [f"{s},{rk},{x},{z},{y}" for s, rk, x, z, y in rail_info]
         Util.write_all_lines(r"c:\temp\rail_info.txt", rail_info)
-        Util.write_all_lines(r"c:\temp\bve_coordinates.txt", coordinates)
         Util.write_all_lines(r"c:\temp\bve_stationcoordinates.txt", stacoordinates)
-        Util.write_all_lines(r"c:\temp\height_info.txt", extrac_height_list)
         Util.write_all_lines(r"c:\temp\bve_freeobjcoordinates.txt", freeobjcoordinates)
+        Util.write_all_lines(r"c:\temp\bve_alignment.txt", bvedatas)
 
         return data

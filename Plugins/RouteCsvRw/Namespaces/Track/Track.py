@@ -134,7 +134,7 @@ class Parser7:
                     cant *= 0.001
                 current_rail.CurveCant = cant
                 data.Blocks[block_index].Rails[idx] = current_rail
-                current_rail.raaaaa = True
+
             case TrackCommand.RailEnd:
                 idx = 0
                 if len(arguments) >= 1 and len(arguments[0]) > 0:
@@ -171,13 +171,13 @@ class Parser7:
                         current_rail.RailEnd.x = 0.0
 
                 if len(arguments) >= 3 and len(arguments[2]) > 0:
-                    success, current_rail.RailStart.y = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
+                    success, current_rail.RailEnd.y = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
                     if not success:
                         logger.error(f'Y is invalid in {command} at line {expression.Line} , column {expression.Column}'
                                      f'in file {expression.File}')
                         current_rail.RailEnd.y = 0.0
                 data.Blocks[block_index].Rails[idx] = current_rail
-                current_rail.raaaaa = False
+
             case TrackCommand.RailType:
                 if not preview_only:
                     idx = 0
@@ -235,8 +235,7 @@ class Parser7:
                             else:
                                 data.Blocks[block_index].RailType[idx] = sttype
                                 data.Blocks[block_index].RailCycles[idx].RailCycleIndex = -1
-                current_rail = data.Blocks[block_index].Rails[idx]
-                current_rail.raaaaa = True
+
             case TrackCommand.Accuracy:
                 pass
             case TrackCommand.Pitch:
@@ -266,8 +265,8 @@ class Parser7:
                                      f'{expression.Line} , column {expression.Column}'
                                      f' in file {expression.File}')
                         cant = 0.0
-                else:
-                    cant *= 0.001
+                    else:
+                        cant *= 0.001
                 if data.SignedCant:
                     if radius != 0.0:
                         cant *= np.sign(radius)

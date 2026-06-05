@@ -15,7 +15,7 @@ class Block:
         self.Cycle: List[int] = []
         self.RailCycles: List[RailCycle] = []
         self.Height: float = 0.0
-        self.Rails: Dict[int, 'Rail'] = {}
+        self.Rails: Dict[int, Rail] = {}
         self.Switches: List['Switch'] = []
         self.RailType: List[int] = []
         self.RailWall: Dict[int, 'WallDike'] = {}

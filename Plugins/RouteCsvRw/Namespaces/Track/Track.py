@@ -301,7 +301,20 @@ class Parser7:
                         s = 0.0
                     data.Blocks[block_index].Turn = s
             case TrackCommand.Adhesion:
-                pass
+                a = 100.0
+                if len(arguments) >= 1 and len(arguments[0]) > 0:
+                    success, a = NumberFormats.try_parse_double_vb6(arguments[0])
+                    if not success:
+                        logger.error(f'Value is invalid in {command} at line '
+                                     f'{expression.Line} , column {expression.Column}'
+                                     f' in file {expression.File}')
+                        a = 100.0
+                    if a < 0.0:
+                        logger.error(f'Value is expected to be non-negative in {command} at line '
+                                     f'{expression.Line} , column {expression.Column}'
+                                     f' in file {expression.File}')
+                        a = 100.0
+                    data.Blocks[block_index].Rails[0].AdhesionMultiplier = 0.01 * a
             case TrackCommand.Brightness:
                 pass
             case TrackCommand.Fog:

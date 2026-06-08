@@ -15,6 +15,7 @@ from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
 from RouteManager2.SignalManager.SafetySystems import SafetySystem
 from RouteManager2.Stations.RouteStation import RouteStation
 from OpenBveApi.System.Path import Path
+from OpenBveApi.Colors.Color24 import Color24
 
 import math
 import numpy as np
@@ -335,7 +336,75 @@ class Parser7:
                             Brightness(data.TrackPosition, value)
                         )
             case TrackCommand.Fog:
-                pass
+                if not preview_only:
+                    start, end = 0.0, 0.0
+                    r, g, b = 128, 128, 128
+
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, start = NumberFormats.try_parse_double_vb6(arguments[0])
+                        if not success:
+                            logger.error(f'StartingDistance is invalid in {command} at line '
+                                         f'{expression.Line}, column {expression.Column} '
+                                         f'in file {expression.File}')
+                            start = 0.0
+
+                    if len(arguments) >= 2 and len(arguments[1]) > 0:
+                        success, end = NumberFormats.try_parse_double_vb6(arguments[1])
+                        if not success:
+                            logger.error(f'EndingDistance is invalid in {command} at line '
+                                         f'{expression.Line}, column {expression.Column} '
+                                         f'in file {expression.File}')
+                            end = 0.0
+
+                    if len(arguments) >= 3 and len(arguments[2]) > 0:
+                        success, r = NumberFormats.try_parse_int_vb6(arguments[2])
+                        if not success:
+                            logger.error(f'RedValue is invalid in {command} at line '
+                                         f'{expression.Line}, column {expression.Column} '
+                                         f'in file {expression.File}')
+                            r = 128
+                    elif r < 0 or r > 255:
+                        logger.error(f'RedValue must be 0–255 in {command} at line '
+                                     f'{expression.Line}, column {expression.Column} '
+                                     f'in file {expression.File}')
+                        r = 0 if r < 0 else 255
+
+                    if len(arguments) >= 4 and len(arguments[3]) > 0:
+                        success, g = NumberFormats.try_parse_int_vb6(arguments[3])
+                        if not success:
+                            logger.error(f'GreenValue is invalid in {command} at line '
+                                         f'{expression.Line}, column {expression.Column} '
+                                         f'in file {expression.File}')
+                            g = 128
+                    elif g < 0 or g > 255:
+                        logger.error(f'GreenValue must be 0–255 in {command} at line '
+                                     f'{expression.Line}, column {expression.Column} '
+                                     f'in file {expression.File}')
+                        g = 0 if g < 0 else 255
+
+                    if len(arguments) >= 5 and len(arguments[4]) > 0:
+                        success, b = NumberFormats.try_parse_int_vb6(arguments[4])
+                        if not success:
+                            logger.error(f'BlueValue is invalid in {command} at line '
+                                         f'{expression.Line}, column {expression.Column} '
+                                         f'in file {expression.File}')
+                            b = 128
+                    elif b < 0 or b > 255:
+                        logger.error(f'BlueValue must be 0–255 in {command} at line '
+                                     f'{expression.Line}, column {expression.Column} '
+                                     f'in file {expression.File}')
+                        b = 0 if b < 0 else 255
+
+                    if start < end:
+                        data.Blocks[block_index].Fog.start = float(start)
+                        data.Blocks[block_index].Fog.end = float(end)
+                    else:
+                        data.Blocks[block_index].Fog.start = self.CurrentRoute.NoFogStart
+                        data.Blocks[block_index].Fog.end = self.CurrentRoute.NoFogEnd
+
+                    data.Blocks[block_index].Fog.color = Color24(r, g, b)
+                    data.Blocks[block_index].FogDefined = True
+
             case TrackCommand.Section:
                 pass
             case TrackCommand.SectionS:

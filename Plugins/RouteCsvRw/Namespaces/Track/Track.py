@@ -10,14 +10,17 @@ from Plugins.RouteCsvRw.Structures.Route.RailCycle import RailCycle
 from Plugins.RouteCsvRw.Structures.Route.StationStop import Stop
 from Plugins.RouteCsvRw.Structures.Direction import Direction
 from Plugins.RouteCsvRw.Structures.Route.Rail import Rail
+from Plugins.RouteCsvRw.Structures.Signals.Signal import Signal
 from Plugins.RouteCsvRw.Structures.Trains.Brightness import Brightness
 from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
 from RouteManager2.SignalManager.SafetySystems import SafetySystem
 from RouteManager2.SignalManager.SectionTypes import SectionType
+from RouteManager2.SignalManager.SignalObject import SignalObject
 from RouteManager2.Stations.RouteStation import RouteStation
 from OpenBveApi.System.Path import Path
 from OpenBveApi.Colors.Color24 import Color24
 from Plugins.RouteCsvRw.Structures.Signals.Section import Section
+from OpenBveApi.Math.Vectors.Vector2 import Vector2
 
 import math
 import numpy as np
@@ -35,7 +38,7 @@ class Parser7:
         self.DepartureSignalUsed: bool = False
 
     def parse_track_command(self, command: TrackCommand, arguments: list[str], filename: str,
-                            unit_of_lngth: list[float], expression: Expression, data: RouteData, block_index: int,
+                            unit_of_length: list[float], expression: Expression, data: RouteData, block_index: int,
                             preview_only: bool, is_rw: bool, rail_index: int = 0) -> RouteData:
         match command:
             case TrackCommand.RailStart | TrackCommand.Rail:
@@ -75,7 +78,7 @@ class Parser7:
                 if len(arguments) >= 2:
                     if len(arguments[1]) > 0:
                         success, current_rail.RailStart.x = NumberFormats.try_parse_double_vb6(
-                            arguments[1], unit_of_lngth
+                            arguments[1], unit_of_length
                         )
                         if not success:
                             logger.error(
@@ -88,7 +91,7 @@ class Parser7:
                 if len(arguments) >= 3:
                     if len(arguments[2]) > 0:
                         success, current_rail.RailStart.y = NumberFormats.try_parse_double_vb6(
-                            arguments[2], unit_of_lngth
+                            arguments[2], unit_of_length
                         )
                         if not success:
                             logger.error(
@@ -168,14 +171,14 @@ class Parser7:
                 current_rail.IsDriveable = False
 
                 if len(arguments) >= 2 and len(arguments[1]) > 0:
-                    success, current_rail.RailEnd.x = NumberFormats.try_parse_double_vb6(arguments[1], unit_of_lngth)
+                    success, current_rail.RailEnd.x = NumberFormats.try_parse_double_vb6(arguments[1], unit_of_length)
                     if not success:
                         logger.error(f'X is invalid in {command} at line {expression.Line} , column {expression.Column}'
                                      f'in file {expression.File}')
                         current_rail.RailEnd.x = 0.0
 
                 if len(arguments) >= 3 and len(arguments[2]) > 0:
-                    success, current_rail.RailEnd.y = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
+                    success, current_rail.RailEnd.y = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_length)
                     if not success:
                         logger.error(f'Y is invalid in {command} at line {expression.Line} , column {expression.Column}'
                                      f'in file {expression.File}')
@@ -478,10 +481,100 @@ class Parser7:
                         self.CurrentSection += 1
 
             case TrackCommand.SigF:
-                pass
-            case TrackCommand.Signal:
-                pass
-            case TrackCommand.Sig:
+                if not preview_only:
+                    objidx = 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, objidx = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'SignalIndex is invalid in Track.SigF at line '
+                                f'{expression.Line}, column {expression.Column} '
+                                f'in file {expression.File}'
+                            )
+                            objidx = 0
+
+                    # SignalObject 선택
+                    signal_object = None
+                    if objidx in data.Signals:
+                        signal_object = data.Signals[objidx]
+                    elif 0 <= objidx < len(data.CompatibilitySignals):
+                        logger.warning(
+                            f'SignalIndex {objidx} mapped to default signal, '
+                            f'as custom signal not loaded in Track.SigF at line '
+                            f'{expression.Line}, column {expression.Column} '
+                            f'in file {expression.File}'
+                        )
+                        signal_object = data.CompatibilitySignals[objidx]
+                    else:
+                        logger.error(
+                            f'SignalIndex {objidx} references a signal object not loaded '
+                            f'in Track.SigF at line {expression.Line}, column {expression.Column} '
+                            f'in file {expression.File}'
+                        )
+                    section = 0
+                    if len(arguments) >= 2 and len(arguments[1]) > 0:
+                        success, section = NumberFormats.try_parse_int_vb6(arguments[1])
+                        if not success:
+                            logger.error(
+                                f'Section is invalid in Track.SigF at line '
+                                f'{expression.Line}, column {expression.Column} '
+                                f'in file {expression.File}'
+                            )
+                            section = 0
+
+                    x, y = 0.0, 0.0
+                    if len(arguments) >= 3 and len(arguments[2]) > 0:
+                        success, x = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_length)
+                        if not success:
+                            logger.error(
+                                f'X is invalid in Track.SigF at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            x = 0.0
+
+                    if len(arguments) >= 4 and len(arguments[3]) > 0:
+                        success, y = NumberFormats.try_parse_double_vb6(arguments[3], unit_of_length)
+                        if not success:
+                            logger.error(
+                                f'Y is invalid in Track.SigF at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            y = 0.0
+
+                    yaw, pitch, roll = 0.0, 0.0, 0.0
+                    if len(arguments) >= 5 and len(arguments[4]) > 0:
+                        success, yaw = NumberFormats.try_parse_double_vb6(arguments[4])
+                        if not success:
+                            logger.error(
+                                f'Yaw is invalid in Track.SigF at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            yaw = 0.0
+
+                    if len(arguments) >= 6 and len(arguments[5]) > 0:
+                        success, pitch = NumberFormats.try_parse_double_vb6(arguments[5])
+                        if not success:
+                            logger.error(
+                                f'Pitch is invalid in Track.SigF at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            pitch = 0.0
+
+                    if len(arguments) >= 7 and len(arguments[6]) > 0:
+                        success, roll = NumberFormats.try_parse_double_vb6(arguments[6])
+                        if not success:
+                            logger.error(
+                                f'Roll is invalid in Track.SigF at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            roll = 0.0
+
+                    # Signal 추가
+                    data.Blocks[block_index].Signals.append(
+                        Signal(
+                            data.TrackPosition,
+                            self.CurrentSection + section,
+                            signal_object,
+                            Vector2(x, y if y >= 0.0 else 4.8),
+                            math.radians(yaw),
+                            math.radians(pitch),
+                            math.radians(roll),
+                            True,
+                            y < 0.0
+                        )
+                    )
+
+            case TrackCommand.Signal | TrackCommand.Sig:
                 pass
             case TrackCommand.Relay:
                 pass
@@ -520,7 +613,7 @@ class Parser7:
                     # Backward Tolerance
                     backw = 5.0
                     if len(arguments) >= 2 and arguments[1]:
-                        success, backw_val = NumberFormats.try_parse_double_vb6(arguments[1], unit_of_lngth)
+                        success, backw_val = NumberFormats.try_parse_double_vb6(arguments[1], unit_of_length)
                         if not success:
                             logger.error(f"BackwardTolerance is invalid in Track.Stop at line"
                                          f'{expression.Line} , column {expression.Column} in file {expression.File}')
@@ -533,7 +626,7 @@ class Parser7:
                     # Forward Tolerance
                     forw = 5.0
                     if len(arguments) >= 3 and arguments[2]:
-                        success, forw_val = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
+                        success, forw_val = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_length)
                         if not success:
                             logger.error(f"ForwardTolerance is invalid in Track.Stop at line"
                                          f'{expression.Line} , column {expression.Column} in file {expression.File}')
@@ -1131,7 +1224,7 @@ class Parser7:
                             data.Blocks[block_index].RailPole[idx].Location = loc
 
                         if len(arguments) >= 4 and len(arguments[3]) > 0:
-                            success, dist = NumberFormats.try_parse_double_vb6(arguments[3], unit_of_lngth)
+                            success, dist = NumberFormats.try_parse_double_vb6(arguments[3], unit_of_length)
                             if not success:
                                 logger.error(f'Interval is invalid in Track.Pole at line '
                                              f"{expression.Line},"
@@ -1206,7 +1299,7 @@ class Parser7:
                 if not preview_only:
                     h = 0.0
                     if len(arguments) >= 1 and len(arguments[0]) > 0:
-                        success, h = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_lngth)
+                        success, h = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_length)
                         if not success:
                             print(f'Height is invalid in Track.Height at line '
                                   f'{expression.Line} , column {expression.Column}'
@@ -1261,16 +1354,16 @@ class Parser7:
                                          f'not loaded in Track.FreeObj at line Track.FreeObj at line '
                                          f"{expression.Line} ,column {expression.Column} in file {expression.File}")
                         else:
-                            from OpenBveApi.Math.Vectors.Vector2 import Vector2
+
                             objectPosition = Vector2()
                             yaw, pitch, roll = 0.0, 0.0, 0.0
                             if len(arguments) >= 3 and len(arguments[2]) > 0:
-                                success, objectPosition.x = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_lngth)
+                                success, objectPosition.x = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_length)
                                 if not success:
                                     logger.error(f'X is invalid in Track.FreeObj at line '
                                                  f"{expression.Line} ,column {expression.Column} in file {expression.File}")
                             if len(arguments) >= 4 and len(arguments[3]) > 0:
-                                success, objectPosition.y = NumberFormats.try_parse_double_vb6(arguments[3], unit_of_lngth)
+                                success, objectPosition.y = NumberFormats.try_parse_double_vb6(arguments[3], unit_of_length)
                                 if not success:
                                     logger.error(f'Y is invalid in Track.FreeObj at line '
                                                  f"{expression.Line} ,column {expression.Column} in file {expression.File}")

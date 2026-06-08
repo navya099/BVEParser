@@ -237,7 +237,20 @@ class Parser7:
                                 data.Blocks[block_index].RailCycles[idx].RailCycleIndex = -1
 
             case TrackCommand.Accuracy:
-                pass
+                acc = 2.0
+                if len(arguments) >= 1 and len(arguments[0]) > 0:
+                    success, acc = NumberFormats.try_parse_double_vb6(arguments[0])
+                    if not success:
+                        logger.error(f'Value is invalid in {command} at line '
+                                     f'{expression.Line} , column {expression.Column}'
+                                     f' in file {expression.File}')
+                        acc = 2.0
+                    if acc < 0.0:
+                        acc = 0.0
+                    elif acc > 4.0:
+                        acc = 4.0
+                    data.Blocks[block_index].Rails[0].Accuracy = acc
+
             case TrackCommand.Pitch:
                 p = 0.0
                 if len(arguments) >= 1 and len(arguments[0]) > 0:

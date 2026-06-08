@@ -13,9 +13,11 @@ from Plugins.RouteCsvRw.Structures.Route.Rail import Rail
 from Plugins.RouteCsvRw.Structures.Trains.Brightness import Brightness
 from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
 from RouteManager2.SignalManager.SafetySystems import SafetySystem
+from RouteManager2.SignalManager.SectionTypes import SectionType
 from RouteManager2.Stations.RouteStation import RouteStation
 from OpenBveApi.System.Path import Path
 from OpenBveApi.Colors.Color24 import Color24
+from Plugins.RouteCsvRw.Structures.Signals.Section import Section
 
 import math
 import numpy as np
@@ -405,10 +407,76 @@ class Parser7:
                     data.Blocks[block_index].Fog.color = Color24(r, g, b)
                     data.Blocks[block_index].FogDefined = True
 
-            case TrackCommand.Section:
-                pass
-            case TrackCommand.SectionS:
-                pass
+            case TrackCommand.Section | TrackCommand.SectionS:
+                if not preview_only:
+                    if len(arguments) == 0:
+                        logger.error(
+                            f'At least one argument is required in {command} at line '
+                            f'{expression.Line}, column {expression.Column} '
+                            f'in file {expression.File}'
+                        )
+                    else:
+                        aspects = [None] * len(arguments)
+
+                        # HACK: 소수점 뒤에 문자가 나오면 섹션 선언 종료로 간주
+                        for i in range(len(arguments)):
+                            arg = arguments[i]
+                            p = arg.find('.')
+                            if p != -1:
+                                pp = p
+                                while pp < len(arg):
+                                    if arg[pp].isalpha():
+                                        arguments[i] = arg[:p]
+                                        arguments = arguments[:i + 1]
+                                        aspects = aspects[:i + 1]
+                                        break
+                                    pp += 1
+
+                        # 각 인자 파싱
+                        for i in range(len(arguments)):
+                            if not arguments[i]:
+                                logger.error(
+                                    f'Aspect{i} is invalid in {command} at line '
+                                    f'{expression.Line}, column {expression.Column} '
+                                    f'in file {expression.File}'
+                                )
+                                aspects[i] = -1
+                            else:
+                                success, val = NumberFormats.try_parse_int_vb6(arguments[i])
+                                if not success or val < 0:
+                                    logger.error(
+                                        f'Aspect{i} is invalid in {command} at line '
+                                        f'{expression.Line}, column {expression.Column} '
+                                        f'in file {expression.File}'
+                                    )
+                                    aspects[i] = -1
+                                else:
+                                    aspects[i] = val
+
+                        # SectionS → valueBased
+                        value_based = data.ValueBasedSections or command == TrackCommand.SectionS
+                        if value_based:
+                            aspects.sort()
+
+                        n = len(data.Blocks[block_index].Sections)
+                        departure_station_index = -1
+                        if self.CurrentStation >= 0 and self.CurrentRoute.Stations[self.CurrentStation].ForceStopSignal:
+                                if self.CurrentStation >= 0 and self.CurrentStop >= 0 and not self.DepartureSignalUsed:
+                                    departure_station_index = self.CurrentStation
+                                    departure_signal_used = True
+
+
+                        data.Blocks[block_index].Sections.append(
+                            Section(
+                                data.TrackPosition,
+                                aspects,
+                                departure_station_index,
+                                SectionType.value_based if value_based else SectionType.index_based
+                            )
+                        )
+
+                        self.CurrentSection += 1
+
             case TrackCommand.SigF:
                 pass
             case TrackCommand.Signal:

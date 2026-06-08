@@ -10,6 +10,7 @@ from Plugins.RouteCsvRw.Structures.Route.RailCycle import RailCycle
 from Plugins.RouteCsvRw.Structures.Route.StationStop import Stop
 from Plugins.RouteCsvRw.Structures.Direction import Direction
 from Plugins.RouteCsvRw.Structures.Route.Rail import Rail
+from Plugins.RouteCsvRw.Structures.Trains.Brightness import Brightness
 from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
 from RouteManager2.SignalManager.SafetySystems import SafetySystem
 from RouteManager2.Stations.RouteStation import RouteStation
@@ -316,7 +317,23 @@ class Parser7:
                         a = 100.0
                     data.Blocks[block_index].Rails[0].AdhesionMultiplier = 0.01 * a
             case TrackCommand.Brightness:
-                pass
+                if not preview_only:
+                    value = 255.0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, value = NumberFormats.try_parse_double_vb6(arguments[0])
+                        if not success:
+                            logger.error(f'Value is invalid in {command} at line '
+                                         f'{expression.Line} , column {expression.Column}'
+                                         f' in file {expression.File}')
+                            value = 255.0
+                        value /= 255.0
+                        if value < 0.0: value = 0.0
+                        if value > 1.0: value = 1.0
+                        n = len(data.Blocks[block_index].BrightnessChanges)
+                        # BrightnessChanges 리스트에 새 Brightness 객체 추가
+                        data.Blocks[block_index].BrightnessChanges.append(
+                            Brightness(data.TrackPosition, value)
+                        )
             case TrackCommand.Fog:
                 pass
             case TrackCommand.Section:

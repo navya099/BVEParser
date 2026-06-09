@@ -1059,9 +1059,31 @@ class Parser7:
                     )
 
             case TrackCommand.ATSSn:
-                pass
+                if not preview_only:
+                    data.Blocks[block_index].Transponders.append(
+                        Transponder(
+                            data.TrackPosition,
+                            0,  # type
+                            0,  # data
+                            Vector2(),  # 위치 (기본값)
+                            self.CurrentSection + 1,
+                            -2  # beacon_structure_index
+                        )
+                    )
+
             case TrackCommand.ATSP:
-                pass
+                if not preview_only:
+                    data.Blocks[block_index].Transponders.append(
+                        Transponder(
+                            data.TrackPosition,
+                            3,  # type
+                            0,  # data
+                            Vector2(),  # 위치 (기본값)
+                            self.CurrentSection + 1,
+                            -2  # beacon_structure_index
+                        )
+                    )
+
             case TrackCommand.Pattern:
                 pass
             case TrackCommand.PLimit:

@@ -23,6 +23,7 @@ from OpenBveApi.System.Path import Path
 from OpenBveApi.Colors.Color24 import Color24
 from Plugins.RouteCsvRw.Structures.Signals.Section import Section
 from OpenBveApi.Math.Vectors.Vector2 import Vector2
+from RouteManager2.Events.TransponderTypes import TransponderTypes
 
 import math
 import numpy as np
@@ -1085,7 +1086,69 @@ class Parser7:
                     )
 
             case TrackCommand.Pattern:
-                pass
+                if not preview_only:
+                    type_val = 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, type_val = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'Type is invalid in {command} at line {expression.Line}, column {expression.Column} '
+                                f'in file {expression.File}'
+                            )
+                            type_val = 0
+
+                    speed = 0.0
+                    if len(arguments) >= 2 and len(arguments[1]) > 0:
+                        success, speed = NumberFormats.try_parse_double_vb6(arguments[1])
+                        if not success:
+                            logger.error(
+                                f'Speed is invalid in {command} at line {expression.Line}, column {expression.Column} '
+                                f'in file {expression.File}'
+                            )
+                            speed = 0.0
+
+                    # 속도 변환: km/h 단위로 변환 (speed * UnitOfSpeed * 3.6)
+                    speed_val = int(math.inf) if speed == 0.0 else int(round(speed * data.UnitOfSpeed * 3.6))
+
+                    # Transponder 추가
+                    if type_val == 0:
+                        # 원본 코드는 오버로드 생성자임으로 python에서는 속성 명시했음
+                        # internal Transponder(double trackPosition, TransponderTypes type, int data) : base(trackPosition)
+                        # {
+                        # 	Type = (int)type;
+                        # 	Data = data;
+                        # 	Position = Vector2.Null;
+                        # 	SectionIndex = -1;
+                        # 	ClipToFirstRedSection = false;
+                        # 	Yaw = 0;
+                        # 	Pitch = 0;
+                        # 	Roll = 0;
+                        # 	BeaconStructureIndex = -1;
+                        # }
+                        data.Blocks[block_index].Transponders.append(
+                            Transponder(
+                                track_position=data.TrackPosition,
+                                event_type=int(TransponderTypes.InternalAtsPTemporarySpeedLimit.value),
+                                data=speed_val,
+                                section_index=-1,
+                                clip_to_first_red_section=False,
+                                position=Vector2.Null()
+                            )
+                        )
+                    else:
+                        #원본 코드는 오버로드 생성자임으로 python에서는 속성 명시했음
+                        #internal Transponder(double trackPosition, TransponderTypes type, int data) : base(trackPosition)
+                        data.Blocks[block_index].Transponders.append(
+                            Transponder(
+                                track_position=data.TrackPosition,
+                                event_type=int(TransponderTypes.AtsPPermanentSpeedLimit.value),
+                                data=speed_val,
+                                section_index=-1,
+                                clip_to_first_red_section=False,
+                                position=Vector2.Null()
+                            )
+                        )
+
             case TrackCommand.PLimit:
                 pass
             case TrackCommand.Limit:

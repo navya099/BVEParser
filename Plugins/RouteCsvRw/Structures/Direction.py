@@ -17,7 +17,7 @@ class Parser9:
         super().__init__()
 
     @staticmethod
-    def find_direction(direction: str, command: str, iswalldike: bool, line: str, file: str):
+    def find_direction(direction: str, command: str, iswalldike: bool, line: int, file: str):
         direction = direction.strip()
         match direction.lower():
             case '-1' | 'L' | 'LEFT':

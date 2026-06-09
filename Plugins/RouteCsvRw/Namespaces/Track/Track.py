@@ -10,8 +10,9 @@ from Plugins.RouteCsvRw.Structures.Route.FreeObject import FreeObj
 from Plugins.RouteCsvRw.Structures.Route.Pole import Pole
 from Plugins.RouteCsvRw.Structures.Route.RailCycle import RailCycle
 from Plugins.RouteCsvRw.Structures.Route.StationStop import Stop
-from Plugins.RouteCsvRw.Structures.Direction import Direction
+from Plugins.RouteCsvRw.Structures.Direction import Direction, Parser9
 from Plugins.RouteCsvRw.Structures.Route.Rail import Rail
+from Plugins.RouteCsvRw.Structures.Route.WallDike import WallDike
 from Plugins.RouteCsvRw.Structures.Signals.Signal import Signal
 from Plugins.RouteCsvRw.Structures.Signals.Transponder import Transponder
 from Plugins.RouteCsvRw.Structures.Trains.Brightness import Brightness
@@ -1993,13 +1994,181 @@ class Parser7:
 
                         data.Blocks[block_index].RailPole[idx].Exists = False
             case TrackCommand.Wall:
-                pass
+                if not preview_only:
+                    idx = 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, idx = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'RailIndex is invalid in Track.Wall at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            idx = 0
+
+                    if idx < 0:
+                        logger.error(
+                            f'RailIndex must be non-negative in Track.Wall at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        idx = 0
+
+                    dir = Direction.Invalid
+                    if len(arguments) >= 2 and len(arguments[1]) > 0:
+                        dir = Parser9.find_direction(arguments[1], "Track.Wall", True, expression.Line, expression.File)
+
+                    if dir in [Direction.Invalid, Direction.Null]:
+                        return data
+                    sttype = 0
+                    if len(arguments) >= 3 and len(arguments[2]) > 0:
+                        success, sttype = NumberFormats.try_parse_int_vb6(arguments[2])
+                        if not success:
+                            logger.error(
+                                f'WallStructureIndex is invalid in Track.Wall at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            sttype = 0
+
+                    if sttype < 0:
+                        logger.error(
+                            f'WallStructureIndex must be non-negative in Track.Wall at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        sttype = 0
+
+                    # 구조체 존재 여부 확인
+                    if (dir < 0 and sttype not in data.Structure.WallL) or \
+                            (dir > 0 and sttype not in data.Structure.WallR) or \
+                            (dir == 0 and (sttype not in data.Structure.WallL and sttype not in data.Structure.WallR)):
+                        if dir < 0:
+                            logger.error(
+                                f'WallStructureIndex {sttype} not loaded in Track.WallL at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        elif dir > 0:
+                            logger.error(
+                                f'WallStructureIndex {sttype} not loaded in Track.WallR at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        else:
+                            logger.error(
+                                f'WallStructureIndex {sttype} not loaded in Track.WallBothSides at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                    else:
+                        if dir == Direction.Both:
+                            if sttype not in data.Structure.WallL:
+                                logger.error(
+                                    f'LeftWallStructureIndex {sttype} not loaded in Track.WallBothSides at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                dir = Direction.Right
+                            if sttype not in data.Structure.WallR:
+                                logger.error(
+                                    f'RightWallStructureIndex {sttype} not loaded in Track.WallBothSides at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                dir = Direction.Left
+
+                        if idx not in data.Blocks[block_index].Rails or not data.Blocks[block_index].Rails[
+                            idx].RailStarted:
+                            logger.warning(
+                                f'RailIndex {idx} could be out of range in Track.Wall at line {expression.Line}, column {expression.Column} in file {expression.File}')
+
+                        # RailWall 추가/갱신
+                        data.Blocks[block_index].RailWall[idx] = WallDike(sttype, dir, data.Structure.WallL,
+                                                                          data.Structure.WallR)
+
             case TrackCommand.WallEnd:
-                pass
+                if not preview_only:
+                    idx = 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, idx = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'RailIndex is invalid in Track.WallEnd at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            idx = 0
+
+                    if idx not in data.Blocks[block_index].RailWall:
+                        logger.error(
+                            f'RailIndex {idx} does not reference an existing wall in Track.WallEnd at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                    else:
+                        if idx not in data.Blocks[block_index].Rails or (
+                                not data.Blocks[block_index].Rails[idx].RailStarted and not
+                        data.Blocks[block_index].Rails[idx].RailEnded):
+                            logger.warning(
+                                f'RailIndex {idx} could be out of range in Track.WallEnd at line {expression.Line}, column {expression.Column} in file {expression.File}')
+
+                        data.Blocks[block_index].RailWall[idx].exists = False
+
             case TrackCommand.Dike:
-                pass
+                if not preview_only:
+                    idx = 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, idx = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'RailIndex is invalid in Track.Dike at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            idx = 0
+
+                    if idx < 0:
+                        logger.error(
+                            f'RailIndex must be non-negative in Track.Dike at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        idx = 0
+
+                    dir = Direction.Invalid
+                    if len(arguments) >= 2 and len(arguments[1]) > 0:
+                        dir = Parser9.find_direction(arguments[1], "Track.Dike", True, expression.Line, expression.File)
+
+                    if dir in [Direction.Invalid, Direction.Null]:
+                        return data
+                    sttype = 0
+                    if len(arguments) >= 3 and len(arguments[2]) > 0:
+                        success, sttype = NumberFormats.try_parse_int_vb6(arguments[2])
+                        if not success:
+                            logger.error(
+                                f'DikeStructureIndex is invalid in Track.Dike at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            sttype = 0
+
+                    if sttype < 0:
+                        logger.error(
+                            f'DikeStructureIndex must be non-negative in Track.Dike at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        sttype = 0
+
+                    # 구조체 존재 여부 확인
+                    if (dir < 0 and sttype not in data.Structure.DikeL) or \
+                            (dir > 0 and sttype not in data.Structure.DikeR) or \
+                            (dir == 0 and (sttype not in data.Structure.DikeL and sttype not in data.Structure.DikeR)):
+                        if dir < 0:
+                            logger.error(
+                                f'DikeStructureIndex {sttype} not loaded in Track.DikeL at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        elif dir > 0:
+                            logger.error(
+                                f'DikeStructureIndex {sttype} not loaded in Track.DikeR at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        else:
+                            logger.error(
+                                f'DikeStructureIndex {sttype} not loaded in Track.DikeBothSides at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                    else:
+                        if dir == Direction.Both:
+                            if sttype not in data.Structure.DikeL:
+                                logger.error(
+                                    f'LeftDikeStructureIndex {sttype} not loaded in Track.DikeBothSides at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                dir = Direction.Right
+                            if sttype not in data.Structure.DikeR:
+                                logger.error(
+                                    f'RightDikeStructureIndex {sttype} not loaded in Track.DikeBothSides at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                dir = Direction.Left
+
+                        if idx not in data.Blocks[block_index].Rails or not data.Blocks[block_index].Rails[
+                            idx].RailStarted:
+                            logger.warning(
+                                f'RailIndex {idx} could be out of range in Track.Dike at line {expression.Line}, column {expression.Column} in file {expression.File}')
+
+                        # RailWall 추가/갱신
+                        data.Blocks[block_index].RailDike[idx] = WallDike(sttype, dir, data.Structure.DikeL,
+                                                                          data.Structure.DikeR)
             case TrackCommand.DikeEnd:
-                pass
+                if not preview_only:
+                    idx = 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, idx = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'RailIndex is invalid in Track.DikeEnd at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            idx = 0
+
+                    if idx not in data.Blocks[block_index].RailDike:
+                        logger.error(
+                            f'RailIndex {idx} does not reference an existing wall in Track.DikeEnd at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                    else:
+                        if idx not in data.Blocks[block_index].Rails or (
+                                not data.Blocks[block_index].Rails[idx].RailStarted and not
+                        data.Blocks[block_index].Rails[idx].RailEnded):
+                            logger.warning(
+                                f'RailIndex {idx} could be out of range in Track.DikeEnd at line {expression.Line}, column {expression.Column} in file {expression.File}')
+
+                        data.Blocks[block_index].RailDike[idx].exists = False
             case TrackCommand.Marker:
                 pass
             case TrackCommand.TextMarker:

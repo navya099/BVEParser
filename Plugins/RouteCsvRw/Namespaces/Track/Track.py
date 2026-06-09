@@ -1,3 +1,5 @@
+import sys
+
 from OpenBveApi.Runtime.Route.Station import StationStopMode, StationType
 from Plugins.RouteCsvRw.Functions import Parser4
 from Plugins.RouteCsvRw.Namespaces.Track.TrackCommands import TrackCommand
@@ -1150,7 +1152,30 @@ class Parser7:
                         )
 
             case TrackCommand.PLimit:
-                pass
+                if not preview_only:
+                    speed = 0.0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, speed = NumberFormats.try_parse_double_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'Speed is invalid in {command} at line {expression.Line}, column {expression.Column} '
+                                f'in file {expression.File}'
+                            )
+                            speed = 0.0
+
+                    speed_val = sys.maxsize if speed == 0.0 else int(round(speed * data.UnitOfSpeed * 3.6))
+
+                    data.Blocks[block_index].Transponders.append(
+                        Transponder(
+                            track_position=data.TrackPosition,
+                            event_type=int(TransponderTypes.AtsPPermanentSpeedLimit.value),
+                            data=speed_val,
+                            section_index=-1,
+                            clip_to_first_red_section=False,
+                            position=Vector2.Null()
+                        )
+                    )
+
             case TrackCommand.Limit:
                 pass
             case TrackCommand.Stop | TrackCommand.StopPos:

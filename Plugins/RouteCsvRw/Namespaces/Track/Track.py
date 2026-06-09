@@ -32,6 +32,7 @@ import math
 import numpy as np
 import os
 
+from RouteManager2.Tracks.BufferStop import BufferStop
 from loggermodule import logger
 
 
@@ -1794,7 +1795,8 @@ class Parser7:
                     data.Blocks[block_index].Station = self.CurrentStation
 
             case TrackCommand.Buffer:
-                pass
+                if not preview_only:
+                    self.CurrentRoute.BufferTrackPositions.append(BufferStop(0, data.TrackPosition, True))
             case TrackCommand.Form:
                 pass
             case TrackCommand.Pole:

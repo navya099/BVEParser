@@ -16,6 +16,7 @@ from Plugins.RouteCsvRw.Structures.Signals.Signal import Signal
 from Plugins.RouteCsvRw.Structures.Signals.Transponder import Transponder
 from Plugins.RouteCsvRw.Structures.Trains.Brightness import Brightness
 from Plugins.RouteCsvRw.Structures.Trains.DestinationEvent import DestinationEvent
+from Plugins.RouteCsvRw.Structures.Trains.Limit import Limit
 from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
 from RouteManager2.SignalManager.SafetySystems import SafetySystem
 from RouteManager2.SignalManager.SectionTypes import SectionType
@@ -1177,7 +1178,45 @@ class Parser7:
                     )
 
             case TrackCommand.Limit:
-                pass
+                limit, direction, cource = 0.0, 0, 0
+
+                if len(arguments) >= 1 and len(arguments[0]) > 0:
+                    success, limit = NumberFormats.try_parse_double_vb6(arguments[0])
+                    if not success:
+                        logger.error(
+                            f'Speed is invalid in Track.Limit at line {expression.Line}, column {expression.Column} '
+                            f'in file {expression.File}'
+                        )
+                        limit = 0.0
+
+                if len(arguments) >= 2 and len(arguments[1]) > 0:
+                    success, direction = NumberFormats.try_parse_int_vb6(arguments[1])
+                    if not success:
+                        logger.error(
+                            f'Direction is invalid in Track.Limit at line {expression.Line}, column {expression.Column} '
+                            f'in file {expression.File}'
+                        )
+                        direction = 0
+
+                if len(arguments) >= 3 and len(arguments[2]) > 0:
+                    success, cource = NumberFormats.try_parse_int_vb6(arguments[2])
+                    if not success:
+                        logger.error(
+                            f'Cource is invalid in Track.Limit at line {expression.Line}, column {expression.Column} '
+                            f'in file {expression.File}'
+                        )
+                        cource = 0
+
+                data.Blocks[block_index].Limits.append(
+                    Limit(
+                        data.TrackPosition,
+                        float('inf') if limit <= 0.0 else data.UnitOfSpeed * limit,
+                        direction,
+                        cource,
+                        0
+                    )
+                )
+
             case TrackCommand.Stop | TrackCommand.StopPos:
                 if self.CurrentStation == -1:
                     logger.error(f"A stop without a station is invalid in Track.Stop at line "

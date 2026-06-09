@@ -131,7 +131,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
 
     def parse_route_for_data(self, file_name: str, encoding: str, data: RouteData,
                              preview_only: bool) -> RouteData:
-        with open(file_name, 'r', encoding=encoding) as f:
+        with open(file_name, 'r', encoding=encoding, errors='ignore') as f:
             lines: List[str] = f.readlines()
 
         expressions = self.preprocess_split_into_expressions(file_name, lines, True)

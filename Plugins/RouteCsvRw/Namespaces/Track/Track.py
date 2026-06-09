@@ -575,7 +575,118 @@ class Parser7:
                     )
 
             case TrackCommand.Signal | TrackCommand.Sig:
-                pass
+                if not preview_only:
+                    num = -2
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, num = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'Aspects is invalid in {command} at line '
+                                f'{expression.Line}, column {expression.Column} '
+                                f'in file {expression.File}'
+                            )
+                            num = -2
+
+                    # RW 호환 처리
+                    if num == 0 and is_rw:
+                        num = -2
+
+                    # 지원되지 않는 값 보정
+                    if num not in [1, -2, 2, -3, 3, -4, 4, -5, 5, 6]:
+                        logger.error(
+                            f'Aspects has an unsupported value in {command} at line '
+                            f'{expression.Line}, column {expression.Column} '
+                            f'in file {expression.File}'
+                        )
+                        num = -num if num in [-3, -6, -1] else -4
+
+                    # 위치 및 회전값
+                    x, y = 0.0, 0.0
+                    if len(arguments) >= 3 and len(arguments[2]) > 0:
+                        success, x = NumberFormats.try_parse_double_vb6(arguments[2], unit_of_length)
+                        if not success:
+                            logger.error(
+                                f'X is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            x = 0.0
+
+                    if len(arguments) >= 4 and len(arguments[3]) > 0:
+                        success, y = NumberFormats.try_parse_double_vb6(arguments[3], unit_of_length)
+                        if not success:
+                            logger.error(
+                                f'Y is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            y = 0.0
+
+                    yaw, pitch, roll = 0.0, 0.0, 0.0
+                    if len(arguments) >= 5 and len(arguments[4]) > 0:
+                        success, yaw = NumberFormats.try_parse_double_vb6(arguments[4])
+                        if not success:
+                            logger.error(
+                                f'Yaw is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            yaw = 0.0
+
+                    if len(arguments) >= 6 and len(arguments[5]) > 0:
+                        success, pitch = NumberFormats.try_parse_double_vb6(arguments[5])
+                        if not success:
+                            logger.error(
+                                f'Pitch is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            pitch = 0.0
+
+                    if len(arguments) >= 7 and len(arguments[6]) > 0:
+                        success, roll = NumberFormats.try_parse_double_vb6(arguments[6])
+                        if not success:
+                            logger.error(
+                                f'Roll is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            roll = 0.0
+
+                    # Aspects 매핑
+                    if num == 1:
+                        aspects, comp = [0, 2, 3], 4
+                    elif num == 2:
+                        aspects, comp = [0, 2], 0
+                    elif num == -2:
+                        aspects, comp = [0, 4], 1
+                    elif num in (-3, 3):
+                        aspects, comp = [0, 2, 4], 2
+                    elif num == 4:
+                        aspects, comp = [0, 1, 2, 4], 3
+                    elif num == -4:
+                        aspects, comp = [0, 2, 3, 4], 4
+                    elif num == 5:
+                        aspects, comp = [0, 1, 2, 3, 4], 5
+                    elif num == -5:
+                        aspects, comp = [0, 2, 3, 4, 5], 6
+                    elif num == 6:
+                        aspects, comp = [0, 1, 2, 3, 4, 5], 7
+                    else:
+                        aspects, comp = [0, 2], 0
+
+                    # Section 추가
+                    departure_station_index = -1
+                    if self.CurrentStation >= 0 and self.CurrentRoute.Stations[self.CurrentStation].ForceStopSignal:
+                        if self.CurrentStation >= 0 and self.CurrentStop >= 0 and not self.DepartureSignalUsed:
+                            departure_station_index = self.CurrentStation
+                            self.DepartureSignalUsed = True
+
+                    data.Blocks[block_index].Sections.append(
+                        Section(data.TrackPosition, aspects, departure_station_index, SectionType.value_based, x == 0.0)
+                    )
+                    self.CurrentSection += 1
+
+                    # Signal 추가
+                    data.Blocks[block_index].Signals.append(
+                        Signal(
+                            data.TrackPosition,
+                            self.CurrentSection,
+                            data.CompatibilitySignals[comp],
+                            Vector2(x, y if y >= 0.0 else 4.8),
+                            math.radians(yaw),
+                            math.radians(pitch),
+                            math.radians(roll),
+                            x != 0.0,
+                            (x != 0.0) and (y < 0.0)
+                        )
+                    )
+
             case TrackCommand.Relay:
                 pass
             case TrackCommand.Destination:

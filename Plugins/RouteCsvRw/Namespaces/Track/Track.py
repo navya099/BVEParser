@@ -12,6 +12,7 @@ from Plugins.RouteCsvRw.Structures.Direction import Direction
 from Plugins.RouteCsvRw.Structures.Route.Rail import Rail
 from Plugins.RouteCsvRw.Structures.Signals.Signal import Signal
 from Plugins.RouteCsvRw.Structures.Trains.Brightness import Brightness
+from Plugins.RouteCsvRw.Structures.Trains.DestinationEvent import DestinationEvent
 from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
 from RouteManager2.SignalManager.SafetySystems import SafetySystem
 from RouteManager2.SignalManager.SectionTypes import SectionType
@@ -746,7 +747,119 @@ class Parser7:
                     )
 
             case TrackCommand.Destination:
-                pass
+                if not preview_only:
+                    type_val = 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, type_val = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'Type is invalid in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            type_val = 0
+
+                    if type_val < -1 or type_val > 1:
+                        logger.error(
+                            f'Type must be -1 to 1 in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                    else:
+                        structure, next_dest, prev_dest, trigger_once = 0, 0, 0, 0
+
+                        if len(arguments) >= 2 and len(arguments[1]) > 0:
+                            success, structure = NumberFormats.try_parse_int_vb6(arguments[1])
+                            if not success:
+                                logger.error(
+                                    f'BeaconStructureIndex is invalid in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                structure = 0
+
+                        if len(arguments) >= 3 and len(arguments[2]) > 0:
+                            success, next_dest = NumberFormats.try_parse_int_vb6(arguments[2])
+                            if not success:
+                                logger.error(
+                                    f'NextDestination is invalid in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                next_dest = 0
+
+                        if len(arguments) >= 4 and len(arguments[3]) > 0:
+                            success, prev_dest = NumberFormats.try_parse_int_vb6(arguments[3])
+                            if not success:
+                                logger.error(
+                                    f'PreviousDestination is invalid in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                prev_dest = 0
+
+                        if len(arguments) >= 5 and len(arguments[4]) > 0:
+                            success, trigger_once = NumberFormats.try_parse_int_vb6(arguments[4])
+                            if not success:
+                                logger.error(
+                                    f'TriggerOnce is invalid in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                trigger_once = 0
+
+                        # 구조체 인덱스 검증
+                        if structure < -1:
+                            logger.error(
+                                f'BeaconStructureIndex must be non-negative or -1 in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            structure = -1
+                        elif structure >= 0 and structure not in data.Structure.Beacon:
+                            logger.error(
+                                f'BeaconStructureIndex {structure} references an object not loaded in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            structure = -1
+
+                        if trigger_once < 0 or trigger_once > 1:
+                            logger.error(
+                                f'TriggerOnce must be 0 or 1 in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            trigger_once = 0
+
+                        # 좌표 및 회전값
+                        x, y = 0.0, 0.0
+                        yaw, pitch, roll = 0.0, 0.0, 0.0
+
+                        if len(arguments) >= 6 and len(arguments[5]) > 0:
+                            success, x = NumberFormats.try_parse_double_vb6(arguments[5], unit_of_length)
+                            if not success:
+                                logger.error(
+                                    f'X is invalid in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                x = 0.0
+
+                        if len(arguments) >= 7 and len(arguments[6]) > 0:
+                            success, y = NumberFormats.try_parse_double_vb6(arguments[6], unit_of_length)
+                            if not success:
+                                logger.error(
+                                    f'Y is invalid in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                y = 0.0
+
+                        if len(arguments) >= 8 and len(arguments[7]) > 0:
+                            success, yaw = NumberFormats.try_parse_double_vb6(arguments[7])
+                            if not success:
+                                logger.error(
+                                    f'Yaw is invalid in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                yaw = 0.0
+
+                        if len(arguments) >= 9 and len(arguments[8]) > 0:
+                            success, pitch = NumberFormats.try_parse_double_vb6(arguments[8])
+                            if not success:
+                                logger.error(
+                                    f'Pitch is invalid in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                pitch = 0.0
+
+                        if len(arguments) >= 10 and len(arguments[9]) > 0:
+                            success, roll = NumberFormats.try_parse_double_vb6(arguments[9])
+                            if not success:
+                                logger.error(
+                                    f'Roll is invalid in Track.Destination at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                roll = 0.0
+
+                        # DestinationEvent 추가
+                        data.Blocks[block_index].DestinationChanges.append(
+                            DestinationEvent(
+                                data.TrackPosition,
+                                type_val,
+                                trigger_once != 0,
+                                structure,
+                                next_dest,
+                                prev_dest,
+                                Vector2(x, y),
+                                math.radians(yaw),
+                                math.radians(pitch),
+                                math.radians(roll)
+                            )
+                        )
+
             case TrackCommand.Beacon:
                 pass
             case TrackCommand.Transponder:

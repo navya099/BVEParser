@@ -1,3 +1,5 @@
+import sys
+
 from OpenBveApi.Runtime.Route.Station import StationStopMode, StationType
 from Plugins.RouteCsvRw.Functions import Parser4
 from Plugins.RouteCsvRw.Namespaces.Track.TrackCommands import TrackCommand
@@ -15,6 +17,7 @@ from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
 from RouteManager2.SignalManager.SafetySystems import SafetySystem
 from RouteManager2.Stations.RouteStation import RouteStation
 from OpenBveApi.System.Path import Path
+from Plugins.RouteCsvRw.Structures.Route.Form import Form
 
 import math
 import numpy as np
@@ -894,7 +897,92 @@ class Parser7:
             case TrackCommand.Buffer:
                 pass
             case TrackCommand.Form:
-                pass
+                if not preview_only:
+                    idx1, idx2 = 0, 0
+
+                    # RailIndex1
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, idx1 = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'RailIndex1 is invalid in Track.Form at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            idx1 = 0
+
+                    # RailIndex2
+                    if len(arguments) >= 2 and len(arguments[1]) > 0:
+                        arg2 = arguments[1].upper()
+                        if arg2 == "L":
+                            idx2 = Form.SecondaryRailL
+                        elif arg2 == "R":
+                            idx2 = Form.SecondaryRailR
+                        elif is_rw and arg2 == "9X":
+                            idx2 = sys.maxsize
+                        else:
+                            success, idx2 = NumberFormats.try_parse_int_vb6(arguments[1])
+                            if not success:
+                                logger.error(
+                                    f'RailIndex2 is invalid in Track.Form at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                idx2 = 0
+
+                    # RW 호환 처리
+                    if is_rw:
+                        if idx2 == sys.maxsize:
+                            idx2 = 9
+                        elif idx2 == -9:
+
+                            idx2 = Form.SecondaryRailL
+                        elif idx2 == 9:
+                            idx2 = Form.SecondaryRailR
+
+                    # RailIndex 검증
+                    if idx1 < 0:
+                        logger.error(
+                            f'RailIndex1 must be non-negative in Track.Form at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                    elif idx2 < 0 and idx2 not in [Form.SecondaryRailStub, Form.SecondaryRailL, Form.SecondaryRailR]:
+                        logger.error(
+                            f'RailIndex2 must be >= -2 in Track.Form at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                    else:
+                        if idx1 not in data.Blocks[block_index].Rails or not data.Blocks[block_index].Rails[
+                            idx1].RailStarted:
+                            logger.warning(
+                                f'RailIndex1 could be out of range in Track.Form at line {expression.Line}, column {expression.Column} in file {expression.File}')
+
+                        if idx2 not in [Form.SecondaryRailStub, Form.SecondaryRailL, Form.SecondaryRailR] and (
+                                idx2 not in data.Blocks[block_index].Rails or not data.Blocks[block_index].Rails[
+                            idx2].RailStarted):
+                            logger.warning(
+                                f'RailIndex2 could be out of range in Track.Form at line {expression.Line}, column {expression.Column} in file {expression.File}')
+
+                        # Roof / Form 구조체 인덱스
+                        roof, pf = 0, 0
+                        if len(arguments) >= 3 and len(arguments[2]) > 0:
+                            success, roof = NumberFormats.try_parse_int_vb6(arguments[2])
+                            if not success:
+                                logger.error(
+                                    f'RoofStructureIndex is invalid in Track.Form at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                roof = 0
+
+                        if len(arguments) >= 4 and len(arguments[3]) > 0:
+                            success, pf = NumberFormats.try_parse_int_vb6(arguments[3])
+                            if not success:
+                                logger.error(
+                                    f'FormStructureIndex is invalid in Track.Form at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                pf = 0
+
+                        if roof != 0 and (
+                                roof < 0 or (roof not in data.Structure.RoofL and roof not in data.Structure.RoofR)):
+                            logger.error(
+                                f'RoofStructureIndex {roof} references an object not loaded in Track.Form at line {expression.Line}, column {expression.Column} in file {expression.File}')
+
+                        if pf < 0 or (pf not in data.Structure.FormL and pf not in data.Structure.FormR):
+                            logger.error(
+                                f'FormStructureIndex {pf} references an object not loaded in Track.Form at line {expression.Line}, column {expression.Column} in file {expression.File}')
+
+                        # Form 추가
+                        data.Blocks[block_index].Forms.append(
+                            Form(idx1, idx2, pf, roof, data.Structure)
+                        )
+
             case TrackCommand.Pole:
                 if not preview_only:
                     idx = 0

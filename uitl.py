@@ -32,6 +32,44 @@ class Util:
             for i, expr in enumerate(expressions):
                 f.write(f"{i},{expr.Line},{expr.Text},{expr.TrackPositionOffset},{expr.File}\n")
 
+    @staticmethod
+    def create_csv(expressions):
+        sections = {
+            "Track": [],
+            "Options": [],
+            "Route": [],
+            "Train": [],
+            "Structure": []
+        }
+
+        # 맨 처음은 Track 섹션으로 시작
+        current_section = "Track"
+
+        for expr in expressions:
+            text = expr.Text.strip()
+
+            # 섹션 시작 키워드 체크
+            if text.startswith("Options"):
+                current_section = "Options"
+            elif text == "With Route":
+                current_section = "Route"
+            elif text == "With Train":
+                current_section = "Train"
+            elif text == "With Structure":
+                current_section = "Structure"
+            elif text == "With Track":
+                current_section = "Track"
+
+            # 현재 섹션에 데이터 추가
+            sections[current_section].append(text)
+
+        # 원하는 순서대로 CSV에 기록
+        with open("C:/TEMP/route_revesed.csv", "w", encoding="utf-8-sig") as f:
+            for section_name in ["Options", "Route", "Train", "Structure", "Track"]:
+                if sections[section_name]:
+                    for line in sections[section_name]:
+                        f.write(f"{line}\n")
+
 
 class RecursiveEncoder(json.JSONEncoder):
     def default(self, obj):

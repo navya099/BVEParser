@@ -148,6 +148,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         logger.debug('루트파싱완료')
         self.CurrentRoute.UnitOfLength = unit_of_length
         Util.test(expressions)# 익스프레션추출 테스트
+        Util.create_csv(expressions)
         return data
 
 

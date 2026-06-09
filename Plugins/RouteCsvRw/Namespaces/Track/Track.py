@@ -688,7 +688,63 @@ class Parser7:
                     )
 
             case TrackCommand.Relay:
-                pass
+                if not preview_only:
+                    x, y = 0.0, 0.0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, x = NumberFormats.try_parse_double_vb6(arguments[0], unit_of_length)
+                        if not success:
+                            logger.error(
+                                f'X is invalid in Track.Relay at line {expression.Line}, column {expression.Column} '
+                                f'in file {expression.File}'
+                            )
+                            x = 0.0
+
+                    if len(arguments) >= 2 and len(arguments[1]) > 0:
+                        success, y = NumberFormats.try_parse_double_vb6(arguments[1], unit_of_length)
+                        if not success:
+                            logger.error(
+                                f'Y is invalid in Track.Relay at line {expression.Line}, column {expression.Column} '
+                                f'in file {expression.File}'
+                            )
+                            y = 0.0
+
+                    yaw, pitch, roll = 0.0, 0.0, 0.0
+                    if len(arguments) >= 3 and len(arguments[2]) > 0:
+                        success, yaw = NumberFormats.try_parse_double_vb6(arguments[2])
+                        if not success:
+                            logger.error(
+                                f'Yaw is invalid in Track.Relay at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            yaw = 0.0
+
+                    if len(arguments) >= 4 and len(arguments[3]) > 0:
+                        success, pitch = NumberFormats.try_parse_double_vb6(arguments[3])
+                        if not success:
+                            logger.error(
+                                f'Pitch is invalid in Track.Relay at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            pitch = 0.0
+
+                    if len(arguments) >= 5 and len(arguments[4]) > 0:
+                        success, roll = NumberFormats.try_parse_double_vb6(arguments[4])
+                        if not success:
+                            logger.error(
+                                f'Roll is invalid in Track.Relay at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            roll = 0.0
+
+                    # Relay 신호 추가
+                    data.Blocks[block_index].Signals.append(
+                        Signal(
+                            data.TrackPosition,
+                            self.CurrentSection + 1,
+                            data.CompatibilitySignals[8],
+                            Vector2(x, y if y >= 0.0 else 4.8),
+                            math.radians(yaw),
+                            math.radians(pitch),
+                            math.radians(roll),
+                            x != 0.0,
+                            (x != 0.0) and (y < 0.0)
+                        )
+                    )
+
             case TrackCommand.Destination:
                 pass
             case TrackCommand.Beacon:

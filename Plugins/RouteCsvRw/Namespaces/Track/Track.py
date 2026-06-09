@@ -11,6 +11,7 @@ from Plugins.RouteCsvRw.Structures.Route.StationStop import Stop
 from Plugins.RouteCsvRw.Structures.Direction import Direction
 from Plugins.RouteCsvRw.Structures.Route.Rail import Rail
 from Plugins.RouteCsvRw.Structures.Signals.Signal import Signal
+from Plugins.RouteCsvRw.Structures.Signals.Transponder import Transponder
 from Plugins.RouteCsvRw.Structures.Trains.Brightness import Brightness
 from Plugins.RouteCsvRw.Structures.Trains.DestinationEvent import DestinationEvent
 from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
@@ -861,7 +862,118 @@ class Parser7:
                         )
 
             case TrackCommand.Beacon:
-                pass
+                if not preview_only:
+                    type_val = 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, type_val = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'Type is invalid in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            type_val = 0
+
+                    if type_val < 0:
+                        logger.error(
+                            f'Type must be non-negative in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                    else:
+                        structure, section, optional = 0, 0, 0
+
+                        if len(arguments) >= 2 and len(arguments[1]) > 0:
+                            success, structure = NumberFormats.try_parse_int_vb6(arguments[1])
+                            if not success:
+                                logger.error(
+                                    f'BeaconStructureIndex is invalid in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                structure = 0
+
+                        if len(arguments) >= 3 and len(arguments[2]) > 0:
+                            success, section = NumberFormats.try_parse_int_vb6(arguments[2])
+                            if not success:
+                                logger.error(
+                                    f'Section is invalid in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                section = 0
+
+                        if len(arguments) >= 4 and len(arguments[3]) > 0:
+                            success, optional = NumberFormats.try_parse_int_vb6(arguments[3])
+                            if not success:
+                                logger.error(
+                                    f'Data is invalid in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                optional = 0
+
+                        # 구조체 인덱스 검증
+                        if structure < -1:
+                            logger.error(
+                                f'BeaconStructureIndex must be non-negative or -1 in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            structure = -1
+                        elif structure >= 0 and structure not in data.Structure.Beacon:
+                            logger.error(
+                                f'BeaconStructureIndex {structure} references an object not loaded in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            structure = -1
+
+                        # 섹션 처리
+                        if section == -1:
+                            # section = TrackManager.TransponderSpecialSection.NextRedSection
+                            pass
+                        elif section < 0:
+                            logger.error(
+                                f'Section must be non-negative or -1 in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            section = self.CurrentSection + 1
+                        else:
+                            section += self.CurrentSection
+
+                        # 좌표 및 회전값
+                        x, y = 0.0, 0.0
+                        yaw, pitch, roll = 0.0, 0.0, 0.0
+
+                        if len(arguments) >= 5 and len(arguments[4]) > 0:
+                            success, x = NumberFormats.try_parse_double_vb6(arguments[4], unit_of_length)
+                            if not success:
+                                logger.error(
+                                    f'X is invalid in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                x = 0.0
+
+                        if len(arguments) >= 6 and len(arguments[5]) > 0:
+                            success, y = NumberFormats.try_parse_double_vb6(arguments[5], unit_of_length)
+                            if not success:
+                                logger.error(
+                                    f'Y is invalid in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                y = 0.0
+
+                        if len(arguments) >= 7 and len(arguments[6]) > 0:
+                            success, yaw = NumberFormats.try_parse_double_vb6(arguments[6])
+                            if not success:
+                                logger.error(
+                                    f'Yaw is invalid in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                yaw = 0.0
+
+                        if len(arguments) >= 8 and len(arguments[7]) > 0:
+                            success, pitch = NumberFormats.try_parse_double_vb6(arguments[7])
+                            if not success:
+                                logger.error(
+                                    f'Pitch is invalid in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                pitch = 0.0
+
+                        if len(arguments) >= 9 and len(arguments[8]) > 0:
+                            success, roll = NumberFormats.try_parse_double_vb6(arguments[8])
+                            if not success:
+                                logger.error(
+                                    f'Roll is invalid in Track.Beacon at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                                roll = 0.0
+
+                        # Transponder 추가
+                        data.Blocks[block_index].Transponders.append(
+                            Transponder(
+                                data.TrackPosition,
+                                type_val,
+                                optional,
+                                Vector2(x, y),
+                                section,
+                                structure,
+                                False,
+                                math.radians(yaw),
+                                math.radians(pitch),
+                                math.radians(roll)
+                            )
+                        )
+
             case TrackCommand.Transponder:
                 pass
             case TrackCommand.Tr:

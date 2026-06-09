@@ -10,13 +10,14 @@ from OpenBveApi.System.TextEncoding import TextEncoding
 
 class RouteLoader:
     """GUI/CUI 공용 루트 로더"""
-    def __init__(self, path: str):
+    def __init__(self, path: str, is_revese_mode: bool):
         self.path = path
         self.plugin = Plugin()
         self.plugin.CurrentProgress = 0.0
         self.current_route = CurrentRoute()
         self.host = Host()
         self.options = BaseOptions()
+        self.is_revese_mode = is_revese_mode
 
     def load(self, progress_callback=None):
         """
@@ -25,6 +26,7 @@ class RouteLoader:
         :return: 성공여부(bool), 에러메시지(str or None)
         """
         try:
+            self.options.is_reverse_mode = self.is_revese_mode
             self.plugin.load(self.host, None, self.options, None)
 
             if not self.plugin.CanLoadRoute(self.path):
@@ -44,8 +46,8 @@ class RouteLoader:
                     progress_callback(100)
 
             threading.Thread(target=progress_thread, daemon=True).start()
-
-            result = self.plugin.LoadRoute(self.path, encoding, '', object_path, '', False, self.current_route)
+            preview_only = True if self.is_revese_mode else False
+            result = self.plugin.LoadRoute(self.path, encoding, '', object_path, '', preview_only, self.current_route)
             return result, None if result else "루트 로딩 실패"
 
         except Exception as ex:

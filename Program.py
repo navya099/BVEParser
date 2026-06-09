@@ -15,6 +15,10 @@ class Program(tk.Tk):
         self.exit_button = tk.Button(self, text="종료", command=self.close_application)
         self.exit_button.pack(pady=10)
 
+        self.is_revese_var = tk.BooleanVar(value=False)
+        self.is_revese_button = ttk.Checkbutton(self, text="역방향 루트 생성", variable=self.is_revese_var)
+        self.is_revese_button.pack(pady=10)
+
         self.progress = ttk.Progressbar(self, orient="horizontal", length=400, mode="determinate")
         self.progress.pack(pady=5)
 
@@ -25,7 +29,7 @@ class Program(tk.Tk):
 
     def file_open(self):
         self.new_task_button.config(state="disabled")
-        loading = Loading(self.progress, self.status, self.new_task_button)
+        loading = Loading(self.progress, self.status, self.new_task_button, self.is_revese_var.get())
         loading.run()
 
     def close_application(self):

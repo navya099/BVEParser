@@ -390,54 +390,45 @@ class Parser1:
         return expressions
 
     def preprocess_sort_by_track_position(self, unitfactors: List[float],
-                                          expressions: List[Expression]) -> List[Expression]:
-
+                                          expressions: List[Expression],
+                                          reverse_mode: bool = False) -> List[Expression]:
         p = []
-        n = 0
         a = -1.0
         number_check = not self.IsRW
 
-        for i in range(len(expressions)):
+        for expr in expressions:
             if self.IsRW:
-                # only check for track positions in the railway section for RW routes
-                if expressions[i].Text.startswith('[') and expressions[i].Text.endswith(']'):
-                    s = expressions[i].Text[1:-1].strip()
+                if expr.Text.startswith('[') and expr.Text.endswith(']'):
+                    s = expr.Text[1:-1].strip()
                     number_check = s.lower() == "railway"
             if number_check:
                 try:
-                    x = float(expressions[i].Text)
-                    x += expressions[i].TrackPositionOffset
+                    x = float(expr.Text)
+                    x += expr.TrackPositionOffset
                     if x >= 0.0:
-                        if self.Plugin.CurrentOptions.EnableBveTsHacks:
-                            match os.path.basename(expressions[i].File.lower()):
-                                case "balloch - dumbarton central special nighttime run.csv":
-                                    pass
-                                case "balloch - dumbarton central summer 2004 morning run.csv":
-                                    if x != 0 or a != 4125:
-                                        # Misplaced comma in the middle of the line causes this to be interpreted as a track position
-                                        a = x
-                                case _:  # 기본 동작(c# default)
-                                    a = x
-                        else:
-                            a = x
+                        a = x
                     else:
                         logger.error(
-                            f'Negative track position encountered at line {str(expressions[i].Line)}, column {str(expressions[i].Column)} in file {expressions[i].File}')
-                except ValueError as ex:
-                    p.append(PositionedExpression(a, expressions[i]))
-        p.sort(key=lambda e: e.track_position)
-        a = -1.0
-        e = []  # Expression 객체를 담을 리스트
+                            f'Negative track position at line {expr.Line}, column {expr.Column} in file {expr.File}')
+                except ValueError:
+                    p.append(PositionedExpression(a, expr))
 
+        # 역방향 변환
+        if reverse_mode and p:
+            max_position = max(pe.track_position for pe in p)
+            for pe in p:
+                pe.track_position = max_position - pe.track_position
+
+        # 오름차순 정렬
+        p.sort(key=lambda e: e.track_position)
+
+        a = -1.0
+        e = []
         for pe in p:
             if pe.track_position != a:
                 a = pe.track_position
-                # 트랙 위치를 유닛으로 나눠서 문자열 표현
                 pos_str = str(a / unitfactors[-1])
                 e.append(Expression('', pos_str, -1, -1, -1))
-
             e.append(pe.expression)
 
-        expressions = e
-
-        return expressions
+        return e

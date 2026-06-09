@@ -7,10 +7,11 @@ def askfile():
 
 class Loading:
     """Tkinter GUI 전용 래퍼"""
-    def __init__(self, progress_bar, status_label, button_to_disable):
+    def __init__(self, progress_bar, status_label, button_to_disable, is_reverse_mode=False):
         self.progress = progress_bar
         self.status = status_label
         self.button = button_to_disable
+        self.is_reverse = is_reverse_mode
 
     def run(self):
         path = askfile()
@@ -19,7 +20,7 @@ class Loading:
             self.button.config(state="normal")
             return
 
-        loader = RouteLoader(path)
+        loader = RouteLoader(path, self.is_reverse)
 
         def progress_callback(percent):
             self.progress["value"] = percent

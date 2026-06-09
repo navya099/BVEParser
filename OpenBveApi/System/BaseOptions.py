@@ -9,3 +9,4 @@ class BaseOptions(ABC):
         self.UnitOfSpeed: str = "km/h"
         self.ObjectDisposalMode = ObjectDisposalMode
         self.SpeedConversionFactor = 0.0
+        self.is_reverse_mode = False

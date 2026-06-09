@@ -6,6 +6,7 @@ from Plugins.RouteCsvRw.Namespaces.Track.TrackCommands import TrackCommand
 from Plugins.RouteCsvRw.RouteData import RouteData
 from Plugins.RouteCsvRw.Structures.Expression import Expression
 from OpenBveApi.Math.Math import NumberFormats
+from Plugins.RouteCsvRw.Structures.Route.Crack import Crack
 from Plugins.RouteCsvRw.Structures.Route.FreeObject import FreeObj
 from Plugins.RouteCsvRw.Structures.Route.Pole import Pole
 from Plugins.RouteCsvRw.Structures.Route.RailCycle import RailCycle
@@ -2208,7 +2209,62 @@ class Parser7:
                             data.Blocks[block_index].Cycle = [cytype]
 
             case TrackCommand.Crack:
-                pass
+                if not preview_only:
+                    idx1, idx2, sttype = 0, 0, 0
+
+                    # RailIndex1
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, idx1 = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'RailIndex1 is invalid in Track.Crack at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            idx1 = 0
+
+                    # RailIndex2
+                    if len(arguments) >= 2 and len(arguments[1]) > 0:
+                        success, idx2 = NumberFormats.try_parse_int_vb6(arguments[1])
+                        if not success:
+                            logger.error(
+                                f'RailIndex2 is invalid in Track.Crack at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            idx2 = 0
+
+                    # CrackStructureIndex
+                    if len(arguments) >= 3 and len(arguments[2]) > 0:
+                        success, sttype = NumberFormats.try_parse_int_vb6(arguments[2])
+                        if not success:
+                            logger.error(
+                                f'CrackStructureIndex is invalid in Track.Crack at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            sttype = 0
+
+                    # 구조체 검증
+                    if sttype < 0 or sttype not in data.Structure.CrackL or sttype not in data.Structure.CrackR:
+                        logger.error(
+                            f'CrackStructureIndex {sttype} references an object not loaded in Track.Crack at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                    else:
+                        # Rail 인덱스 검증
+                        if idx1 < 0:
+                            logger.error(
+                                f'RailIndex1 must be non-negative in Track.Crack at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        elif idx2 < 0:
+                            logger.error(
+                                f'RailIndex2 must be non-negative in Track.Crack at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        elif idx1 == idx2:
+                            logger.error(
+                                f'RailIndex1 must not equal RailIndex2 in Track.Crack at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        else:
+                            if idx1 not in data.Blocks[block_index].Rails or not data.Blocks[block_index].Rails[
+                                idx1].RailStarted:
+                                logger.warning(
+                                    f'RailIndex1 {idx1} could be out of range in Track.Crack at line {expression.Line}, column {expression.Column} in file {expression.File}')
+
+                            if idx2 not in data.Blocks[block_index].Rails or not data.Blocks[block_index].Rails[
+                                idx2].RailStarted:
+                                logger.warning(
+                                    f'RailIndex2 {idx2} could be out of range in Track.Crack at line {expression.Line}, column {expression.Column} in file {expression.File}')
+
+                            # Crack 추가
+                            data.Blocks[block_index].Cracks.append(Crack(idx1, idx2, sttype))
+
             case TrackCommand.FreeObj:
                 if not preview_only:
                     if len(arguments) < 2:

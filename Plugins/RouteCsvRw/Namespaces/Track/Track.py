@@ -974,10 +974,90 @@ class Parser7:
                             )
                         )
 
-            case TrackCommand.Transponder:
-                pass
-            case TrackCommand.Tr:
-                pass
+            case TrackCommand.Transponder | TrackCommand.Tr:
+                if not preview_only:
+                    type_val, oversig, work = 0, 0, 0
+
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, type_val = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'Type is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            type_val = 0
+
+                    if len(arguments) >= 2 and len(arguments[1]) > 0:
+                        success, oversig = NumberFormats.try_parse_int_vb6(arguments[1])
+                        if not success:
+                            logger.error(
+                                f'Signals is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            oversig = 0
+
+                    if len(arguments) >= 3 and len(arguments[2]) > 0:
+                        success, work = NumberFormats.try_parse_int_vb6(arguments[2])
+                        if not success:
+                            logger.error(
+                                f'SwitchSystems is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            work = 0
+
+                    if oversig < 0:
+                        logger.error(
+                            f'Signals must be non-negative in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                        oversig = 0
+
+                    # 좌표 및 회전값
+                    x, y = 0.0, 0.0
+                    if len(arguments) >= 4 and len(arguments[3]) > 0:
+                        success, x = NumberFormats.try_parse_double_vb6(arguments[3], unit_of_length)
+                        if not success:
+                            logger.error(
+                                f'X is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            x = 0.0
+
+                    if len(arguments) >= 5 and len(arguments[4]) > 0:
+                        success, y = NumberFormats.try_parse_double_vb6(arguments[4], unit_of_length)
+                        if not success:
+                            logger.error(
+                                f'Y is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            y = 0.0
+
+                    yaw, pitch, roll = 0.0, 0.0, 0.0
+                    if len(arguments) >= 6 and len(arguments[5]) > 0:
+                        success, yaw = NumberFormats.try_parse_double_vb6(arguments[5])
+                        if not success:
+                            logger.error(
+                                f'Yaw is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            yaw = 0.0
+
+                    if len(arguments) >= 7 and len(arguments[6]) > 0:
+                        success, pitch = NumberFormats.try_parse_double_vb6(arguments[6])
+                        if not success:
+                            logger.error(
+                                f'Pitch is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            pitch = 0.0
+
+                    if len(arguments) >= 8 and len(arguments[7]) > 0:
+                        success, roll = NumberFormats.try_parse_double_vb6(arguments[7])
+                        if not success:
+                            logger.error(
+                                f'Roll is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}')
+                            roll = 0.0
+
+                    # Transponder 추가
+                    data.Blocks[block_index].Transponders.append(
+                        Transponder(
+                            data.TrackPosition,
+                            type_val,
+                            work,
+                            Vector2(x, y),
+                            self.CurrentSection + oversig + 1,
+                            -2,
+                            True,
+                            math.radians(yaw),
+                            math.radians(pitch),
+                            math.radians(roll)
+                        )
+                    )
+
             case TrackCommand.ATSSn:
                 pass
             case TrackCommand.ATSP:

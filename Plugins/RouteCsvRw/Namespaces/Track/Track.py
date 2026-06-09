@@ -30,6 +30,7 @@ from Plugins.RouteCsvRw.Structures.Signals.Section import Section
 from OpenBveApi.Math.Vectors.Vector2 import Vector2
 from RouteManager2.Events.TransponderTypes import TransponderTypes
 from Plugins.RouteCsvRw.Structures.Route.Form import Form
+from OpenBveApi.Routes.StaticBackground import StaticBackground
 
 import math
 import numpy as np
@@ -2383,10 +2384,46 @@ class Parser7:
                                             math.radians(yaw)
                                         )
                                     )
-            case TrackCommand.Back:
-                pass
-            case TrackCommand.Background:
-                pass
+            case TrackCommand.Back | TrackCommand.Background:
+                if not preview_only:
+                    typ = 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, typ = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'BackgroundIndex is invalid in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}'
+                            )
+                            typ = 0
+
+                    if typ < 0 or typ not in data.Backgrounds:
+                        logger.error(
+                            f'BackgroundIndex {typ} references a background not loaded in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}'
+                        )
+                    else:
+                        bg = data.Backgrounds[typ]
+
+                        from OpenBveApi.Routes.DynamicBackground import DynamicBackground
+                        if isinstance(bg, StaticBackground):
+                            if bg.texture is None:
+                                logger.error(
+                                    f'BackgroundIndex {typ} has not been loaded via Texture.Background in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}'
+                                )
+                            else:
+                                data.Blocks[block_index].Background = typ
+                                # BveTs 호환 처리
+                                if self.Plugin.CurrentOptions.EnableBveTsHacks and len(data.Blocks) == 2 and data.Blocks[
+                                    0].Background == 0:
+                                    if 0 in data.Backgrounds:
+                                        bg0 = data.Backgrounds[0]
+                                        if isinstance(bg0, StaticBackground) and bg0.texture is None:
+                                            data.Blocks[0].Background = typ
+                                    else:
+                                        data.Blocks[0].Background = typ
+                        elif isinstance(bg, DynamicBackground):
+                            # XML 로딩 시 파일 존재 여부는 이미 체크됨
+                            data.Blocks[block_index].Background = typ
+                        else:
+                            data.Blocks[block_index].Background = typ
             case TrackCommand.Announce:
                 pass
             case TrackCommand.AnnounceAll:

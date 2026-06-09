@@ -1283,7 +1283,28 @@ class Parser7:
                             h = 0.0
                     data.Blocks[block_index].Height = h + 0.3 if is_rw else h
             case TrackCommand.Ground:
-                pass
+                if not preview_only:
+                    cytype = 0
+                    if len(arguments) >= 1 and len(arguments[0]) > 0:
+                        success, cytype = NumberFormats.try_parse_int_vb6(arguments[0])
+                        if not success:
+                            logger.error(
+                                f'CycleIndex is invalid in Track.Ground at line {expression.Line}, column {expression.Column} in file {expression.File}'
+                            )
+                            cytype = 0
+
+                    # Cycles 배열 확인
+                    if cytype < len(data.Structure.Cycles) and data.Structure.Cycles[cytype] is not None:
+                        data.Blocks[block_index].Cycle = data.Structure.Cycles[cytype]
+                    else:
+                        # Ground 딕셔너리 확인
+                        if cytype not in data.Structure.Ground:
+                            logger.error(
+                                f'CycleIndex {cytype} references an object not loaded in Track.Ground at line {expression.Line}, column {expression.Column} in file {expression.File}'
+                            )
+                        else:
+                            data.Blocks[block_index].Cycle = [cytype]
+
             case TrackCommand.Crack:
                 pass
             case TrackCommand.FreeObj:

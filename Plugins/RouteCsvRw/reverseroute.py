@@ -15,7 +15,13 @@ class RouteReverser:
         """역방향 실행 메서드"""
         current_track_position = None
         current_track_position_freeobj = None
-        # 1. 블록 리스트를 역순으로 뒤집기
+        actual_block_count = int(self.data.TrackPosition / self.data.BlockInterval) + 1
+        # 원래 데이터 크기만큼만 남기고 뒤에 붙은 유령 블록들은 제거합니다.
+        if len(self.data.Blocks) > actual_block_count:
+            logger.debug(f"역방향 인덱스 보정: 유령 블록 {len(self.data.Blocks) - actual_block_count}개 제거")
+            self.data.Blocks = self.data.Blocks[:actual_block_count]
+
+        # 1. 이제 순수한 블록 리스트만 남았으므로 역순으로 뒤집기
         self.data.Blocks.reverse()
 
         # 2. 역방향 기하학적 요소 변경

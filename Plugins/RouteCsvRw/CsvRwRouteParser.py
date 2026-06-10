@@ -137,7 +137,6 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
             reverser = RouteReverser(data, self.CurrentRoute)
             reverser.preprocess_reverse_route()
             reverser.convert_to_reverse_route()
-            data = reverser.data
 
         # -------------------------------------------------------------------
         # 3. 최종 적용 단계 (3D 월드 인스턴스화)

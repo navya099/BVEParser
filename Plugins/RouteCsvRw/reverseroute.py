@@ -4,6 +4,7 @@ from Plugins.RouteCsvRw.RouteData import RouteData
 import copy
 
 from Plugins.RouteCsvRw.reverseclass.alignment_reverse import AlignmentReverse
+from Plugins.RouteCsvRw.reverseclass.object_reverse import ObjectReverse
 from Plugins.RouteCsvRw.reverseclass.rail_reverse import RailReverse
 from Plugins.RouteCsvRw.reverseclass.station_reverse import StationReverse
 from loggermodule import logger
@@ -50,6 +51,11 @@ class RouteReverser:
             AlignmentReverse.reverse_alignment(block)
             #레일 뒤집기
             RailReverse.reverse_rail(block)
+            # ③ [추가] 지상물 오브젝트 뒤집기 (Ground 및 Rail 오브젝트 전수조사 반전)
+            ObjectReverse.reverse_objects(block)
+
+            # 💡 [추가] 가공전선주(전신주) 좌우 방향 및 위치 반전
+            ObjectReverse.reverse_poles(block)
 
             # -------------------------------------------------------------------
             # [교정 3] 블록이 뒤집힌 상태이므로 인덱스 i를 전달해 정차 위치(Stop)를 최종 교정!

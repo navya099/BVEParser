@@ -3,6 +3,8 @@ import math
 from Plugins.RouteCsvRw.RouteData import RouteData
 import copy
 
+from Plugins.RouteCsvRw.reverseclass.alignment_reverse import AlignmentReverse
+from Plugins.RouteCsvRw.reverseclass.rail_reverse import RailReverse
 from Plugins.RouteCsvRw.reverseclass.station_reverse import StationReverse
 from loggermodule import logger
 from RouteManager2.CurrentRoute import CurrentRoute
@@ -40,50 +42,20 @@ class RouteReverser:
         # 2. 역방향 기하학적 요소 변경
         for i in range(len(self.data.Blocks)):
             block = self.data.Blocks[i]
-            last_block = self.data.Blocks[-1]
             last_track_position = self.data.TrackPosition
             current_track_position = i * self.data.BlockInterval
             current_reverse_track_position = last_track_position - current_track_position
-            # 종단구배 반전 (오르막 <-> 내리막)
-            if block.CurrentTrackState.Pitch != 0.0:
-                current_pitch = block.Pitch
-                block.Pitch = -current_pitch
-                block.CurrentTrackState.Pitch = -current_pitch
 
-            # 메인 선로 곡선 반전 (우곡선 <-> 좌곡선)
-            if block.CurrentTrackState.CurveRadius != 0.0:
-                current_radius = block.CurrentTrackState.CurveRadius
-                block.CurrentTrackState.CurveRadius = -current_radius
-
-            # 캔트(Cant) 방향도 반전
-            if block.CurrentTrackState.CurveCant != 0.0:
-                current_cant = block.CurrentTrackState.CurveCant
-                block.CurrentTrackState.CurveCant = -current_cant
-
-            # 타 레일(부본선 등) 위치 좌표 수정
-            for key, rail in block.Rails.items():
-                # 좌우 오프셋 반전
-                rail.RailStart.x = -rail.RailStart.x
-                rail.RailEnd.x = -rail.RailEnd.x
-                if hasattr(rail, 'MidPoint'):
-                    rail.MidPoint.x = -rail.MidPoint.x
-
-                # 타 레일의 곡선/캔트 반전
-                rail.CurveCant = -rail.CurveCant
-
-                #bool 속성 반전
-                current_is_started = rail.RailStarted
-                current_is_ended = rail.RailEnded
-                # 3. [핵심] bool 속성 완벽 반전 (Swap)
-                # 정방향의 시작점은 역방향의 끝점으로, 정방향의 끝점은 역방향의 시작점으로 바꿉니다.
-                rail.RailStarted, rail.RailEnded = rail.RailEnded, rail.RailStarted
+            #선형 뒤집기
+            AlignmentReverse.reverse_alignment(block)
+            #레일 뒤집기
+            RailReverse.reverse_rail(block)
 
             # -------------------------------------------------------------------
             # [교정 3] 블록이 뒤집힌 상태이므로 인덱스 i를 전달해 정차 위치(Stop)를 최종 교정!
             # -------------------------------------------------------------------
             station_reverser.reverse_stoppositions(i, block)
-            # Free Object(지상물)들의 좌우 오프셋 방향 반전 필요 시
-            # free_obj.X = -free_obj.X 형태의 로직을 추가할 수 있습니다.
+
 
     def preprocess_reverse_route(self):
         """역방향 루트 생성 전 원본 루트에서 필요한 값 추출"""

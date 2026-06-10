@@ -4,6 +4,7 @@ from Plugins.RouteCsvRw.RouteData import RouteData
 import copy
 
 from Plugins.RouteCsvRw.reverseclass.alignment_reverse import AlignmentReverse
+from Plugins.RouteCsvRw.reverseclass.create_route import CreateRouteFILE
 from Plugins.RouteCsvRw.reverseclass.object_reverse import ObjectReverse
 from Plugins.RouteCsvRw.reverseclass.rail_reverse import RailReverse
 from Plugins.RouteCsvRw.reverseclass.station_reverse import StationReverse
@@ -62,6 +63,8 @@ class RouteReverser:
             # -------------------------------------------------------------------
             station_reverser.reverse_stoppositions(i, block)
 
+        #직렬화 및 저장
+        CreateRouteFILE.serialize_route_data(self.current_route, self.data)
 
     def preprocess_reverse_route(self):
         """역방향 루트 생성 전 원본 루트에서 필요한 값 추출"""

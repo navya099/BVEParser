@@ -23,7 +23,7 @@ from .PreprocessOptions import Parser2
 from .Functions import Parser4
 from .RouteData import RouteData
 from .Preprocess import Parser1
-from OpenBveApi.Objects.ObjectInterface import ObjectInterface, CompatabilityHacks
+from OpenBveApi.Objects.ObjectInterface import CompatabilityHacks
 from OpenBveApi.Routes.TrackDirection import TrackDirection
 from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
 from .Namespaces.Track.TrackCommands import TrackCommand
@@ -32,7 +32,7 @@ from OpenBveApi.Colors.Color24 import Color24
 from .Structures.Direction import Parser9
 from .Structures.Expression import Expression
 from OpenBveApi.Math.Math import NumberFormats
-from .reverseroute import RouteReverser
+from Plugins.RouteCsvRw.reverseclass.reverseroute import RouteReverser
 
 
 class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Parser8, Parser9, Parser10, Parser11):

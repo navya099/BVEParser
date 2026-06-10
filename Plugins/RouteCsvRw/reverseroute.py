@@ -2,15 +2,18 @@ import math
 
 from Plugins.RouteCsvRw.RouteData import RouteData
 import copy
+
+from Plugins.RouteCsvRw.reverseclass.station_reverse import StationReverse
 from loggermodule import logger
 from RouteManager2.CurrentRoute import CurrentRoute
 
 
 class RouteReverser:
     """역방향 루트 생성을 위한 리버서"""
-    def __init__(self, data: RouteData):
-
+    def __init__(self, data: RouteData, current_route: CurrentRoute):
+        self.current_route = current_route
         self.data = data
+
     def convert_to_reverse_route(self):
         """역방향 실행 메서드"""
         current_track_position = None
@@ -20,6 +23,16 @@ class RouteReverser:
         if len(self.data.Blocks) > actual_block_count:
             logger.debug(f"역방향 인덱스 보정: 유령 블록 {len(self.data.Blocks) - actual_block_count}개 제거")
             self.data.Blocks = self.data.Blocks[:actual_block_count]
+
+        # 역(station) 반전
+        station_reverser = StationReverse(self.data, self.current_route)
+        station_reverser.reverse_stations()
+
+        # -------------------------------------------------------------------
+        # [교정 2] 블록 리스트를 뒤집기 "전"에, 정방향 인덱스 기준으로 Station ID를 먼저 매칭!
+        # -------------------------------------------------------------------
+        for block in self.data.Blocks:
+            station_reverser.reverse_block_station_id(block)
 
         # 1. 이제 순수한 블록 리스트만 남았으므로 역순으로 뒤집기
         self.data.Blocks.reverse()
@@ -65,17 +78,21 @@ class RouteReverser:
                 # 정방향의 시작점은 역방향의 끝점으로, 정방향의 끝점은 역방향의 시작점으로 바꿉니다.
                 rail.RailStarted, rail.RailEnded = rail.RailEnded, rail.RailStarted
 
+            # -------------------------------------------------------------------
+            # [교정 3] 블록이 뒤집힌 상태이므로 인덱스 i를 전달해 정차 위치(Stop)를 최종 교정!
+            # -------------------------------------------------------------------
+            station_reverser.reverse_stoppositions(i, block)
             # Free Object(지상물)들의 좌우 오프셋 방향 반전 필요 시
             # free_obj.X = -free_obj.X 형태의 로직을 추가할 수 있습니다.
 
-    def preprocess_reverse_route(self, current_route: CurrentRoute):
+    def preprocess_reverse_route(self):
         """역방향 루트 생성 전 원본 루트에서 필요한 값 추출"""
 
         # 600m 여유 블록을 제외하고, 실제 선로 데이터가 끝나는 정확한 블록 인덱스 계산
         # 예: TrackPosition이 1000m이고 Interval이 25m이면, 정확히 40번 블록이 데이터의 끝입니다.
         actual_last_idx = int(self.data.TrackPosition / self.data.BlockInterval)
 
-        elements = current_route.Tracks[0].Elements
+        elements = self.current_route.Tracks[0].Elements
         max_available_idx = len(elements) - 1
 
         # 안전장치: 계산된 인덱스가 현재 할당된 배열 크기(4096 등)를 넘지 않도록 보정
@@ -96,9 +113,9 @@ class RouteReverser:
             reverse_degree = (forward_rad * 180.0 / math.pi) + 180.0
 
             # 2-Pass(역방향 빌드)의 시작 좌표로 정방향 종점 좌표를 주입
-            current_route.Atmosphere.InitialX = last_world_pos.x
-            current_route.Atmosphere.InitialY = last_world_pos.z
-            current_route.Atmosphere.InitialElevation = last_world_pos.y
-            current_route.Atmosphere.InitialDirection = reverse_degree
+            self.current_route.Atmosphere.InitialX = last_world_pos.x
+            self.current_route.Atmosphere.InitialY = last_world_pos.z
+            self.current_route.Atmosphere.InitialElevation = last_world_pos.y
+            self.current_route.Atmosphere.InitialDirection = reverse_degree
 
             logger.debug(f'실제 종점 데이터 매칭 성공 (인덱스: {last_element_idx}) - X: {last_world_pos.x}, Z: {last_world_pos.z}')

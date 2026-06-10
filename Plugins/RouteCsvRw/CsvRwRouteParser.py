@@ -134,8 +134,8 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
             # 정방향 apply_route_data를 먼저 한 번 실행하여 좌표 추출
             data = self.apply_route_data(file_name, data, preview_only=True)
             #역방향 메서드 실행
-            reverser = RouteReverser(data)
-            reverser.preprocess_reverse_route(self.CurrentRoute)
+            reverser = RouteReverser(data, self.CurrentRoute)
+            reverser.preprocess_reverse_route()
             reverser.convert_to_reverse_route()
             data = reverser.data
 

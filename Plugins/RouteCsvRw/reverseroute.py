@@ -32,8 +32,10 @@ class RouteReverser:
             current_track_position = i * self.data.BlockInterval
             current_reverse_track_position = last_track_position - current_track_position
             # 종단구배 반전 (오르막 <-> 내리막)
-            current_pitch = block.Pitch
-            block.Pitch = -current_pitch
+            if block.CurrentTrackState.Pitch != 0.0:
+                current_pitch = block.Pitch
+                block.Pitch = -current_pitch
+                block.CurrentTrackState.Pitch = -current_pitch
 
             # 메인 선로 곡선 반전 (우곡선 <-> 좌곡선)
             if block.CurrentTrackState.CurveRadius != 0.0:
@@ -55,6 +57,13 @@ class RouteReverser:
 
                 # 타 레일의 곡선/캔트 반전
                 rail.CurveCant = -rail.CurveCant
+
+                #bool 속성 반전
+                current_is_started = rail.RailStarted
+                current_is_ended = rail.RailEnded
+                # 3. [핵심] bool 속성 완벽 반전 (Swap)
+                # 정방향의 시작점은 역방향의 끝점으로, 정방향의 끝점은 역방향의 시작점으로 바꿉니다.
+                rail.RailStarted, rail.RailEnded = rail.RailEnded, rail.RailStarted
 
             # Free Object(지상물)들의 좌우 오프셋 방향 반전 필요 시
             # free_obj.X = -free_obj.X 형태의 로직을 추가할 수 있습니다.

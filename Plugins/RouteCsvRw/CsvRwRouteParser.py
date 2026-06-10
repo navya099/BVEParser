@@ -32,6 +32,7 @@ from OpenBveApi.Colors.Color24 import Color24
 from .Structures.Direction import Parser9
 from .Structures.Expression import Expression
 from OpenBveApi.Math.Math import NumberFormats
+from .reverseroute import RouteReverser
 
 
 class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Parser8, Parser9, Parser10, Parser11):
@@ -125,6 +126,23 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         if self.Plugin.Cancel:
             self.Plugin.IsLoading = False
             return
+        # -------------------------------------------------------------------
+        # [추가] 역방향 전용 2-Pass 로직 처리
+        # -------------------------------------------------------------------
+        if self.Plugin.CurrentOptions.is_reverse_mode and preview_only:
+            logger.debug('역방향 모드 감지: 종점 좌표 계산을 위한 1-Pass(정방향 프리뷰) 시작')
+            # 정방향 apply_route_data를 먼저 한 번 실행하여 좌표 추출
+            data = self.apply_route_data(file_name, data, preview_only=True)
+            #역방향 메서드 실행
+            reverser = RouteReverser(data)
+            reverser.preprocess_reverse_route(self.CurrentRoute)
+            reverser.convert_to_reverse_route()
+            data = reverser.data
+
+        # -------------------------------------------------------------------
+        # 3. 최종 적용 단계 (3D 월드 인스턴스화)
+        # -------------------------------------------------------------------
+        # 역방향 모드라면 주입된 종점 좌표에서 출발하고, 정방향 모드라면 원래 세팅된 기점에서 출발합니다.
         data = self.apply_route_data(file_name, data, preview_only)
         logger.debug('루트적용완료')
 
@@ -142,7 +160,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         data.UnitOfSpeed = 0.277777777777778
         data = self.pre_process_options(expressions, data, unit_of_length, preview_only)
         reversed_mode = True if self.Plugin.CurrentOptions.is_reverse_mode else False
-        expressions = self.preprocess_sort_by_track_position(unit_of_length, expressions, reverse_mode=reversed_mode)
+        expressions = self.preprocess_sort_by_track_position(unit_of_length, expressions, reverse_mode=False)
         logger.debug('expressions 추출완료')
         data = self.parse_route_for_data2(file_name, encoding, expressions, unit_of_length, data, preview_only)
         logger.debug('루트파싱완료')

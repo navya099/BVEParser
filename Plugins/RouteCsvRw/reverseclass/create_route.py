@@ -100,7 +100,9 @@ class CreateRouteFILE:
             if block.Station >= 0 and block.Station < len(current_route.Stations):
                 station_obj = current_route.Stations[block.Station]
                 srializedata['TrackCommand'][track_position]['Station']['Name'] = station_obj.Name
-                srializedata['TrackCommand'][track_position]['Station']['StopPosition'] = station_obj.StopPosition
+            #stop 요소 직렬화
+            for idx, stop in enumerate(block.StopPositions):
+                srializedata['TrackCommand'][track_position]['Stop'][idx] = stop.TrackPosition
 
     @staticmethod
     def save_csv(srializedata, block_interval: float):
@@ -169,12 +171,13 @@ class CreateRouteFILE:
                 st_name = block_data['Station']['Name']
                 csv_lines.append(f"{dist},.sta {st_name};")
 
-                # 정차 마커 동적 오프셋 계산
-                stop_position_offset = block_data['Station']['StopPosition']
-                if stop_position_offset > 0:
-                    csv_lines.append(f"{dist + stop_position_offset},.stop 0;")
-                else:
-                    csv_lines.append(f"{dist + 100.0},.stop 0;")  # 방어용 기본값
+            # stop 위치
+            if 'Stop' in block_data:
+                # 💡 [교정 핵심] .values()를 통해 딕셔너리에 저장된 stop.TrackPosition 실제 값을 추출합니다.
+                for actual_stop_pos in block_data['Stop'].values():
+                    # actual_stop_pos는 이미 변환 과정에서 역방향 기준으로 가공된 절대 거리 좌표입니다.
+                    # BVE 문법 규칙에 맞게 절대 거리 헤더를 붙여 출력합니다.
+                    csv_lines.append(f"{actual_stop_pos},.stop 0;")
 
         # 3. 실제 파일 쓰기
         import os

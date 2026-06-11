@@ -39,9 +39,6 @@ class CreateRouteFILE:
     def serialize_track_command(current_route: CurrentRoute, data: RouteData, srializedata):
         total_blocks = len(data.Blocks)
 
-        # 💡 [종점 마감 핵심] 각 레일 번호별로 "마지막으로 등장한 거리"를 추적하기 위한 맵
-        last_seen_positions = {}
-
         for i, block in enumerate(data.Blocks):
             track_position = i * data.BlockInterval
 
@@ -49,6 +46,15 @@ class CreateRouteFILE:
             srializedata['TrackCommand'][track_position]['Curve']['radius'] = block.CurrentTrackState.CurveRadius
             srializedata['TrackCommand'][track_position]['Curve']['cant'] = block.CurrentTrackState.CurveCant
             srializedata['TrackCommand'][track_position]['Pitch'] = block.CurrentTrackState.Pitch
+
+            # 💡 다음 블록에 존재하는 레일 인덱스 세트 미리 추출 (Look-Ahead)
+            next_block_rails = set()
+            if i < total_blocks - 1:
+                next_block = data.Blocks[i + 1]
+                for n_key, n_rail in next_block.Rails.items():
+                    # 다음 블록에서 유효한 유령이 아닌 레일만 수집
+                    if n_rail.RailStarted or n_rail.RailEnded or n_rail.RailStartRefreshed:
+                        next_block_rails.add(n_key)
 
             # 레일 요소 직렬화
             for key, rail in block.Rails.items():
@@ -65,40 +71,34 @@ class CreateRouteFILE:
                 rail_data['refreshed'] = rail.RailStartRefreshed
                 rail_data['driveable'] = rail.IsDriveable
 
-                # 1) 기본 플래그 조합 기반 분기
+                # 💡 [핵심 Look-Ahead 종단 판정 규칙]
+                # 현재 블록에는 이 레일이 살아있는데, 바로 다음 블록(역방향 진행 방향)에는 레일이 없다면?
+                # 혹은 현재 블록이 역방향의 완전히 마지막 블록(i == total_blocks - 1)이라면?
+                # ➔ 조건 불문하고 이곳이 이 레일이 폐합되어야 하는 절대 종점(.railend)입니다!
+                if (key not in next_block_rails) or (i == total_blocks - 1):
+                    rail_data['x'] = rail.RailEnd.x  # 유종의 미를 거두기 위해 끝점 좌표 매핑
+                    rail_data['y'] = rail.RailEnd.y
+                    rail_data['command'] = 'railend'
+                    continue  # 종점 판정 완료되었으므로 아래 일반 분기 스킵
+
+                # 2) 종점이 아닐 경우, 기존 플래그 조합 기반 분기 준수
                 if rail.RailStarted and not rail.RailEnded:
+                    # 구 정방향 종점 마디 ➔ 역방향 시점에서는 새로운 선로의 기점 (.rail 5)
                     rail_data['command'] = 'rail'
                 elif rail.RailEnded and not rail.RailStarted:
+                    # 구 정방향 시점 마디 ➔ 역방향 종점 (위의 Look-Ahead가 이미 처리하겠지만 이중 방어)
                     rail_data['x'] = rail.RailEnd.x
                     rail_data['y'] = rail.RailEnd.y
                     rail_data['command'] = 'railend'
-                elif rail.RailStarted and rail.RailEnded:
-                    rail_data['command'] = 'KeepAlive'
                 else:
+                    # 그 외 중간에 연속적으로 살아 통과하는 구간은 전부 유지 판정
                     rail_data['command'] = 'KeepAlive'
-
-                # 💡 [종점 마감 핵심] 해당 레일 번호가 살아있는 상태라면, 마지막 발견 거리를 계속 갱신합니다.
-                if rail_data['command'] in ('rail', 'KeepAlive'):
-                    last_seen_positions[key] = (track_position, rail.RailEnd.x, rail.RailEnd.y)
 
             # 역(Station) 요소 직렬화
             if block.Station >= 0 and block.Station < len(current_route.Stations):
                 station_obj = current_route.Stations[block.Station]
                 srializedata['TrackCommand'][track_position]['Station']['Name'] = station_obj.Name
                 srializedata['TrackCommand'][track_position]['Station']['StopPosition'] = station_obj.StopPosition
-
-        # -------------------------------------------------------------------
-        # 💡 [종점 마감 작업] 루프가 끝난 후, 닫히지 않고 증발한 레일들을 강제로 .railend 처리
-        # -------------------------------------------------------------------
-        for key, (last_dist, end_x, end_y) in last_seen_positions.items():
-            current_cmd = srializedata['TrackCommand'][last_dist]['Rail'][key].get('command')
-
-            # 만약 마지막으로 발견된 지점의 명령어가 .rail 이거나 KeepAlive 상태로 방치되어 있다면
-            if current_cmd in ('rail', 'KeepAlive'):
-                # 루트 맨 마지막 블록이거나 선로가 끊어지는 지점이므로 안전하게 종단 처리합니다.
-                srializedata['TrackCommand'][last_dist]['Rail'][key]['x'] = end_x
-                srializedata['TrackCommand'][last_dist]['Rail'][key]['y'] = end_y
-                srializedata['TrackCommand'][last_dist]['Rail'][key]['command'] = 'railend'
 
     @staticmethod
     def save_csv(srializedata, block_interval: float):

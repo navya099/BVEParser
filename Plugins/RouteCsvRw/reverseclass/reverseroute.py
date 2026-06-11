@@ -39,7 +39,7 @@ class RouteReverser:
         # 결과를 임시 파일로 저장하여 눈으로 직접 확인합니다.
         with open('c:/temp/reverser_debug_snapshot.txt', 'w', encoding='utf-8') as f:
             f.write('\n'.join(debug_lines))
-        logger.debug("🔬 [Debug] 정방향 프리뷰 상태 덤프 완료 (c:/temp/reverser_debug_snapshot.txt)")
+        logger.debug("[Debug] 정방향 프리뷰 상태 덤프 완료 (c:/temp/reverser_debug_snapshot.txt)")
         # -------------------------------------------------------------------
 
         current_track_position = None

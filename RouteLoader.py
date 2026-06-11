@@ -46,7 +46,7 @@ class RouteLoader:
                     progress_callback(100)
 
             threading.Thread(target=progress_thread, daemon=True).start()
-            preview_only = True if self.is_revese_mode else False
+            preview_only = False if self.is_revese_mode else True
             result = self.plugin.LoadRoute(self.path, encoding, '', object_path, '', preview_only, self.current_route)
             return result, None if result else "루트 로딩 실패"
 

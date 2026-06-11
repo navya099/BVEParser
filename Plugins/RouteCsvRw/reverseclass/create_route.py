@@ -58,6 +58,7 @@ class CreateRouteFILE:
 
             # 레일 요소 직렬화
             for key, rail in block.Rails.items():
+                current_sttype = block.RailType[key]
                 if key == 0:
                     continue  # 자선 스킵
 
@@ -70,6 +71,7 @@ class CreateRouteFILE:
                 rail_data['y'] = rail.RailStart.y
                 rail_data['refreshed'] = rail.RailStartRefreshed
                 rail_data['driveable'] = rail.IsDriveable
+                rail_data['object_type'] = current_sttype
 
                 # 💡 [핵심 Look-Ahead 종단 판정 규칙]
                 # 현재 블록에는 이 레일이 살아있는데, 바로 다음 블록(역방향 진행 방향)에는 레일이 없다면?
@@ -144,14 +146,16 @@ class CreateRouteFILE:
                         continue  # 자선(0번)은 BVE 표준상 상시 활성화이므로 출력 스킵
 
                     rail_info = block_data['Rail'][rail_idx]
-
+                    stttype = rail_info.get('object_type', None)
+                    if stttype is None:
+                        stttype = 0
                     # defaultdict의 부작용을 막기 위해 안전하게 .get()으로 커맨드 타입을 읽어옵니다.
                     cmd_type = rail_info.get('command')
 
                     # 💡 물리적 인덱스 기준에 따라 발급된 단어만 골라서 출력합니다.
                     if cmd_type == 'rail':
                         # 역방향 루트의 맨 첫 블록 (i == 0 지점)
-                        csv_lines.append(f"{dist},.rail {rail_idx};{rail_info['x']};{rail_info['y']}")
+                        csv_lines.append(f"{dist},.rail {rail_idx};{rail_info['x']};{rail_info['y']};{stttype};")
                     elif cmd_type == 'railend':
                         # 역방향 루트의 맨 마지막 블록 (i == total_blocks - 1 지점)
                         csv_lines.append(f"{dist},.railend {rail_idx};{rail_info['x']};{rail_info['y']}")

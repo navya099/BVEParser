@@ -129,7 +129,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         # -------------------------------------------------------------------
         # [추가] 역방향 전용 2-Pass 로직 처리
         # -------------------------------------------------------------------
-        if self.Plugin.CurrentOptions.is_reverse_mode and preview_only:
+        if self.Plugin.CurrentOptions.is_reverse_mode and not preview_only:
             logger.debug('역방향 모드 감지: 종점 좌표 계산을 위한 1-Pass(정방향 프리뷰) 시작')
             # 정방향 apply_route_data를 먼저 한 번 실행하여 좌표 추출
             data = self.apply_route_data(file_name, data, preview_only=True)

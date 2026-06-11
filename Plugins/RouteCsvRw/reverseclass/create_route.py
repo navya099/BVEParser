@@ -1,4 +1,5 @@
 import collections
+import os
 from RouteManager2.CurrentRoute import CurrentRoute
 from Plugins.RouteCsvRw.RouteData import RouteData
 
@@ -6,7 +7,6 @@ from Plugins.RouteCsvRw.RouteData import RouteData
 class CreateRouteFILE:
     @staticmethod
     def serialize_route_data(current_route: CurrentRoute, data: RouteData):
-        # 💡 [교정] 중첩 딕셔너리를 자동으로 생성해주는 무한 트리 구조 정의 (KeyError 방지)
         def tree():
             return collections.defaultdict(tree)
 
@@ -21,10 +21,10 @@ class CreateRouteFILE:
 
         # 4. CSV 파일 조립 및 디스크 작성
         CreateRouteFILE.save_csv(srializedata, data.BlockInterval)
+        return srializedata
 
     @staticmethod
     def serialize_option_command(current_route: CurrentRoute, srializedata):
-        # 파이썬은 정수/실수 단위 출력을 선호하므로 round 처리 혹은 그대로 대입
         srializedata['OptionsCommand']['BlockLength'] = current_route.BlockLength
 
     @staticmethod
@@ -37,33 +37,68 @@ class CreateRouteFILE:
 
     @staticmethod
     def serialize_track_command(current_route: CurrentRoute, data: RouteData, srializedata):
+        total_blocks = len(data.Blocks)
+
+        # 💡 [종점 마감 핵심] 각 레일 번호별로 "마지막으로 등장한 거리"를 추적하기 위한 맵
+        last_seen_positions = {}
+
         for i, block in enumerate(data.Blocks):
-            # 💡 [안전장치] 블록 번호와 인터벌을 곱해 정밀한 이정(Distance) 키 생성
             track_position = i * data.BlockInterval
 
-            radius = block.CurrentTrackState.CurveRadius
-            cant = block.CurrentTrackState.CurveCant
-            pitch = block.CurrentTrackState.Pitch
-
             # 선형 요소 직렬화
-            srializedata['TrackCommand'][track_position]['Curve']['radius'] = radius
-            srializedata['TrackCommand'][track_position]['Curve']['cant'] = cant
-            srializedata['TrackCommand'][track_position]['Pitch'] = pitch
+            srializedata['TrackCommand'][track_position]['Curve']['radius'] = block.CurrentTrackState.CurveRadius
+            srializedata['TrackCommand'][track_position]['Curve']['cant'] = block.CurrentTrackState.CurveCant
+            srializedata['TrackCommand'][track_position]['Pitch'] = block.CurrentTrackState.Pitch
 
             # 레일 요소 직렬화
             for key, rail in block.Rails.items():
-                srializedata['TrackCommand'][track_position]['Rail'][key]['x'] = rail.RailStart.x
-                srializedata['TrackCommand'][track_position]['Rail'][key]['y'] = rail.RailStart.y
-                srializedata['TrackCommand'][track_position]['Rail'][key]['isstart'] = rail.RailStarted
-                srializedata['TrackCommand'][track_position]['Rail'][key]['isend'] = rail.RailEnded
+                if key == 0:
+                    continue  # 자선 스킵
 
-            # 역(Station) 요소 직렬화 (블록에 속해있을 경우만 기록)
+                # 완벽한 공백 유령 레일 객체 필터링 (순수 무효 데이터 드롭)
+                if not rail.RailStarted and not rail.RailEnded and not rail.RailStartRefreshed:
+                    continue
+
+                rail_data = srializedata['TrackCommand'][track_position]['Rail'][key]
+                rail_data['x'] = rail.RailStart.x
+                rail_data['y'] = rail.RailStart.y
+                rail_data['refreshed'] = rail.RailStartRefreshed
+                rail_data['driveable'] = rail.IsDriveable
+
+                # 1) 기본 플래그 조합 기반 분기
+                if rail.RailStarted and not rail.RailEnded:
+                    rail_data['command'] = 'rail'
+                elif rail.RailEnded and not rail.RailStarted:
+                    rail_data['x'] = rail.RailEnd.x
+                    rail_data['y'] = rail.RailEnd.y
+                    rail_data['command'] = 'railend'
+                elif rail.RailStarted and rail.RailEnded:
+                    rail_data['command'] = 'KeepAlive'
+                else:
+                    rail_data['command'] = 'KeepAlive'
+
+                # 💡 [종점 마감 핵심] 해당 레일 번호가 살아있는 상태라면, 마지막 발견 거리를 계속 갱신합니다.
+                if rail_data['command'] in ('rail', 'KeepAlive'):
+                    last_seen_positions[key] = (track_position, rail.RailEnd.x, rail.RailEnd.y)
+
+            # 역(Station) 요소 직렬화
             if block.Station >= 0 and block.Station < len(current_route.Stations):
                 station_obj = current_route.Stations[block.Station]
                 srializedata['TrackCommand'][track_position]['Station']['Name'] = station_obj.Name
-                srializedata['TrackCommand'][track_position]['Station'][
-                    'Door'] = "Left" if station_obj.OpenLeftDoors else "Right"
-                # 필요시 도어 Both 예외처리나 타 속성 추가 가능
+                srializedata['TrackCommand'][track_position]['Station']['StopPosition'] = station_obj.StopPosition
+
+        # -------------------------------------------------------------------
+        # 💡 [종점 마감 작업] 루프가 끝난 후, 닫히지 않고 증발한 레일들을 강제로 .railend 처리
+        # -------------------------------------------------------------------
+        for key, (last_dist, end_x, end_y) in last_seen_positions.items():
+            current_cmd = srializedata['TrackCommand'][last_dist]['Rail'][key].get('command')
+
+            # 만약 마지막으로 발견된 지점의 명령어가 .rail 이거나 KeepAlive 상태로 방치되어 있다면
+            if current_cmd in ('rail', 'KeepAlive'):
+                # 루트 맨 마지막 블록이거나 선로가 끊어지는 지점이므로 안전하게 종단 처리합니다.
+                srializedata['TrackCommand'][last_dist]['Rail'][key]['x'] = end_x
+                srializedata['TrackCommand'][last_dist]['Rail'][key]['y'] = end_y
+                srializedata['TrackCommand'][last_dist]['Rail'][key]['command'] = 'railend'
 
     @staticmethod
     def save_csv(srializedata, block_interval: float):
@@ -71,7 +106,6 @@ class CreateRouteFILE:
         csv_lines = []
 
         # 1. Options & Route 헤더 영역 작성
-        csv_lines.append("Options.ObjectVisibility 1")
         if 'BlockLength' in srializedata['OptionsCommand']:
             csv_lines.append(f"With Options\n.BlockLength {srializedata['OptionsCommand']['BlockLength']}")
 
@@ -85,8 +119,7 @@ class CreateRouteFILE:
 
         csv_lines.append("With Track")
 
-        # 2. Track 명령어 영역 작성 (거리 순서대로 정렬하여 추출)
-        # srializedata['TrackCommand'].keys() 에는 0, 25, 50 같은 정수/실수 거리가 들어있습니다.
+        # 2. Track 명령어 영역 거리순 정렬 추출
         sorted_distances = sorted(list(srializedata['TrackCommand'].keys()))
 
         for dist in sorted_distances:
@@ -95,7 +128,6 @@ class CreateRouteFILE:
             # ① 곡선 (.curve) 문법 조립
             radius = block_data['Curve']['radius']
             cant = block_data['Curve']['cant']
-            # BVE 문법은 Cant 단위가 mm이므로 파서 내부 값(m)에 1000을 곱합니다.
             if radius != 0.0:
                 csv_lines.append(f"{dist},.curve {radius};{cant * 1000.0}")
 
@@ -104,22 +136,41 @@ class CreateRouteFILE:
             if pitch != 0.0:
                 csv_lines.append(f"{dist},.pitch {pitch}")
 
-            # ③ 레일 (.rail / .railend) 문법 조립
-            for rail_idx in block_data['Rail']:
-                rail_info = block_data['Rail'][rail_idx]
-                # 앞서 우리가 스왑한 플래그에 근거하여 문법 명세를 지정합니다.
-                if rail_info['isstart']:
-                    # 다음 블록으로 이어지는 구조이므로 End 좌표 계산 로직을 물려주거나 패딩
-                    csv_lines.append(f"{dist},.rail {rail_idx};{rail_info['x']};{rail_info['y']}")
-                elif rail_info['isend']:
-                    csv_lines.append(f"{dist},.railend {rail_idx};{rail_info['x']};{rail_info['y']}")
+            # ③ [핵심 교정] 레일 (.rail / .railend) 문법 조립
+            if 'Rail' in block_data:
+                # 레일 인덱스 번호 순서대로 정렬하여 출력 규칙 준수
+                for rail_idx in sorted(list(block_data['Rail'].keys())):
+                    if rail_idx == 0:
+                        continue  # 자선(0번)은 BVE 표준상 상시 활성화이므로 출력 스킵
 
-            # ④ 역정거장 (.sta) 문법 조립
+                    rail_info = block_data['Rail'][rail_idx]
+
+                    # defaultdict의 부작용을 막기 위해 안전하게 .get()으로 커맨드 타입을 읽어옵니다.
+                    cmd_type = rail_info.get('command')
+
+                    # 💡 물리적 인덱스 기준에 따라 발급된 단어만 골라서 출력합니다.
+                    if cmd_type == 'rail':
+                        # 역방향 루트의 맨 첫 블록 (i == 0 지점)
+                        csv_lines.append(f"{dist},.rail {rail_idx};{rail_info['x']};{rail_info['y']}")
+                    elif cmd_type == 'railend':
+                        # 역방향 루트의 맨 마지막 블록 (i == total_blocks - 1 지점)
+                        csv_lines.append(f"{dist},.railend {rail_idx};{rail_info['x']};{rail_info['y']}")
+                    elif cmd_type == 'KeepAlive':
+                        # 💡 거대한 중간 구간 마디들은 .rail을 중복 선언하면 선로가 찢어집니다!
+                        # 문법을 출력하지 않고 그냥 패스함으로써 선로의 무한 연속성을 보장합니다.
+                        pass
+
+            # ④ 정거장 (.sta) 및 정차 마커 (.stop) 문법 조립
             if 'Station' in block_data and 'Name' in block_data['Station']:
                 st_name = block_data['Station']['Name']
-                st_door = block_data['Station']['Door']
-                # 순정 .sta 인자 양식 매칭
-                csv_lines.append(f"{dist},.sta {st_name};;;;{st_door}")
+                csv_lines.append(f"{dist},.sta {st_name};")
+
+                # 정차 마커 동적 오프셋 계산
+                stop_position_offset = block_data['Station']['StopPosition']
+                if stop_position_offset > 0:
+                    csv_lines.append(f"{dist + stop_position_offset},.stop 0;")
+                else:
+                    csv_lines.append(f"{dist + 100.0},.stop 0;")  # 방어용 기본값
 
         # 3. 실제 파일 쓰기
         import os
@@ -128,4 +179,4 @@ class CreateRouteFILE:
             for line in csv_lines:
                 f.write(line + '\n')
 
-        print("🎉 [Exporter] 역방향 CSV 파일 저장 완료! (c:/temp/route_reversed.csv)")
+        print("🎉 [Exporter] 역방향 2-Pass 대응 CSV 빌드 완료! (c:/temp/route_reversed.csv)")

@@ -20,6 +20,28 @@ class RouteReverser:
 
     def convert_to_reverse_route(self):
         """역방향 실행 메서드"""
+        # -------------------------------------------------------------------
+        # [정밀 디버깅] 1-Pass 프리뷰 직후 원본 상태 덤프 (reverse하기 직전에 실행)
+        # -------------------------------------------------------------------
+        debug_lines = ["=== BEFORE REVERSE: 1-PASS SNAPSHOT ==="]
+        for idx, block in enumerate(self.data.Blocks):
+            track_pos = idx * self.data.BlockInterval
+            # 레일 40번 집중 추적
+            if 40 in block.Rails:
+                r = block.Rails[40]
+                debug_lines.append(
+                    f"BlockIdx: {idx:3d} | Dist: {track_pos:6.1f} | "
+                    f"Started: {str(r.RailStarted):5s} | Ended: {str(r.RailEnded):5s} | Refreshed: {str(r.RailStartRefreshed):5s} | "
+                    f"Driveable: {str(r.IsDriveable):5s} | "
+                    f"Start({r.RailStart.x:.3f}, {r.RailStart.y:.3f}) | End({r.RailEnd.x:.3f}, {r.RailEnd.y:.3f})"
+                )
+
+        # 결과를 임시 파일로 저장하여 눈으로 직접 확인합니다.
+        with open('c:/temp/reverser_debug_snapshot.txt', 'w', encoding='utf-8') as f:
+            f.write('\n'.join(debug_lines))
+        logger.debug("🔬 [Debug] 정방향 프리뷰 상태 덤프 완료 (c:/temp/reverser_debug_snapshot.txt)")
+        # -------------------------------------------------------------------
+
         current_track_position = None
         current_track_position_freeobj = None
         actual_block_count = int(self.data.TrackPosition / self.data.BlockInterval) + 1

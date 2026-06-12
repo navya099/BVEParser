@@ -60,7 +60,7 @@ class RouteReverser:
             ObjectReverse.reverse_objects(block)
 
             # 💡 [추가] 가공전선주(전신주) 좌우 방향 및 위치 반전
-            ObjectReverse.reverse_poles(block)
+            ObjectReverse.reverse_poles(block, next_block)
 
             # -------------------------------------------------------------------
             # [교정 3] 블록이 뒤집힌 상태이므로 인덱스 i를 전달해 정차 위치(Stop)를 최종 교정!

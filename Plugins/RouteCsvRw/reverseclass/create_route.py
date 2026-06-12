@@ -224,6 +224,26 @@ class CreateRouteFILE:
                                 'roll': freeobj.Roll
                             }
                             srializedata['TrackCommand'][track_position]['FreeObj'].append(obj_data)
+            #pole 직렬화
+            if hasattr(block, 'RailPole') and block.RailPole:
+                # save_csv에서 편하게 접근할 수 있도록 딕셔너리로 초기화
+                srializedata['TrackCommand'][track_position]['Pole'] = {}
+
+                for rail_idx, pole in enumerate(block.RailPole):
+                    # 💡 [핵심 가드] 오픈BVE 파서가 extend()로 확장해둔 유령 객체들을 걸러냅니다.
+                    # Exists가 한 번도 True가 된 적 없고, 초기 상태(Mode=0, Type=0)인 빈 객체는 수집할 필요가 없습니다.
+                    if not pole.Exists and pole.Mode == 0 and pole.Type == 0 and pole.Location == 0.0:
+                        continue
+
+                    # 레일 인덱스를 Key로 하여 구조화된 딕셔너리 주입
+                    srializedata['TrackCommand'][track_position]['Pole'][rail_idx] = {
+                        'exists': pole.Exists,
+                        'mode': pole.Mode,
+                        'type': pole.Type,
+                        'loc': pole.Location,
+                        'interval': pole.Interval
+                    }
+
     @staticmethod
     def save_csv(srializedata, block_interval: float):
         """트리 구조의 데이터를 BVE CSV 공식 문법 문자열로 변환하여 파일 저장"""
@@ -323,6 +343,30 @@ class CreateRouteFILE:
                         f"{fobj['x']:.3f};{fobj['y']:.3f};{fobj['yaw']:.2f};{fobj['pitch']:.2f};{fobj['roll']:.2f}"
                     )
                     csv_lines.append(freeobj_string)
+            #pole
+            # [save_csv 내부의 전신주 최종 출력 처리 로직 연동]
+            prev_pole_states = {}  # { rail_idx: bool } 이전 블록의 생존 여부 추적용
+            if 'Pole' in block_data:
+                # 수집단에서 정의한 rail_idx 순서대로 정렬 순회
+                for rail_idx in sorted(list(block_data['Pole'].keys())):
+                    pole_info = block_data['Pole'][rail_idx]
+
+                    was_existed = prev_pole_states.get(rail_idx, False)
+                    is_existing = pole_info['exists']
+
+                    if is_existing and not was_existed:
+                        # ➔ 깔끔하게 .pole 출력
+                        csv_lines.append(
+                            f"{dist},.pole {rail_idx};{pole_info['mode']};{pole_info['loc']:.2f};"
+                            f"{pole_info['interval']:.1f};{pole_info['type']}"
+                        )
+                    elif not is_existing and was_existed:
+                        # ➔ 정확한 위치에서 .poleend 출력
+                        csv_lines.append(f"{dist},.poleend {rail_idx}")
+
+                    # 상태 체인 업데이트
+                    prev_pole_states[rail_idx] = is_existing
+
         # 3. 실제 파일 쓰기
         import os
         os.makedirs('c:/temp', exist_ok=True)

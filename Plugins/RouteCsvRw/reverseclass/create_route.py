@@ -132,13 +132,11 @@ class CreateRouteFILE:
             # ① 곡선 (.curve) 문법 조립
             radius = block_data['Curve']['radius']
             cant = block_data['Curve']['cant']
-            if radius != 0.0:
-                csv_lines.append(f"{dist},.curve {radius};{cant * 1000.0}")
+            csv_lines.append(f"{dist},.curve {radius};{cant * 1000.0}")
 
             # ② 구배 (.pitch) 문법 조립
             pitch = block_data['Pitch']
-            if pitch != 0.0:
-                csv_lines.append(f"{dist},.pitch {pitch}")
+            csv_lines.append(f"{dist},.pitch {pitch * 1000.0}")
 
             # ③ [핵심 교정] 레일 (.rail / .railend) 문법 조립
             if 'Rail' in block_data:

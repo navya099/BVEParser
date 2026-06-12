@@ -206,6 +206,24 @@ class CreateRouteFILE:
             #height 요소 작렬화
             if block.Height is not None:
                 srializedata['TrackCommand'][track_position]['Height'] = block.Height
+
+            #freeobj 직렬화
+            if block.RailFreeObj:
+                srializedata['TrackCommand'][track_position]['FreeObj'] = []
+                for rail_key, freeobjs in block.RailFreeObj.items():
+                    if freeobjs:
+                        for freeobj in freeobjs:
+                            obj_data = {
+                                'track_position': freeobj.TrackPosition,
+                                'RailIndex': freeobj.RailIndex,
+                                'StructureType': freeobj.Type,
+                                'x': freeobj.Position.x,
+                                'y': freeobj.Position.y,
+                                'yaw': freeobj.Yaw,
+                                'pitch': freeobj.Pitch,
+                                'roll': freeobj.Roll
+                            }
+                            srializedata['TrackCommand'][track_position]['FreeObj'].append(obj_data)
     @staticmethod
     def save_csv(srializedata, block_interval: float):
         """트리 구조의 데이터를 BVE CSV 공식 문법 문자열로 변환하여 파일 저장"""
@@ -292,6 +310,19 @@ class CreateRouteFILE:
             if 'Height' in block_data:
                 csv_lines.append(f"{dist},.Height {block_data['Height']};")
 
+            # 💡 ④ [신설] 지상물 오브젝트 (.freeobj) 문법 조립
+            # 정밀 절대 위치(actual_obj_pos)를 거리 헤더로 취하여 공간 무결성을 완벽히 보존합니다.
+            if 'FreeObj' in block_data and block_data['FreeObj']:
+                for fobj in block_data['FreeObj']:
+                    actual_obj_pos = fobj['track_position']
+
+                    # 라디안/도 변환 오차를 고려해 안전하게 소수점 포맷팅 제어
+                    # 문법: 거리,.freeobj 레일번호;종류번호;X;Y;Yaw;Pitch;Roll
+                    freeobj_string = (
+                        f"{actual_obj_pos:.2f},.freeobj {fobj['RailIndex']};{fobj['StructureType']};"
+                        f"{fobj['x']:.3f};{fobj['y']:.3f};{fobj['yaw']:.2f};{fobj['pitch']:.2f};{fobj['roll']:.2f}"
+                    )
+                    csv_lines.append(freeobj_string)
         # 3. 실제 파일 쓰기
         import os
         os.makedirs('c:/temp', exist_ok=True)

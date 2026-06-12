@@ -104,6 +104,9 @@ class CreateRouteFILE:
             for idx, stop in enumerate(block.StopPositions):
                 srializedata['TrackCommand'][track_position]['Stop'][idx] = stop.TrackPosition
 
+            #height 요소 작렬화
+            if block.Height is not None:
+                srializedata['TrackCommand'][track_position]['Height'] = block.Height
     @staticmethod
     def save_csv(srializedata, block_interval: float):
         """트리 구조의 데이터를 BVE CSV 공식 문법 문자열로 변환하여 파일 저장"""
@@ -175,7 +178,10 @@ class CreateRouteFILE:
                 for actual_stop_pos in block_data['Stop'].values():
                     # actual_stop_pos는 이미 변환 과정에서 역방향 기준으로 가공된 절대 거리 좌표입니다.
                     # BVE 문법 규칙에 맞게 절대 거리 헤더를 붙여 출력합니다.
-                    csv_lines.append(f"{actual_stop_pos},.stop 0;")
+                    csv_lines.append(f"{dist},.stop 0;")
+            #height
+            if 'Height' in block_data:
+                csv_lines.append(f"{dist},.Height {block_data['Height']};")
 
         # 3. 실제 파일 쓰기
         import os

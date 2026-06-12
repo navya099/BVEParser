@@ -20,28 +20,6 @@ class RouteReverser:
 
     def convert_to_reverse_route(self):
         """역방향 실행 메서드"""
-        # -------------------------------------------------------------------
-        # [정밀 디버깅] 1-Pass 프리뷰 직후 원본 상태 덤프 (reverse하기 직전에 실행)
-        # -------------------------------------------------------------------
-        debug_lines = ["=== BEFORE REVERSE: 1-PASS SNAPSHOT ==="]
-        for idx, block in enumerate(self.data.Blocks):
-            track_pos = idx * self.data.BlockInterval
-            # 레일 40번 집중 추적
-            if 40 in block.Rails:
-                r = block.Rails[40]
-                debug_lines.append(
-                    f"BlockIdx: {idx:3d} | Dist: {track_pos:6.1f} | "
-                    f"Started: {str(r.RailStarted):5s} | Ended: {str(r.RailEnded):5s} | Refreshed: {str(r.RailStartRefreshed):5s} | "
-                    f"Driveable: {str(r.IsDriveable):5s} | "
-                    f"Start({r.RailStart.x:.3f}, {r.RailStart.y:.3f}) | End({r.RailEnd.x:.3f}, {r.RailEnd.y:.3f})"
-                )
-
-        # 결과를 임시 파일로 저장하여 눈으로 직접 확인합니다.
-        with open('c:/temp/reverser_debug_snapshot.txt', 'w', encoding='utf-8') as f:
-            f.write('\n'.join(debug_lines))
-        logger.debug("[Debug] 정방향 프리뷰 상태 덤프 완료 (c:/temp/reverser_debug_snapshot.txt)")
-        # -------------------------------------------------------------------
-
         current_track_position = None
         current_track_position_freeobj = None
         actual_block_count = int(self.data.TrackPosition / self.data.BlockInterval) + 1
@@ -64,14 +42,18 @@ class RouteReverser:
         self.data.Blocks.reverse()
 
         # 2. 역방향 기하학적 요소 변경
-        for i in range(len(self.data.Blocks)):
+        total_blocks = len(self.data.Blocks)
+        for i in range(len(self.data.Blocks) - 1):
             block = self.data.Blocks[i]
+            # 마지막 블록일 때는 next_block에 None을 주어 종단 마감을 유도합니다.
+            next_block = self.data.Blocks[i + 1] if i < total_blocks - 1 else None
+
             last_track_position = self.data.TrackPosition
             current_track_position = i * self.data.BlockInterval
             current_reverse_track_position = last_track_position - current_track_position
 
-            #선형 뒤집기
-            AlignmentReverse.reverse_alignment(block)
+            #선형 뒤집기(next_block 전달로 1칸 시프트 완벽 결합)
+            AlignmentReverse.reverse_alignment(block, next_block)
             #레일 뒤집기
             RailReverse.reverse_rail(block)
             # ③ [추가] 지상물 오브젝트 뒤집기 (Ground 및 Rail 오브젝트 전수조사 반전)

@@ -58,7 +58,7 @@ class RouteReverser:
             #레일 뒤집기
             RailReverse.reverse_rail(block)
             # ③ [추가] 지상물 오브젝트 뒤집기 (Ground 및 Rail 오브젝트 전수조사 반전)
-            ObjectReverse.reverse_objects(block)
+            ObjectReverse.reverse_objects(block, last_track_position)
 
             # 💡 [추가] 가공전선주(전신주) 좌우 방향 및 위치 반전
             ObjectReverse.reverse_poles(block, next_block)

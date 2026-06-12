@@ -1,4 +1,5 @@
 import collections
+import math
 import os
 from RouteManager2.CurrentRoute import CurrentRoute
 from Plugins.RouteCsvRw.RouteData import RouteData
@@ -101,7 +102,7 @@ class CreateRouteFILE:
                     # 문법: 거리,.freeobj 레일번호;종류번호;X;Y;Yaw;Pitch;Roll
                     freeobj_string = (
                         f"{actual_obj_pos:.2f},.freeobj {fobj['RailIndex']};{fobj['StructureType']};"
-                        f"{fobj['x']:.3f};{fobj['y']:.3f};{fobj['yaw']:.2f};{fobj['pitch']:.2f};{fobj['roll']:.2f}"
+                        f"{fobj['x']:.3f};{fobj['y']:.3f};{math.degrees(fobj['yaw']):.2f};{math.degrees(fobj['pitch']):.2f};{math.degrees(fobj['roll']):.2f}"
                     )
                     csv_lines.append(freeobj_string)
             #pole

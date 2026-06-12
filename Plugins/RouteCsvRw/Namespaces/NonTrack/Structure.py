@@ -11,7 +11,7 @@ class Parser10:
     def __init__(self):
         super().__init__()
 
-    def parse_structure_command(self, command: StructureCommand, arguments: [str], command_indices: [int]
+    def parse_structure_command(self, command: StructureCommand, arguments: list[str], command_indices: list[int]
                                 , filename: str, encoding: str, expression: Expression, data: RouteData
                                 , preview_only: bool) -> RouteData:
         match command:

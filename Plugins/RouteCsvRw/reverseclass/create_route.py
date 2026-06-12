@@ -2,7 +2,7 @@ import collections
 import os
 from RouteManager2.CurrentRoute import CurrentRoute
 from Plugins.RouteCsvRw.RouteData import RouteData
-
+from loggermodule import logger
 
 class CreateRouteFILE:
     @staticmethod
@@ -16,6 +16,8 @@ class CreateRouteFILE:
         CreateRouteFILE.serialize_option_command(current_route, srializedata)
         # 2. 루트 네임스페이스 섹션
         CreateRouteFILE.serialize_route_command(current_route, srializedata)
+        # 3. 스트럭쳐 네임스페이스 섹션
+        CreateRouteFILE.serialize_structure_command(data, srializedata)
         # 3. 트랙 네임스페이스 섹션
         CreateRouteFILE.serialize_track_command(current_route, data, srializedata)
 
@@ -34,6 +36,103 @@ class CreateRouteFILE:
         srializedata['RouteCommand']['PositionX'] = current_route.Atmosphere.InitialX
         srializedata['RouteCommand']['PositionY'] = current_route.Atmosphere.InitialY
         srializedata['RouteCommand']['Direction'] = current_route.Atmosphere.InitialDirection
+
+    @staticmethod
+    def serialize_structure_command(data: RouteData, serializedata):
+        """
+        Parser10 적재 원형(리스트 형태 [f] 및 순수 문자열 f)에 완벽히 동기화된
+        Structure 정의 명령어 직렬화 마스터 메서드
+        """
+        if 'StructureCommand' not in serializedata:
+            serializedata['StructureCommand'] = []
+
+        # 1. 일반 ObjectDictionary 계열 속성 이름과 BVE CSV 명령어 접두사 매핑
+        structure_mappings = {
+            'RailObjects': 'Structure.Rail',
+            'Ground': 'Structure.Ground',
+            'WallL': 'Structure.WallL',
+            'WallR': 'Structure.WallR',
+            'DikeL': 'Structure.DikeL',
+            'DikeR': 'Structure.DikeR',
+            'FormL': 'Structure.FormL',
+            'FormR': 'Structure.FormR',
+            'FormCL': 'Structure.FormCL',
+            'FormCR': 'Structure.FormCR',
+            'RoofL': 'Structure.RoofL',
+            'RoofR': 'Structure.RoofR',
+            'RoofCL': 'Structure.RoofCL',
+            'RoofCR': 'Structure.RoofCR',
+            'CrackL': 'Structure.CrackL',
+            'CrackR': 'Structure.CrackR',
+            'FreeObjects': 'Structure.FreeObj',
+            'Beacon': 'Structure.Beacon',
+            'WeatherObjects': 'Structure.Weather'
+        }
+
+        # [내부 헬퍼] Parser10 데이터 구조에서 동적 상대 경로만 추출
+        def extract_pure_path(obj_val) -> str:
+            raw_path = ""
+            if obj_val is None:
+                return ""
+
+            if isinstance(obj_val, (list, tuple)) and len(obj_val) > 0:
+                raw_path = str(obj_val[0])
+            elif isinstance(obj_val, str):
+                raw_path = obj_val
+            else:
+                for attr in ['FilePath', 'Path', 'path', 'FileName']:
+                    if hasattr(obj_val, attr):
+                        val = getattr(obj_val, attr)
+                        if isinstance(val, str) and val:
+                            raw_path = val
+                            break
+                if not raw_path:
+                    raw_path = str(obj_val)
+
+            # 💡 [동적 경로 슬라이싱 가드 적용]
+            # 1. 먼저 슬래시를 윈도우/BVE 표준 역슬래시로 통일
+            raw_path = raw_path.replace('/', '\\')
+
+            # 2. 대소문자 무관하게 'object\'가 포함된 마디의 시작점 추적
+            lower_path = raw_path.lower()
+            target_keyword = "object\\"
+
+            if target_keyword in lower_path:
+                # 'object\' 키워드가 시작되는 인덱스를 찾고, 그 단어 길이만큼 건너뜁니다.
+                idx = lower_path.index(target_keyword)
+                # 'D:\BVE\루트\Railway\Object\경북선\...' 에서 'Object\' 뒤의 문자열만 슬라이싱
+                raw_path = raw_path[idx + len(target_keyword):]
+
+            return raw_path
+
+        # 2. 일반 구조물 사전 순회 및 명령어 생성
+        for attr_name, bve_prefix in structure_mappings.items():
+            current_dict = getattr(data.Structure, attr_name, None)
+
+            if current_dict and isinstance(current_dict, dict):
+                for key, obj_val in current_dict.items():
+                    obj_path = extract_pure_path(obj_val)
+                    if obj_path:
+                        # 출력 형식: Structure.Rail(40) Obj\Rail\rail_concrete.csv
+                        cmd_string = f"{bve_prefix}({key}) {obj_path}"
+                        serializedata['StructureCommand'].append(cmd_string)
+
+        # 3. 전신주(Poles) 특수 2중 중첩 사전 구조 해결
+        # 파서 원형: data.Structure.Poles[command_indices[0]].Add(command_indices[1], obj)
+        if hasattr(data.Structure, 'Poles') and data.Structure.Poles:
+            poles_root = data.Structure.Poles
+            if isinstance(poles_root, dict):
+                for first_idx, sub_dict in poles_root.items():
+                    if sub_dict and isinstance(sub_dict, dict):
+                        for second_idx, obj_val in sub_dict.items():
+                            obj_path = extract_pure_path(obj_val)
+                            if obj_path:
+                                # 출력 형식: Structure.Pole(0; 1) Obj\Pole\pole_double.b3d
+                                cmd_string = f"Structure.Pole({first_idx}; {second_idx}) {obj_path}"
+                                serializedata['StructureCommand'].append(cmd_string)
+
+
+        logger.debug(f"[Structure 원형 직렬화 완료] 총 {len(serializedata['StructureCommand'])}개 명령어 캡처 완료")
 
     @staticmethod
     def serialize_track_command(current_route: CurrentRoute, data: RouteData, srializedata):
@@ -124,6 +223,16 @@ class CreateRouteFILE:
         csv_lines.append(f".PositionY {srializedata['RouteCommand']['PositionY']}")
         csv_lines.append(f".Direction {srializedata['RouteCommand']['Direction']}")
 
+        # 💡 3. [신설] 오브젝트 사전 정의(Structure) 명령어 삽입 영역
+        csv_lines.append("\n;=========================================================")
+        csv_lines.append("; STRUCTURE OBJECT DEFINITIONS")
+        csv_lines.append(";=========================================================")
+        # With Track 이전에 선언되어야 오픈BVE 엔진이 3D 구조물 리소스를 정상 인지합니다.
+        if 'StructureCommand' in srializedata and srializedata['StructureCommand']:
+            for obj_cmd in srializedata['StructureCommand']:
+                csv_lines.append(obj_cmd)
+            csv_lines.append("")  # 가독성을 위한 공백 패딩
+
         csv_lines.append("With Track")
 
         # 2. Track 명령어 영역 거리순 정렬 추출
@@ -178,7 +287,7 @@ class CreateRouteFILE:
                 for actual_stop_pos in block_data['Stop'].values():
                     # actual_stop_pos는 이미 변환 과정에서 역방향 기준으로 가공된 절대 거리 좌표입니다.
                     # BVE 문법 규칙에 맞게 절대 거리 헤더를 붙여 출력합니다.
-                    csv_lines.append(f"{dist},.stop 0;")
+                    csv_lines.append(f"{actual_stop_pos},.stop 0;")
             #height
             if 'Height' in block_data:
                 csv_lines.append(f"{dist},.Height {block_data['Height']};")

@@ -156,7 +156,16 @@ class SerializeRouteData:
 
             # 레일 요소 직렬화
             for key, rail in block.Rails.items():
-                current_sttype = block.RailType[key]
+                try:
+                    current_sttype = block.RailType[key]
+                except KeyError:
+                    logger.error(f'unexpected rail key {key}')
+                    current_sttype = 0
+
+                except IndexError:
+                    logger.error(f'invailed rail key {key}')
+                    current_sttype = 0
+
                 if key == 0:
                     continue  # 자선 스킵
 
@@ -214,7 +223,7 @@ class SerializeRouteData:
                         for freeobj in freeobjs:
                             obj_data = {
                                 'track_position': freeobj.TrackPosition,
-                                'RailIndex': freeobj.RailIndex,
+                                'RailIndex': rail_key,
                                 'StructureType': freeobj.Type,
                                 'x': freeobj.Position.x,
                                 'y': freeobj.Position.y,

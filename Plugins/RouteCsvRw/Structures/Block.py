@@ -1,9 +1,12 @@
 from typing import List, Dict
 
 from OpenBveApi.Routes.LightDefinition import LightDefinition
+from Plugins.RouteCsvRw.Structures.Route.FreeObject import FreeObj
+from Plugins.RouteCsvRw.Structures.Route.Pole import Pole
 from Plugins.RouteCsvRw.Structures.Route.Rail import Rail
 from Plugins.RouteCsvRw.Structures.Route.RailCycle import RailCycle
 from OpenBveApi.Routes.TrackElement import TrackElement
+from Plugins.RouteCsvRw.Structures.Route.StationStop import Stop
 
 
 class Block:
@@ -20,15 +23,15 @@ class Block:
         self.RailType: List[int] = []
         self.RailWall: Dict[int, 'WallDike'] = {}
         self.RailDike: Dict[int, 'WallDike'] = {}
-        self.RailPole: List['Pole'] = []
-        self.RailFreeObj: Dict[int, List['FreeObj']] = {}
-        self.GroundFreeObj: List['FreeObj'] = []
+        self.RailPole: List[Pole] = []
+        self.RailFreeObj: Dict[int, List[FreeObj]] = {}
+        self.GroundFreeObj: List[FreeObj] = []
         self.Forms: List['Form'] = []
         self.Cracks: List['Crack'] = []
         self.Signals: List['Signal'] = []
         self.Sections: List['Section'] = []
         self.Limits: List['Limit'] = []
-        self.StopPositions: List['Stop'] = []
+        self.StopPositions: List[Stop] = []
         self.SoundEvents: List['Sound'] = []
         self.Transponders: List['Transponder'] = []
         self.DestinationChanges: List['DestinationEvent'] = []

@@ -246,3 +246,27 @@ class SerializeRouteData:
                         'loc': pole.Location,
                         'interval': pole.Interval
                     }
+            #DIKE 직렬화
+            if hasattr(block, 'RailDike') and block.RailDike:
+                # save_csv에서 편하게 접근할 수 있도록 딕셔너리로 초기화
+                srializedata['TrackCommand'][track_position]['Dike'] = {}
+
+                for rail_idx, dike in block.RailDike.items():
+                    # 레일 인덱스를 Key로 하여 구조화된 딕셔너리 주입
+                    srializedata['TrackCommand'][track_position]['Dike'][rail_idx] = {
+                        'object_type': dike.object_type,
+                        'direction': dike.direction,
+                        'exists': dike.exists
+                    }
+            # Wall 직렬화
+            if hasattr(block, 'RailWall') and block.RailWall:
+                # save_csv에서 편하게 접근할 수 있도록 딕셔너리로 초기화
+                srializedata['TrackCommand'][track_position]['Wall'] = {}
+
+                for rail_idx, wall in block.RailWall.items():
+                    # 레일 인덱스를 Key로 하여 구조화된 딕셔너리 주입
+                    srializedata['TrackCommand'][track_position]['Wall'][rail_idx] = {
+                        'object_type': wall.object_type,
+                        'direction': wall.direction,
+                        'exists': wall.exists
+                    }

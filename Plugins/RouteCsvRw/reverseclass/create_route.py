@@ -121,7 +121,36 @@ class CreateRouteFILE:
                     else:
                         # ➔ 정확한 위치에서 .poleend 출력
                         csv_lines.append(f"{dist},.poleend {rail_idx}")
-
+            #dike
+            if 'Dike' in block_data:
+                # 수집단에서 정의한 rail_idx 순서대로 정렬 순회
+                for rail_idx in sorted(list(block_data['Dike'].keys())):
+                    dike_info = block_data['Dike'][rail_idx]
+                    is_existing = dike_info['exists']
+                    direction = dike_info['direction'].value
+                    if is_existing:
+                        # ➔ 깔끔하게 .dike 출력
+                        csv_lines.append(
+                            f"{dist},.Dike {rail_idx};{dike_info['direction']};{dike_info['object_type']};"
+                        )
+                    else:
+                        # ➔ 정확한 위치에서 .poleend 출력
+                        csv_lines.append(f"{dist},.DikeEnd {rail_idx}")
+            # wall
+            if 'Wall' in block_data:
+                # 수집단에서 정의한 rail_idx 순서대로 정렬 순회
+                for rail_idx in sorted(list(block_data['Wall'].keys())):
+                    wall_info = block_data['Wall'][rail_idx]
+                    is_existing = wall_info['exists']
+                    direction = wall_info['direction'].value
+                    if is_existing:
+                        # ➔ 깔끔하게 .dike 출력
+                        csv_lines.append(
+                            f"{dist},.Dike {rail_idx};{wall_info['direction']};{wall_info['object_type']};"
+                        )
+                    else:
+                        # ➔ 정확한 위치에서 .poleend 출력
+                        csv_lines.append(f"{dist},.DikeEnd {rail_idx}")
         # 3. 실제 파일 쓰기
         import os
         os.makedirs('c:/temp', exist_ok=True)

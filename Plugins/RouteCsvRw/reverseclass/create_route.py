@@ -106,28 +106,21 @@ class CreateRouteFILE:
                     )
                     csv_lines.append(freeobj_string)
             #pole
-            # [save_csv 내부의 전신주 최종 출력 처리 로직 연동]
-            prev_pole_states = {}  # { rail_idx: bool } 이전 블록의 생존 여부 추적용
             if 'Pole' in block_data:
                 # 수집단에서 정의한 rail_idx 순서대로 정렬 순회
                 for rail_idx in sorted(list(block_data['Pole'].keys())):
                     pole_info = block_data['Pole'][rail_idx]
-
-                    was_existed = prev_pole_states.get(rail_idx, False)
                     is_existing = pole_info['exists']
 
-                    if is_existing and not was_existed:
+                    if is_existing:
                         # ➔ 깔끔하게 .pole 출력
                         csv_lines.append(
                             f"{dist},.pole {rail_idx};{pole_info['mode']};{pole_info['loc']:.2f};"
                             f"{pole_info['interval']:.1f};{pole_info['type']}"
                         )
-                    elif not is_existing and was_existed:
+                    else:
                         # ➔ 정확한 위치에서 .poleend 출력
                         csv_lines.append(f"{dist},.poleend {rail_idx}")
-
-                    # 상태 체인 업데이트
-                    prev_pole_states[rail_idx] = is_existing
 
         # 3. 실제 파일 쓰기
         import os

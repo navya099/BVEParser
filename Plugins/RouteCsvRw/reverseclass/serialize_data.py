@@ -237,12 +237,7 @@ class SerializeRouteData:
                 # save_csv에서 편하게 접근할 수 있도록 딕셔너리로 초기화
                 srializedata['TrackCommand'][track_position]['Pole'] = {}
 
-                for rail_idx, pole in enumerate(block.RailPole):
-                    # 💡 [핵심 가드] 오픈BVE 파서가 extend()로 확장해둔 유령 객체들을 걸러냅니다.
-                    # Exists가 한 번도 True가 된 적 없고, 초기 상태(Mode=0, Type=0)인 빈 객체는 수집할 필요가 없습니다.
-                    if not pole.Exists and pole.Mode == 0 and pole.Type == 0 and pole.Location == 0.0:
-                        continue
-
+                for rail_idx, pole in block.RailPole.items():
                     # 레일 인덱스를 Key로 하여 구조화된 딕셔너리 주입
                     srializedata['TrackCommand'][track_position]['Pole'][rail_idx] = {
                         'exists': pole.Exists,

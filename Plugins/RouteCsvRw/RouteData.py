@@ -82,7 +82,7 @@ class RouteData:
                                 )
                     self.Blocks[i].Rails[key] = rail
                 if not preview_only:
-                    self.Blocks[i].RailPole = self.Blocks[i - 1].RailPole.copy()
+                    self.Blocks[i].RailPole = copy.deepcopy(self.Blocks[i - 1].RailPole)
 
                 self.Blocks[i].Pitch = self.Blocks[i - 1].Pitch
 

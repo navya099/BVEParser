@@ -1014,11 +1014,11 @@ class Parser7:
                             f'RailIndex must be non-negative in Track.Wall at line {expression.Line}, column {expression.Column} in file {expression.File}')
                         idx = 0
 
-                    dir = Direction.Invalid
+                    dir = Direction.Invalid.value
                     if len(arguments) >= 2 and len(arguments[1]) > 0:
-                        dir = Parser9.find_direction(arguments[1], "Track.Wall", True, expression.Line, expression.File)
+                        dir = Parser9.find_direction(arguments[1], "Track.Wall", True, expression.Line, expression.File).value
 
-                    if dir in [Direction.Invalid, Direction.Null]:
+                    if dir in [Direction.Invalid.value, Direction.Null.value]:
                         return data
                     sttype = 0
                     if len(arguments) >= 3 and len(arguments[2]) > 0:
@@ -1063,8 +1063,12 @@ class Parser7:
                                 f'RailIndex {idx} could be out of range in Track.Wall at line {expression.Line}, column {expression.Column} in file {expression.File}')
 
                         # RailWall 추가/갱신
-                        data.Blocks[block_index].RailWall[idx] = WallDike(sttype, dir, data.Structure.WallL,
-                                                                          data.Structure.WallR)
+                        if idx in data.Blocks[block_index].RailWall:
+                            data.Blocks[block_index].RailWall[idx] = WallDike(sttype, dir, data.Structure.WallL,
+                                                                              data.Structure.WallR)
+                        else:
+                            data.Blocks[block_index].RailWall[idx] = WallDike(sttype, dir, data.Structure.WallL,
+                                                                              data.Structure.WallR)
 
             case TrackCommand.WallEnd:
                 if not preview_only:
@@ -1103,11 +1107,11 @@ class Parser7:
                             f'RailIndex must be non-negative in Track.Dike at line {expression.Line}, column {expression.Column} in file {expression.File}')
                         idx = 0
 
-                    dir = Direction.Invalid
+                    dir = Direction.Invalid.value
                     if len(arguments) >= 2 and len(arguments[1]) > 0:
-                        dir = Parser9.find_direction(arguments[1], "Track.Dike", True, expression.Line, expression.File)
+                        dir = Parser9.find_direction(arguments[1], "Track.Dike", True, expression.Line, expression.File).value
 
-                    if dir in [Direction.Invalid, Direction.Null]:
+                    if dir in [Direction.Invalid.value, Direction.Null.value]:
                         return data
                     sttype = 0
                     if len(arguments) >= 3 and len(arguments[2]) > 0:

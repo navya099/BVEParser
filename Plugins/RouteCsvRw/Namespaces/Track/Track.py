@@ -33,7 +33,7 @@ class Parser7:
 
     def parse_track_command(self, command: TrackCommand, arguments: list[str], filename: str,
                             unit_of_lngth: list[float], expression: Expression, data: RouteData, block_index: int,
-                            preview_only: bool, is_rw: bool, rail_index: int = 0) -> RouteData:
+                            preview_only: bool, is_rw: bool, rail_index: int = 0):
         match command:
             case TrackCommand.RailStart | TrackCommand.Rail:
                 idx = 0
@@ -43,12 +43,12 @@ class Parser7:
                         logger.error(f'RailIndex is invalid in {command} at line '
                                      f'{expression.Line} , column {expression.Column}'
                                      f' in file {expression.File}')
-                        return data
+                        return
                 if idx < 1:
                     logger.error(f'RailIndex is expected to be positive in {command} at line '
                                  f'{expression.Line} , column {expression.Column}'
                                  f' in file {expression.File}')
-                    return data
+                    return
                 if command == TrackCommand.RailStart:
                     if idx in data.Blocks[block_index].Rails and data.Blocks[block_index].Rails[idx].RailStarted:
                         logger.error(
@@ -144,17 +144,17 @@ class Parser7:
                         logger.error(f'RailIndex {idx} is invalid in {command} at line '
                                      f'{expression.Line} , column {expression.Column}'
                                      f' in file {expression.File}')
-                        return data
+                        return
                 if idx == 0:
                     logger.error(f'The command {command} is invalid for Rail 0 at line '
                                  f'{expression.Line} , column {expression.Column}'
                                  f' in file {expression.File}')
-                    return data
+                    return
                 if idx < 0 or idx not in data.Blocks[block_index].Rails \
                         or not data.Blocks[block_index].Rails[idx].RailStarted:
                     logger.error(f'RailIndex {idx} references a non-existing rail in {command} at line '
                                  f'{expression.Line} , column {expression.Column} in file {expression.File}')
-                    return data
+                    return
                 if idx not in data.Blocks[block_index].Rails:
                     data.Blocks[block_index].Rails[idx] = Rail(2.0, 1.0)
 
@@ -1019,7 +1019,7 @@ class Parser7:
                         dir = Parser9.find_direction(arguments[1], "Track.Wall", True, expression.Line, expression.File).value
 
                     if dir in [Direction.Invalid.value, Direction.Null.value]:
-                        return data
+                        return
                     sttype = 0
                     if len(arguments) >= 3 and len(arguments[2]) > 0:
                         success, sttype = NumberFormats.try_parse_int_vb6(arguments[2])
@@ -1112,7 +1112,7 @@ class Parser7:
                         dir = Parser9.find_direction(arguments[1], "Track.Dike", True, expression.Line, expression.File).value
 
                     if dir in [Direction.Invalid.value, Direction.Null.value]:
-                        return data
+                        return
                     sttype = 0
                     if len(arguments) >= 3 and len(arguments[2]) > 0:
                         success, sttype = NumberFormats.try_parse_int_vb6(arguments[2])
@@ -1211,7 +1211,7 @@ class Parser7:
                         '''
                         logger.error(f'An insufficient number of arguments was supplied in Track.FreeObj at line '
                                      f"{expression.Line} ,column {expression.Column} in file {expression.File}")
-                        return data
+                        return
                     idx, sttype = 0, 0
                     if len(arguments) >= 1 and len(arguments[0]) > 0:
                         success, idx = NumberFormats.try_parse_int_vb6(arguments[0])
@@ -1368,4 +1368,3 @@ class Parser7:
                 pass
             case TrackCommand.RailAdhesion:
                 pass
-        return data

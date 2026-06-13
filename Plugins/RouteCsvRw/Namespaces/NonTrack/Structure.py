@@ -13,7 +13,7 @@ class Parser10:
 
     def parse_structure_command(self, command: StructureCommand, arguments: list[str], command_indices: list[int]
                                 , filename: str, encoding: str, expression: Expression, data: RouteData
-                                , preview_only: bool) -> RouteData:
+                                , preview_only: bool):
         match command:
             case StructureCommand.Rail:
                 if command_indices[0] < 0:
@@ -148,5 +148,3 @@ class Parser10:
                                 data.Structure.FreeObjects.Add(command_indices[0], obj, 'FreeObject')
                             else:
                                 self.freeObjCount += 1
-
-        return data

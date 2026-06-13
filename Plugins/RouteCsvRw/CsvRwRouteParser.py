@@ -121,7 +121,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
             data.TimetableNighttime = 'Texture(None, None, None, None)'
             data.Structure.WeatherObjects = ObjectDictionary()
             data.Structure.LightDefinitions = {}
-        data = self.parse_route_for_data(file_name, encoding, data, preview_only)
+        self.parse_route_for_data(file_name, encoding, data, preview_only)
 
         if self.Plugin.Cancel:
             self.Plugin.IsLoading = False
@@ -132,7 +132,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         if self.Plugin.CurrentOptions.is_reverse_mode and not preview_only:
             logger.debug('역방향 모드 감지: 종점 좌표 계산을 위한 1-Pass(정방향 프리뷰) 시작')
             # 정방향 apply_route_data를 먼저 한 번 실행하여 좌표 추출
-            data = self.apply_route_data(file_name, data, preview_only=True)
+            self.apply_route_data(file_name, data, preview_only=True)
             #역방향 메서드 실행
             reverser = RouteReverser(data, self.CurrentRoute)
             reverser.preprocess_reverse_route()
@@ -142,12 +142,12 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         # 3. 최종 적용 단계 (3D 월드 인스턴스화)
         # -------------------------------------------------------------------
         # 역방향 모드라면 주입된 종점 좌표에서 출발하고, 정방향 모드라면 원래 세팅된 기점에서 출발합니다.
-        data = self.apply_route_data(file_name, data, preview_only)
+        self.apply_route_data(file_name, data, preview_only)
         logger.debug('루트적용완료')
 
 
     def parse_route_for_data(self, file_name: str, encoding: str, data: RouteData,
-                             preview_only: bool) -> RouteData:
+                             preview_only: bool):
         with open(file_name, 'r', encoding=encoding) as f:
             lines: List[str] = f.readlines()
 
@@ -161,18 +161,17 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         reversed_mode = True if self.Plugin.CurrentOptions.is_reverse_mode else False
         expressions = self.preprocess_sort_by_track_position(unit_of_length, expressions, reverse_mode=False)
         logger.debug('expressions 추출완료')
-        data = self.parse_route_for_data2(file_name, encoding, expressions, unit_of_length, data, preview_only)
+        self.parse_route_for_data2(file_name, encoding, expressions, unit_of_length, data, preview_only)
         logger.debug('루트파싱완료')
         self.CurrentRoute.UnitOfLength = unit_of_length
         Util.test(expressions)# 익스프레션추출 테스트
         Util.create_csv(expressions)
-        return data
 
 
 
     # parse route for data
     def parse_route_for_data2(self, file_name: str, encoding: str, expressions: List["Expression"],
-                              unit_of_length: list[float], data: RouteData, preview_only: bool) -> RouteData | None:
+                              unit_of_length: list[float], data: RouteData, preview_only: bool):
         current_station = -1
         current_stop = -1
         current_section = 0
@@ -296,7 +295,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                             case 'options':
                                 parsed_option_command, success = Util.try_parse_enum(OptionsCommand, command)
                                 if success:
-                                    data = self.parse_option_command(parsed_option_command, arguments, unit_of_length,
+                                    self.parse_option_command(parsed_option_command, arguments, unit_of_length,
                                                                      expressions[j], data, preview_only)
                                 else:
                                     logger.error(
@@ -306,7 +305,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                             case 'route':
                                 parsed_route_command, success = Util.try_parse_enum(RouteCommand, command)
                                 if success:
-                                    data = self.parse_route_command(parsed_route_command, arguments, command_indices[0],
+                                    self.parse_route_command(parsed_route_command, arguments, command_indices[0],
                                                                     file_name,
                                                                     unit_of_length, expressions[j], data, preview_only)
                                 else:
@@ -320,7 +319,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                                 parsed_structure_command, success = Util.try_parse_enum(StructureCommand, command)
                                 if success:
 
-                                    data = self.parse_structure_command(parsed_structure_command, arguments,
+                                    self.parse_structure_command(parsed_structure_command, arguments,
                                                                         command_indices, file_name, encoding,
                                                                         expressions[j], data, preview_only)
                                 else:
@@ -424,7 +423,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                             case 'track':
                                 parsed_command, success = Util.try_parse_enum(TrackCommand, command)
                                 if success:
-                                    data = self.parse_track_command(parsed_command, arguments, file_name,
+                                    self.parse_track_command(parsed_command, arguments, file_name,
                                                                     unit_of_length,
                                                                     expressions[j], data, block_index, preview_only,
                                                                     self.IsRW)
@@ -440,7 +439,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                                         command = command[period + 1:]
                                         parsed_command, success = Util.try_parse_enum(TrackCommand, command)
                                         if success:
-                                            data = self.parse_track_command(command, arguments, file_name,
+                                            self.parse_track_command(command, arguments, file_name,
                                                                             unit_of_length,
                                                                             expressions[j], data, block_index,
                                                                             preview_only, self.IsRW)
@@ -473,4 +472,3 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
                             case _:
                                 logger.warning(f'The command {command} is not supported at line {expressions[j].Line}, '
                                                f'column {expressions[j].Column} in file {expressions[j].File}')
-        return data

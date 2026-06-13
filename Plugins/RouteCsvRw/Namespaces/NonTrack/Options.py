@@ -12,7 +12,7 @@ class Parser5:
     @staticmethod
     def parse_option_command(command: OptionsCommand, arguments: list[str],
                              unit_of_length: [float], expression: Expression,
-                             data: RouteData, preview_only: bool) -> RouteData:
+                             data: RouteData, preview_only: bool):
         match command:
             case OptionsCommand.BlockLength:
                 length = 25.0
@@ -44,5 +44,3 @@ class Parser5:
                 pass
             case OptionsCommand.ReverseDirection:
                 pass
-
-        return data

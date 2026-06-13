@@ -18,7 +18,7 @@ class Parser8:
     def __init__(self):
         super().__init__()  # 💡 중요!
 
-    def apply_route_data(self, filename: str, data: RouteData, preview_only: bool) -> RouteData:
+    def apply_route_data(self, filename: str, data: RouteData, preview_only: bool):
 
         last_block = int(math.floor((data.TrackPosition + 600.0) / data.BlockInterval + 0.001) + 1)
         if abs(data.Blocks[len(data.Blocks) - 1].CurrentTrackState.CurveRadius) < 300:
@@ -310,5 +310,3 @@ class Parser8:
         Util.write_all_lines(r"c:\temp\bve_stationcoordinates.txt", stacoordinates)
         Util.write_all_lines(r"c:\temp\bve_freeobjcoordinates.txt", freeobjcoordinates)
         Util.write_all_lines(r"c:\temp\bve_alignment.txt", bvedatas)
-
-        return data

@@ -11,7 +11,7 @@ class Parser6:
 
     def parse_route_command(self, command: RouteCommand, arguments: list[str], index: int, filename: str,
                             unit_of_length: list[float], expression: 'Expression', data: RouteData,
-                            preview_only: bool) -> RouteData:
+                            preview_only: bool):
         match command:
             case RouteCommand.DeveloperID:
                 pass
@@ -109,4 +109,3 @@ class Parser6:
                 pass
             case RouteCommand.TfoXML:
                 pass
-        return data

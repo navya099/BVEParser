@@ -911,17 +911,14 @@ class Parser7:
                                 data.Blocks[block_index].Rails[idx].RailStarted:
                             logger.warning(f'RailIndex {idx} could be out of range in Track.Pole at line '
                                            f"{expression.Line} ,column {expression.Column} in file {expression.File}")
-                        # Make sure RailPole is a list of proper RailPole objects
-                        if idx >= len(data.Blocks[block_index].RailPole):
-                            # Extend with *new* RailPole instances
-                            missing = idx + 1 - len(data.Blocks[block_index].RailPole)
-                            data.Blocks[block_index].RailPole.extend(Pole() for _ in range(missing))
-
-                            # Now safe to assign
-                            data.Blocks[block_index].RailPole[idx].Mode = 0
-                            data.Blocks[block_index].RailPole[idx].Location = 0
-                            data.Blocks[block_index].RailPole[idx].Interval = 2.0 * data.BlockInterval
-                            data.Blocks[block_index].RailPole[idx].Type = 0
+                        # C#은 ARRAY 기반이라서 파이선에 대응하려면 DICT로 바꿔야함 260613
+                        if idx not in data.Blocks[block_index].RailPole:
+                            pole = Pole()
+                            pole.Mode = 0
+                            pole.Location = 0
+                            pole.Interval = 2.0 * data.BlockInterval
+                            pole.Type = 0
+                            data.Blocks[block_index].RailPole[idx] = pole
 
                         typ = data.Blocks[block_index].RailPole[idx].Mode
                         sttype = data.Blocks[block_index].RailPole[idx].Type
@@ -989,7 +986,7 @@ class Parser7:
                                          f"{expression.Line} ,column {expression.Column} in file {expression.File}")
                             idx = 0
 
-                    if idx < 0 or idx >= len(data.Blocks[block_index].RailPole):
+                    if idx < 0 or idx not in data.Blocks[block_index].RailPole:
                         logger.error(f'RailIndex {idx} does not reference an existing pole in Track.PoleEnd at line '
                                      f"{expression.Line} ,column {expression.Column} in file {expression.File}")
                     else:

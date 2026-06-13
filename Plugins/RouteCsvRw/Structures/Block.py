@@ -23,7 +23,7 @@ class Block:
         self.RailType: List[int] = []
         self.RailWall: Dict[int, 'WallDike'] = {}
         self.RailDike: Dict[int, 'WallDike'] = {}
-        self.RailPole: List[Pole] = []
+        self.RailPole: dict[int, Pole] = {}
         self.RailFreeObj: Dict[int, List[FreeObj]] = {}
         self.GroundFreeObj: List[FreeObj] = []
         self.Forms: List['Form'] = []

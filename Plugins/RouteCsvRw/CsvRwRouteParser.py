@@ -85,7 +85,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
             data.Blocks[0].RailFreeObj = {}
             data.Blocks[0].RailWall = {}  # Empty dictionary
             data.Blocks[0].RailDike = {}  # Empty dictionary
-            data.Blocks[0].RailPole = []  # Empty list (equivalent to empty array in C#)
+            data.Blocks[0].RailPole = {}  # Empty dictionary
             data.Markers = []  # Empty list
             data.RequestStops = []  # Empty list
             #PoleFolder = os.path.join(CompatibilityFolder, "Poles")  # Path.Combine equivalent in Python

@@ -36,3 +36,24 @@ class ObjectReverse:
         #station 반전
         if hasattr(free_obj, 'TrackPosition'):
             free_obj.TrackPosition = last_track_position - free_obj.TrackPosition
+
+    @staticmethod
+    def reverse_walldike(block, next_block: Block):
+        if not next_block:
+            return
+        for railkey, wall in block.RailWall.items():
+            next_wall = next_block.RailWall.get(railkey)
+            next_exists = next_wall.exists if next_wall else False
+            wall.direction = wall.direction * -1
+            if not wall.exists and next_exists:
+                wall.exists = True
+            elif wall.exists and not next_exists:
+                wall.exists = False
+        for railkey, dike in block.RailDike.items():
+            next_dike = next_block.RailDike.get(railkey)
+            next_exists = next_dike.exists if next_dike else False
+            dike.direction = dike.direction * -1
+            if not dike.exists and next_exists:
+                dike.exists = True
+            elif dike.exists and not next_exists:
+                dike.exists = False

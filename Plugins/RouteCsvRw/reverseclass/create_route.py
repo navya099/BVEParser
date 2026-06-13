@@ -127,7 +127,6 @@ class CreateRouteFILE:
                 for rail_idx in sorted(list(block_data['Dike'].keys())):
                     dike_info = block_data['Dike'][rail_idx]
                     is_existing = dike_info['exists']
-                    direction = dike_info['direction'].value
                     if is_existing:
                         # ➔ 깔끔하게 .dike 출력
                         csv_lines.append(
@@ -142,15 +141,14 @@ class CreateRouteFILE:
                 for rail_idx in sorted(list(block_data['Wall'].keys())):
                     wall_info = block_data['Wall'][rail_idx]
                     is_existing = wall_info['exists']
-                    direction = wall_info['direction'].value
                     if is_existing:
-                        # ➔ 깔끔하게 .dike 출력
+                        # ➔ 깔끔하게 .Wall 출력
                         csv_lines.append(
-                            f"{dist},.Dike {rail_idx};{wall_info['direction']};{wall_info['object_type']};"
+                            f"{dist},.Wall {rail_idx};{wall_info['direction']};{wall_info['object_type']};"
                         )
                     else:
-                        # ➔ 정확한 위치에서 .poleend 출력
-                        csv_lines.append(f"{dist},.DikeEnd {rail_idx}")
+                        # ➔ 정확한 위치에서 Wallend 출력
+                        csv_lines.append(f"{dist},.WallEnd {rail_idx}")
         # 3. 실제 파일 쓰기
         import os
         os.makedirs('c:/temp', exist_ok=True)

@@ -29,6 +29,9 @@ class RouteReverser:
             logger.debug(f"역방향 인덱스 보정: 유령 블록 {len(self.data.Blocks) - actual_block_count}개 제거")
             self.data.Blocks = self.data.Blocks[:actual_block_count]
 
+        #측점 반전
+        for block in self.data.Blocks:
+            block.CurrentTrackState.StartingTrackPosition = self.data.TrackPosition - block.CurrentTrackState.StartingTrackPosition
         # 역(station) 반전
         station_reverser = StationReverse(self.data, self.current_route)
         station_reverser.reverse_stations()
@@ -59,12 +62,12 @@ class RouteReverser:
             RailReverse.reverse_rail(block)
             # ③ [추가] 지상물 오브젝트 뒤집기 (Ground 및 Rail 오브젝트 전수조사 반전)
             ObjectReverse.reverse_objects(block, last_track_position)
-
+            #walldike
+            ObjectReverse.reverse_walldike(block, next_block)
             # -------------------------------------------------------------------
             # [교정 3] 블록이 뒤집힌 상태이므로 인덱스 i를 전달해 정차 위치(Stop)를 최종 교정!
             # -------------------------------------------------------------------
             station_reverser.reverse_stoppositions(i, block)
-
         #직렬화 및 저장
         srializedata = SerializeRouteData.serialize_route_data(self.current_route, self.data)
         CreateRouteFILE.save_csv(srializedata, self.data.BlockInterval)

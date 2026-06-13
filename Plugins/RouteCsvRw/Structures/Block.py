@@ -7,6 +7,7 @@ from Plugins.RouteCsvRw.Structures.Route.Rail import Rail
 from Plugins.RouteCsvRw.Structures.Route.RailCycle import RailCycle
 from OpenBveApi.Routes.TrackElement import TrackElement
 from Plugins.RouteCsvRw.Structures.Route.StationStop import Stop
+from Plugins.RouteCsvRw.Structures.Route.WallDike import WallDike
 
 
 class Block:
@@ -21,8 +22,8 @@ class Block:
         self.Rails: Dict[int, Rail] = {}
         self.Switches: List['Switch'] = []
         self.RailType: List[int] = []
-        self.RailWall: Dict[int, 'WallDike'] = {}
-        self.RailDike: Dict[int, 'WallDike'] = {}
+        self.RailWall: Dict[int, WallDike] = {}
+        self.RailDike: Dict[int, WallDike] = {}
         self.RailPole: dict[int, Pole] = {}
         self.RailFreeObj: Dict[int, List[FreeObj]] = {}
         self.GroundFreeObj: List[FreeObj] = []

@@ -82,6 +82,18 @@ class RouteData:
                                 )
                     self.Blocks[i].Rails[key] = rail
                 if not preview_only:
+                    self.Blocks[i].RailWall = {}
+                    for key, wall in self.Blocks[i - 1].RailWall.items():
+                        if wall is None or not wall.exists:
+                            continue
+                        self.Blocks[i].RailWall[key] = wall.clone()
+
+                    self.Blocks[i].RailDike = {}
+                    for key, dike in self.Blocks[i - 1].RailDike.items():
+                        if dike is None or not dike.exists:
+                            continue
+                        self.Blocks[i].RailDike[key] = dike.clone()
+
                     self.Blocks[i].RailPole = copy.deepcopy(self.Blocks[i - 1].RailPole)
 
                 self.Blocks[i].Pitch = self.Blocks[i - 1].Pitch

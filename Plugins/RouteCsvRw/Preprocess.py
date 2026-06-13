@@ -14,7 +14,7 @@ class Parser1:
     def __init__(self):
         super().__init__()  # 💡 중요!
     def preprocess_split_into_expressions(self, file_name, lines, allow_rw_route_description,
-                                          track_position_offset=0.0):
+                                          track_position_offset=0.0) -> list[Expression]:
         expressions = []  # 기본 생성자를 사용할 경우
         e = 0
         # full-line rw comments
@@ -148,7 +148,7 @@ class Parser1:
                     expressions.append(Expression(file_name, t, i + 1, c + 1, track_position_offset))
         return expressions
 
-    def preprocess_chr_rnd_sub(self, file_name, encoding, expressions):
+    def preprocess_chr_rnd_sub(self, file_name: str, encoding: str, expressions: list[Expression]):
         subs = []
         open_ifs = 0
         i = 0
@@ -382,16 +382,12 @@ class Parser1:
             i += 1
         # handle comments introduced via chr, rnd, sub
         # 기존 expressions 리스트에서 주석과 빈 줄 제거
-        expressions = [
+        expressions[:] = [
             expr for expr in expressions
             if expr.Text.strip() and not expr.Text.strip().startswith(';')
         ]
 
-        return expressions
-
-    def preprocess_sort_by_track_position(self, unitfactors: List[float],
-                                          expressions: List[Expression],
-                                          reverse_mode: bool = False) -> List[Expression]:
+    def preprocess_sort_by_track_position(self, unitfactors: list[float], expressions: list[Expression]):
         p = []
         a = -1.0
         number_check = not self.IsRW
@@ -412,13 +408,6 @@ class Parser1:
                             f'Negative track position at line {expr.Line}, column {expr.Column} in file {expr.File}')
                 except ValueError:
                     p.append(PositionedExpression(a, expr))
-
-        # 역방향 변환
-        if reverse_mode and p:
-            max_position = max(pe.track_position for pe in p)
-            for pe in p:
-                pe.track_position = max_position - pe.track_position
-
         # 오름차순 정렬
         p.sort(key=lambda e: e.track_position)
 
@@ -430,5 +419,5 @@ class Parser1:
                 pos_str = str(a / unitfactors[-1])
                 e.append(Expression('', pos_str, -1, -1, -1))
             e.append(pe.expression)
-
-        return e
+        # inplace 변환: 기존 리스트 객체를 덮어쓰기
+        expressions[:] = e

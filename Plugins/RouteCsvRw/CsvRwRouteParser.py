@@ -152,14 +152,14 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
             lines: List[str] = f.readlines()
 
         expressions = self.preprocess_split_into_expressions(file_name, lines, True)
-        expressions = self.preprocess_chr_rnd_sub(file_name, encoding, expressions)
+        self.preprocess_chr_rnd_sub(file_name, encoding, expressions)
         unit_of_length = [1.0]
         # Set units of speed initially to km/h
         # This represents 1km/h in m/s
         data.UnitOfSpeed = 0.277777777777778
-        data = self.pre_process_options(expressions, data, unit_of_length, preview_only)
+        self.pre_process_options(expressions, data, unit_of_length, preview_only)
         reversed_mode = True if self.Plugin.CurrentOptions.is_reverse_mode else False
-        expressions = self.preprocess_sort_by_track_position(unit_of_length, expressions, reverse_mode=False)
+        self.preprocess_sort_by_track_position(unit_of_length, expressions)
         logger.debug('expressions 추출완료')
         self.parse_route_for_data2(file_name, encoding, expressions, unit_of_length, data, preview_only)
         logger.debug('루트파싱완료')
@@ -170,7 +170,7 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
 
 
     # parse route for data
-    def parse_route_for_data2(self, file_name: str, encoding: str, expressions: List["Expression"],
+    def parse_route_for_data2(self, file_name: str, encoding: str, expressions: list[Expression],
                               unit_of_length: list[float], data: RouteData, preview_only: bool):
         current_station = -1
         current_stop = -1

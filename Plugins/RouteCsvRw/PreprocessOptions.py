@@ -9,7 +9,7 @@ class Parser2:
     def __init__(self):
         super().__init__()  # 💡 중요!
     def pre_process_options(self, expressions: List[Expression], data: RouteData,
-                            unit_of_length: List[float], preview_only: bool) -> RouteData:
+                            unit_of_length: List[float], preview_only: bool):
         section = ''
         section_always_prefix = False
         # process expressions
@@ -238,4 +238,3 @@ class Parser2:
                                               f'{expressions[j].File}')
                                         mode = 0
                                     self.Plugin.CurrentOptions.EnableBveTsHacks = (mode == 1)
-        return data

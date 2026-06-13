@@ -64,7 +64,7 @@ class Util:
             sections[current_section].append(text)
 
         # 원하는 순서대로 CSV에 기록
-        with open("C:/TEMP/route_revesed.csv", "w", encoding="utf-8-sig") as f:
+        with open("C:/TEMP/route_expressions.csv", "w", encoding="utf-8-sig") as f:
             for section_name in ["Options", "Route", "Train", "Structure", "Track"]:
                 if sections[section_name]:
                     for line in sections[section_name]:

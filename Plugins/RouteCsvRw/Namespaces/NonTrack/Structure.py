@@ -72,6 +72,51 @@ class Parser10:
                             obj = [f]
                             overwrite_default = True if command_indices[1] >= 0 and command_indices[1] >= 3 else False
                             data.Structure.Poles[command_indices[0]].Add(command_indices[1], obj, overwrite_default)
+            case StructureCommand.DikeL | StructureCommand.DikeR | StructureCommand.WallL | StructureCommand.WallR:
+                if not preview_only:
+                    if command in (StructureCommand.DikeL, StructureCommand.DikeR):
+                        current = "Dike"
+                    elif command in (StructureCommand.WallL, StructureCommand.WallR):
+                        current = "Wall"
+                    else:
+                        current = "Unknown"
+
+                    if command_indices[0] < 0:
+                        side = "Left" if command in (StructureCommand.DikeL, StructureCommand.WallL) else "Right"
+                        logger.error(
+                            f'{side} {current}StructureIndex must be non-negative in {command} '
+                            f'at line {expression.Line}, column {expression.Column} in file {expression.File}'
+                        )
+                    else:
+                        if len(arguments) < 1:
+                            logger.error(
+                                f'{command} requires one argument at line {expression.Line}, '
+                                f'column {expression.Column} in file {expression.File}'
+                            )
+                        elif Path.contains_invalid_chars(arguments[0]):
+                            logger.error(
+                                f'FileName {arguments[0]} contains illegal characters in {command} '
+                                f'at line {expression.Line}, column {expression.Column} in file {expression.File}'
+                            )
+                        else:
+                            f = arguments[0]
+                            success, f = self.locate_object(f, self.ObjectPath)
+                            if not success:
+                                logger.error(
+                                    f'FileName {f} not found in {command} '
+                                    f'at line {expression.Line}, column {expression.Column} in file {expression.File}'
+                                )
+                            else:
+                                obj = f
+                                if obj is not None:
+                                    if command == StructureCommand.WallL:
+                                        data.Structure.WallL[command_indices[0]] = obj
+                                    elif command == StructureCommand.WallR:
+                                        data.Structure.WallR[command_indices[0]] = obj
+                                    elif command == StructureCommand.DikeL:
+                                        data.Structure.DikeL[command_indices[0]] = obj
+                                    elif command == StructureCommand.DikeR:
+                                        data.Structure.DikeR[command_indices[0]] = obj
 
             case StructureCommand.Object | StructureCommand.FreeObj:
                 if command == StructureCommand.Object:

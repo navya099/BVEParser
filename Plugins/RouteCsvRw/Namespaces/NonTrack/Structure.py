@@ -1,3 +1,5 @@
+import os
+
 from Plugins.RouteCsvRw.Namespaces.NonTrack.StructureCommands import StructureCommand
 from Plugins.RouteCsvRw.RouteData import RouteData
 from Plugins.RouteCsvRw.Structures.Expression import Expression
@@ -297,3 +299,72 @@ class Parser10:
                                 data.Structure.FreeObjects.Add(command_indices[0], obj, 'FreeObject')
                             else:
                                 self.freeObjCount += 1
+
+            case StructureCommand.Background | StructureCommand.Back:
+                if not preview_only:
+                    if command_indices[0] < 0:
+                        logger.error(
+                            f"BackgroundTextureIndex is expected to be non-negative "
+                            f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                        )
+                    elif len(arguments) < 1:
+                        logger.error(
+                            f"{command} is expected to have one argument "
+                            f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                        )
+                    else:
+                        if Path.contains_invalid_chars(arguments[0]):
+                            logger.error(
+                                f"FileName {arguments[0]} contains illegal characters "
+                                f"in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                            )
+                        else:
+                            # Backgrounds dict 초기화
+                            if command_indices[0] not in data.Backgrounds:
+                                # 파이선에서는 필요 없어서 StaticBackground 객체 주석
+                                data.Backgrounds[command_indices[0]] = 'StaticBackground(null, 6, false, Plugin.CurrentOptions.ViewingDistance)'
+
+                            f = os.path.join(self.ObjectPath, arguments[0])
+
+                            # Uchibo 호환성 처리
+                            if not os.path.exists(f) and arguments[0].lower() in ("back_mt.bmp", "back_mthigh.bmp", "bg_fine.bmp"):
+                                pass
+                                #파이선에서는 필요 없어서 주석
+                                #f = os.path.join(self.Plugin.FileSystem.get_data_folder("Compatibility"), "Uchibo", "Back_Mt.png")
+
+                            # BveTs 호환성 처리
+                            if not os.path.exists(f) and self.Plugin.CurrentOptions.EnableBveTsHacks:
+                                if arguments[0].lower().startswith("midland suburban line"):
+                                    arguments[0] = "Midland Suburban Line Objects" + arguments[0][21:]
+                                    f = os.path.join(self.ObjectPath, arguments[0])
+                                elif command_indices[0] == 0:
+                                    pass
+                                    #파이선에서는 필요 없어서 주석
+                                    #f = 'os.path.join(self.Plugin.file_system.get_data_folder("Compatibility"),"Uchibo", "Back_Mt.png")'
+
+                            if not os.path.exists(f):
+                                logger.error(
+                                    f"FileName {f} not found in {command} "
+                                    f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                                )
+                            else:
+                                #xml 객체 처리이지만 파이선에서는 필요 없음
+                                if f.lower().endswith(".xml"):
+                                    try:
+                                        h = f
+                                        data.Backgrounds[command_indices[0]] = h
+                                    except Exception:
+                                        logger.error(
+                                            f"{f} is not a valid background XML in {command} "
+                                            f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                                        )
+                                else:
+                                    pass
+                                    """파이선에서는 필요없어서 주석처리
+                                    b = data.Backgrounds.get(command_indices[0])
+                                    if isinstance(b, StaticBackground):
+                                        b.texture = plugin.current_host.register_texture(
+                                            f, TextureParameters(None, None)
+                                        )
+                                        
+                                    """

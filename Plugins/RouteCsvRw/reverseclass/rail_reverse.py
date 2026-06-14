@@ -1,8 +1,11 @@
+from Plugins.RouteCsvRw.Structures.Block import Block
+
+
 class RailReverse:
     """레일 역방향 변환 클래스 (덤프 명세 반영 완전판)"""
 
     @staticmethod
-    def reverse_rail(block):
+    def reverse_rail(block: Block):
         if not block.Rails:
             return
 

@@ -139,7 +139,7 @@ class SerializeRouteData:
 
         for i, block in enumerate(data.Blocks):
             track_position = i * data.BlockInterval
-
+            next_block = data.Blocks[i + 1] if i <total_blocks - 1 else None
             # 선형 요소 직렬화
             srializedata['TrackCommand'][track_position]['Curve']['radius'] = block.CurrentTrackState.CurveRadius
             srializedata['TrackCommand'][track_position]['Curve']['cant'] = block.CurrentTrackState.CurveCant
@@ -147,8 +147,7 @@ class SerializeRouteData:
 
             # 💡 다음 블록에 존재하는 레일 인덱스 세트 미리 추출 (Look-Ahead)
             next_block_rails = set()
-            if i < total_blocks - 1:
-                next_block = data.Blocks[i + 1]
+            if next_block:
                 for n_key, n_rail in next_block.Rails.items():
                     # 다음 블록에서 유효한 유령이 아닌 레일만 수집
                     if n_rail.RailStarted or n_rail.RailEnded or n_rail.RailStartRefreshed:
@@ -157,13 +156,14 @@ class SerializeRouteData:
             # 레일 요소 직렬화
             for key, rail in block.Rails.items():
                 try:
-                    current_sttype = block.RailType[key]
+                    if next_block:
+                        current_sttype = next_block.RailType[key]
                 except KeyError:
-                    logger.error(f'unexpected rail key {key}')
+                    logger.error(f'unexpected rail key {key} in occured at track_position={track_position} with serialize_track_command')
                     current_sttype = 0
 
                 except IndexError:
-                    logger.error(f'invailed rail key {key}')
+                    logger.error(f'not found rail key {key} in occured at track_position={track_position} with serialize_track_command')
                     current_sttype = 0
 
                 if key == 0:

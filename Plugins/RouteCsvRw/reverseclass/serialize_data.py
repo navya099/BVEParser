@@ -269,3 +269,16 @@ class SerializeRouteData:
                         'direction': wall.direction,
                         'exists': wall.exists
                     }
+            # From 직렬화
+            if hasattr(block, 'Forms') and block.Forms:
+                # save_csv에서 편하게 접근할 수 있도록 딕셔너리로 초기화
+                srializedata['TrackCommand'][track_position]['Form'] = {}
+
+                for i, form in enumerate(block.Forms):
+                    # 레일 인덱스를 Key로 하여 구조화된 딕셔너리 주입
+                    srializedata['TrackCommand'][track_position]['Form'][i] = {
+                        'primary_rail': form.primary_rail,
+                        'secondary_rail': form.secondary_rail,
+                        'roof_type': form.roof_type,
+                        'form_type': form.form_type
+                    }

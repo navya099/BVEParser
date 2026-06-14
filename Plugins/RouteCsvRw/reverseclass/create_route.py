@@ -13,11 +13,12 @@ class CreateRouteFILE:
 
         # 1. Options & Route 헤더 영역 작성
         if 'BlockLength' in srializedata['OptionsCommand']:
-            csv_lines.append(f"With Options\n.BlockLength {srializedata['OptionsCommand']['BlockLength']}")
+            csv_lines.append(f"With Options\n.ObjectVisibility 1")
+            csv_lines.append(f".BlockLength {srializedata['OptionsCommand']['BlockLength']}")
 
         csv_lines.append("With Route")
         if 'Comment' in srializedata['RouteCommand']:
-            csv_lines.append(f".Comment {srializedata['RouteCommand']['Comment']}")
+            csv_lines.append(f".Comment {srializedata['RouteCommand']['Comment']} - Reversed")
         csv_lines.append(f".Elevation {srializedata['RouteCommand']['Elevation']}")
         csv_lines.append(f".PositionX {srializedata['RouteCommand']['PositionX']}")
         csv_lines.append(f".PositionY {srializedata['RouteCommand']['PositionY']}")
@@ -149,11 +150,17 @@ class CreateRouteFILE:
                     else:
                         # ➔ 정확한 위치에서 Wallend 출력
                         csv_lines.append(f"{dist},.WallEnd {rail_idx}")
+            # Form
+            if 'Form' in block_data:
+                # 수집단에서 정의한 rail_idx 순서대로 정렬 순회
+                for i, form in block_data['Form'].items():
+                    form_info = block_data['Form'][i]
+                    csv_lines.append(f"{dist},.Form {form_info['primary_rail']};{form_info['secondary_rail']};{form_info['roof_type']};{form_info['form_type']};")
+
         # 3. 실제 파일 쓰기
-        import os
-        os.makedirs('c:/temp', exist_ok=True)
-        with open('c:/temp/route_reversed.csv', 'w', encoding='utf-8') as f:
+        file_path = r'D:\BVE\루트\Railway\Route/route_reversed.csv'
+        with open(file_path, 'w', encoding='utf-8') as f:
             for line in csv_lines:
                 f.write(line + '\n')
 
-        print("🎉 [Exporter] 역방향 2-Pass 대응 CSV 빌드 완료! (c:/temp/route_reversed.csv)")
+        print(f"🎉 [Exporter] 역방향 2-Pass 대응 CSV 빌드 완료! {file_path}")

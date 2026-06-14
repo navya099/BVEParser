@@ -57,3 +57,11 @@ class ObjectReverse:
                 dike.exists = True
             elif dike.exists and not next_exists:
                 dike.exists = False
+
+    @staticmethod
+    def reverse_form(block: Block):
+        for form in block.Forms:
+            if form.secondary_rail == -1: #left
+                form.secondary_rail = -2 #right
+            elif form.secondary_rail == -2:
+                form.secondary_rail = -1

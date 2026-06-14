@@ -64,6 +64,9 @@ class RouteReverser:
             ObjectReverse.reverse_objects(block, last_track_position)
             #walldike
             ObjectReverse.reverse_walldike(block, next_block)
+
+            #FORM
+            ObjectReverse.reverse_form(block)
             # -------------------------------------------------------------------
             # [교정 3] 블록이 뒤집힌 상태이므로 인덱스 i를 전달해 정차 위치(Stop)를 최종 교정!
             # -------------------------------------------------------------------

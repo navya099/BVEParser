@@ -270,7 +270,7 @@ class SerializeRouteData:
                         'exists': wall.exists
                     }
             # From 직렬화
-            if hasattr(next_block, 'Forms') and next_block.Forms:
+            if next_block and hasattr(next_block, 'Forms') and next_block.Forms:
                 #form 특성상 nextblock에서 조회해야함
                 #89200,.form 1;0;0;8; 89225;nan이면
                 #역방향은 89225,.form 1;0;0;8; 89200:nana이 되야함
@@ -285,3 +285,14 @@ class SerializeRouteData:
                         'roof_type': form.roof_type,
                         'form_type': form.form_type
                     }
+            # ground 직렬화
+            # ground 특성상 nextblock에서 조회해야함
+            # 정방향 89200,.ground 0; 89225,.ground 3;이면
+            # 역방향은 89225,.ground 0; 89200,.ground 3;이 되야함(number swap필요)
+            if next_block and hasattr(next_block, 'Cycle') and next_block.Cycle:
+                srializedata['TrackCommand'][track_position]['Ground'] = []
+                for cycle in next_block.Cycle:
+                    if cycle == -1:
+                        cycle = 0
+                    srializedata['TrackCommand'][track_position]['Ground'].append(cycle)
+

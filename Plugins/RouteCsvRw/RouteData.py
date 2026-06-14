@@ -47,7 +47,7 @@ class RouteData:
                 self.Blocks.append(Block(preview_only))
                 if not preview_only:
                     self.Blocks[i].Cycle = self.Blocks[i - 1].Cycle
-                    self.Blocks[i].Height = 0.0
+                    self.Blocks[i].Height = float('nan')
                 self.Blocks[i].RailCycles = self.Blocks[i - 1].RailCycles
                 self.Blocks[i].RailType = [0] * len(self.Blocks[i - 1].RailType)
                 if not preview_only:

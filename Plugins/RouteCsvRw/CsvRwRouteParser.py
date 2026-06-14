@@ -132,12 +132,13 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
         if self.Plugin.CurrentOptions.is_reverse_mode and not preview_only:
             logger.debug('역방향 모드 감지: 종점 좌표 계산을 위한 1-Pass(정방향 프리뷰) 시작')
             # 정방향 apply_route_data를 먼저 한 번 실행하여 좌표 추출
-            self.apply_route_data(file_name, data, preview_only=True)
+            self.apply_route_data(file_name, data, preview_only=preview_only)
             #역방향 메서드 실행
             reverser = RouteReverser(data, self.CurrentRoute)
             reverser.preprocess_reverse_route()
             reverser.convert_to_reverse_route()
-
+            logger.debug('역방향 루트 생성 완료')
+            return
         # -------------------------------------------------------------------
         # 3. 최종 적용 단계 (3D 월드 인스턴스화)
         # -------------------------------------------------------------------

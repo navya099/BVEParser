@@ -270,11 +270,14 @@ class SerializeRouteData:
                         'exists': wall.exists
                     }
             # From 직렬화
-            if hasattr(block, 'Forms') and block.Forms:
+            if hasattr(next_block, 'Forms') and next_block.Forms:
+                #form 특성상 nextblock에서 조회해야함
+                #89200,.form 1;0;0;8; 89225;nan이면
+                #역방향은 89225,.form 1;0;0;8; 89200:nana이 되야함
                 # save_csv에서 편하게 접근할 수 있도록 딕셔너리로 초기화
                 srializedata['TrackCommand'][track_position]['Form'] = {}
 
-                for i, form in enumerate(block.Forms):
+                for i, form in enumerate(next_block.Forms):
                     # 레일 인덱스를 Key로 하여 구조화된 딕셔너리 주입
                     srializedata['TrackCommand'][track_position]['Form'][i] = {
                         'primary_rail': form.primary_rail,

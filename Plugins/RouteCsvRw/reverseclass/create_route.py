@@ -54,13 +54,13 @@ class CreateRouteFILE:
             if 'Rail' in block_data:
                 # 레일 인덱스 번호 순서대로 정렬하여 출력 규칙 준수
                 for rail_idx in sorted(list(block_data['Rail'].keys())):
-                    if rail_idx == 0:
-                        continue  # 자선(0번)은 BVE 표준상 상시 활성화이므로 출력 스킵
-
                     rail_info = block_data['Rail'][rail_idx]
                     stttype = rail_info.get('object_type', None)
                     if stttype is None:
                         stttype = 0
+                    if rail_idx == 0:
+                        csv_lines.append(f"{dist},.railtype {rail_idx};{stttype};")
+                        continue  # 자선(0번)은 railtype구문만 존재로 railtype구문 생성후 스킵
                     # defaultdict의 부작용을 막기 위해 안전하게 .get()으로 커맨드 타입을 읽어옵니다.
                     cmd_type = rail_info.get('command')
 

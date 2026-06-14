@@ -155,25 +155,24 @@ class SerializeRouteData:
 
             # 레일 요소 직렬화
             for key, rail in block.Rails.items():
+                current_sttype = 0
                 try:
                     if next_block:
                         current_sttype = next_block.RailType[key]
                 except KeyError:
                     logger.error(f'unexpected rail key {key} in occured at track_position={track_position} with serialize_track_command')
-                    current_sttype = 0
 
                 except IndexError:
                     logger.error(f'not found rail key {key} in occured at track_position={track_position} with serialize_track_command')
-                    current_sttype = 0
-
-                if key == 0:
-                    continue  # 자선 스킵
 
                 # 완벽한 공백 유령 레일 객체 필터링 (순수 무효 데이터 드롭)
                 if not rail.RailStarted and not rail.RailEnded and not rail.RailStartRefreshed:
                     continue
 
                 rail_data = srializedata['TrackCommand'][track_position]['Rail'][key]
+                if key == 0:
+                    rail_data['object_type'] = current_sttype
+                    continue  # 자선은 railtype 구문을 위해 오브젝트 타입만 수집후 바로 스킵!
                 rail_data['x'] = rail.RailStart.x
                 rail_data['y'] = rail.RailStart.y
                 rail_data['refreshed'] = rail.RailStartRefreshed

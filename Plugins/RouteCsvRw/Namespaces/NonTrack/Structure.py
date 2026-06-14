@@ -73,6 +73,7 @@ class Parser10:
                                 obj = [f]
                                 overwrite_default = True if command_indices[1] >= 0 and command_indices[1] >= 3 else False
                                 data.Structure.Poles[command_indices[0]].Add(command_indices[1], obj, overwrite_default)
+
             case StructureCommand.Ground:
                 if not preview_only:
                     if command_indices[0] < 0:
@@ -149,7 +150,7 @@ class Parser10:
                                         data.Structure.DikeL[command_indices[0]] = obj
                                     elif command == StructureCommand.DikeR:
                                         data.Structure.DikeR[command_indices[0]] = obj
-                                        
+
             case StructureCommand.FormL | StructureCommand.FormR | StructureCommand.FormCL | StructureCommand.FormCR:
                 if not preview_only:
                     if command in (StructureCommand.FormL, StructureCommand.FormR):
@@ -201,6 +202,70 @@ class Parser10:
                                         data.Structure.FormCL.Add(command_indices[0], obj, 'Left FormCStructure')
                                     elif command == StructureCommand.FormCR:
                                         data.Structure.FormCR.Add(command_indices[0], obj, 'Right FormCStructure')
+
+            case StructureCommand.RoofL | StructureCommand.RoofR | StructureCommand.RoofCL | StructureCommand.RoofCR:
+                if not preview_only:
+                    if command in (StructureCommand.RoofL, StructureCommand.RoofR):
+                        current = "Roof"
+                    elif command in (StructureCommand.RoofCL, StructureCommand.RoofCR):
+                        current = "RoofC"
+                    else:
+                        current = "Unknown"
+                    side = "Left" if command in (StructureCommand.RoofL, StructureCommand.RoofCL) else "Right"
+                    if command_indices[0] < 0:
+
+                        logger.error(
+                            f"{side} {current}StructureIndex is expected to be non-negative "
+                            f"in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                        )
+                    else:
+                        if len(arguments) < 1:
+                            logger.error(
+                                f"{command} is expected to have one argument "
+                                f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                            )
+                        elif Path.contains_invalid_chars(arguments[0]):
+                            logger.error(
+                                f"FileName {arguments[0]} contains illegal characters "
+                                f"in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                            )
+                        else:
+                            # 인덱스가 0일 때 RW 여부 확인
+                            if command_indices[0] == 0:
+                                if not self.IsRW:
+                                    logger.error(
+                                        f"{current}StructureIndex was omitted or is 0 in {command} argument "
+                                        f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                                    )
+                                command_indices[0] = 1
+                            if command_indices[0] < 0:
+                                logger.error(
+                                    f"{current}StructureIndex is expected to be non-negative "
+                                    f"in {command} argument at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                                )
+                            else:
+                                f = arguments[0]
+                                success, f = self.locate_object(f, self.ObjectPath)
+                                if not success:
+                                    logger.error(
+                                        f"FileName {f} not found in {command} "
+                                        f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                                    )
+                                else:
+                                    if side == "Left":
+                                        obj = f
+                                    else:
+                                        obj = f
+
+                                    if obj is not None:
+                                        if command == StructureCommand.RoofL:
+                                            data.Structure.RoofL.Add(command_indices[0], obj, 'Left RoofStructure')
+                                        elif command == StructureCommand.RoofR:
+                                            data.Structure.RoofR.Add(command_indices[0], obj, 'Right RoofStructure')
+                                        elif command == StructureCommand.RoofCL:
+                                            data.Structure.RoofCL.Add(command_indices[0], obj, 'Left RoofCStructure')
+                                        elif command == StructureCommand.RoofCR:
+                                            data.Structure.RoofCR.Add(command_indices[0], obj, 'Right RoofCStructure')
 
             case StructureCommand.Object | StructureCommand.FreeObj:
                 if command == StructureCommand.Object:

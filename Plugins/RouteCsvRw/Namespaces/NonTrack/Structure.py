@@ -73,7 +73,38 @@ class Parser10:
                                 obj = [f]
                                 overwrite_default = True if command_indices[1] >= 0 and command_indices[1] >= 3 else False
                                 data.Structure.Poles[command_indices[0]].Add(command_indices[1], obj, overwrite_default)
-            
+                                
+            case StructureCommand.Ground:
+                if not preview_only:
+                    if command_indices[0] < 0:
+                        logger.error(
+                            f"GroundStructureIndex is expected to be non-negative "
+                            f"in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                        )
+                    else:
+                        if len(arguments) < 1:
+                            logger.error(
+                                f"{command} is expected to have one argument "
+                                f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                            )
+                        elif Path.contains_invalid_chars(arguments[0]):
+                            logger.error(
+                                f"FileName {arguments[0]} contains illegal characters "
+                                f"in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                            )
+                        else:
+                            f = arguments[0]
+                            success, f = self.locate_object(f, self.ObjectPath)
+                            if not success:
+                                logger.error(
+                                    f"FileName {f} not found in {command} "
+                                    f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                                )
+                            else:
+                                obj = f
+                                if obj is not None:
+                                    data.Structure.Ground.Add(command_indices[0], obj, "GroundStructure")
+
             case StructureCommand.DikeL | StructureCommand.DikeR | StructureCommand.WallL | StructureCommand.WallR:
                 if not preview_only:
                     if command in (StructureCommand.DikeL, StructureCommand.DikeR):

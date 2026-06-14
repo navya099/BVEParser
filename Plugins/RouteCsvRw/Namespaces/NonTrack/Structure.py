@@ -73,7 +73,6 @@ class Parser10:
                                 obj = [f]
                                 overwrite_default = True if command_indices[1] >= 0 and command_indices[1] >= 3 else False
                                 data.Structure.Poles[command_indices[0]].Add(command_indices[1], obj, overwrite_default)
-                                
             case StructureCommand.Ground:
                 if not preview_only:
                     if command_indices[0] < 0:
@@ -150,7 +149,58 @@ class Parser10:
                                         data.Structure.DikeL[command_indices[0]] = obj
                                     elif command == StructureCommand.DikeR:
                                         data.Structure.DikeR[command_indices[0]] = obj
+                                        
+            case StructureCommand.FormL | StructureCommand.FormR | StructureCommand.FormCL | StructureCommand.FormCR:
+                if not preview_only:
+                    if command in (StructureCommand.FormL, StructureCommand.FormR):
+                        current = "Form"
+                    elif command in (StructureCommand.FormCL, StructureCommand.FormCR):
+                        current = "FormC"
+                    else:
+                        current = "Unknown"
+                    side = "Left" if command in (StructureCommand.FormL, StructureCommand.FormCL) else "Right"
+                    if command_indices[0] < 0:
 
+                        logger.error(
+                            f"{side} {current}StructureIndex is expected to be non-negative "
+                            f"in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                        )
+                    else:
+                        if len(arguments) < 1:
+                            logger.error(
+                                f"{command} is expected to have one argument "
+                                f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                            )
+                        elif Path.contains_invalid_chars(arguments[0]):
+                            logger.error(
+                                f"FileName {arguments[0]} contains illegal characters "
+                                f"in {command} at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                            )
+                        else:
+                            f = arguments[0]
+                            success, f = self.locate_object(f, self.ObjectPath)
+                            if not success:
+                                logger.error(
+                                    f"FileName {f} not found in {command} "
+                                    f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
+                                )
+                            else:
+                                # FormL / FormR → LoadObject
+                                # FormCL / FormCR → LoadStaticObject
+                                if side in ("Left FormStructure", "Right FormStructure"):
+                                    obj = f
+                                else:
+                                    obj = f
+
+                                if obj is not None:
+                                    if command == StructureCommand.FormL:
+                                        data.Structure.FormL.Add(command_indices[0], obj, 'Left FormStructure')
+                                    elif command == StructureCommand.FormR:
+                                        data.Structure.FormR.Add(command_indices[0], obj, 'Right FormStructure')
+                                    elif command == StructureCommand.FormCL:
+                                        data.Structure.FormCL.Add(command_indices[0], obj, 'Left FormCStructure')
+                                    elif command == StructureCommand.FormCR:
+                                        data.Structure.FormCR.Add(command_indices[0], obj, 'Right FormCStructure')
 
             case StructureCommand.Object | StructureCommand.FreeObj:
                 if command == StructureCommand.Object:

@@ -362,7 +362,7 @@ class Parser1:
                                         expressions.pop(i)
                                     else:
                                         # 표현식이 있으면 교체
-                                        expressions = expressions[:i] + expr + expressions[i + 1:]
+                                        expressions[i:i+1] = expr
                                     i -= 1
                                     continue_with_next_expression = True
 

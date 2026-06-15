@@ -37,15 +37,10 @@ class RouteReverser:
         station_reverser = StationReverse(self.data, self.current_route)
         station_reverser.reverse_stations()
 
-        # -------------------------------------------------------------------
-        # [교정 2] 블록 리스트를 뒤집기 "전"에, 정방향 인덱스 기준으로 Station ID를 먼저 매칭!
-        # -------------------------------------------------------------------
-        for block in self.data.Blocks:
-            station_reverser.reverse_block_station_id(block)
-
         # 1. 이제 순수한 블록 리스트만 남았으므로 역순으로 뒤집기
         self.data.Blocks.reverse()
-
+        #뒤집은 후 id 매칭
+        station_reverser.reverse_block_station_id()
         # 2. 역방향 기하학적 요소 변경
         total_blocks = len(self.data.Blocks)
         for i in range(total_blocks):

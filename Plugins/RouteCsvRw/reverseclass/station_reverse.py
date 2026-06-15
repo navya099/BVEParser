@@ -38,10 +38,21 @@ class StationReverse:
 
         self.current_route.Stations = reversed_stations
 
-    def reverse_block_station_id(self, block: Block):
-        """블록이 뒤집히기 전에 정방향 기준 역 ID를 역방향 타겟 역 ID로 전환합니다."""
-        if block.Station >= 0 and block.Station < self.total_stations_count:
-            block.Station = self.total_stations_count - 1 - block.Station
+    def reverse_block_station_id(self):
+        """블록을 뒤집은 후 current_route의 역 ID를 역방향 타겟 블록 역 ID로 전환합니다."""
+        # 1. 모든 블록을 -1로 초기화
+        for block in self.data.Blocks:
+            block.Station = -1
+
+        #역방향 DefaultTrackPosition에 해당하는 블록 인덱스 얻기
+        for i, station in enumerate(self.current_route.Stations):
+            station = self.current_route.Stations[i]
+            current_track_position = station.DefaultTrackPosition #역방향
+            block_index = int(math.floor(current_track_position / self.data.BlockInterval + 0.001))
+            target_block = self.data.Blocks[block_index]
+
+            #station id 매핑
+            target_block.Station = i
 
     def reverse_stoppositions(self, i: int, block: Block):
         """

@@ -311,3 +311,21 @@ class SerializeRouteData:
             if next_block and hasattr(next_block, 'Background'):
                 srializedata['TrackCommand'][track_position]['Background'] = next_block.Background
 
+            # LIMIT 직렬화
+            # LIMIT 특성상 nextblock에서 조회해야함
+            # 정방향 89200,.limit 130; 89225,.limit 0; 이면
+            # 역방향은 89225,.limit 130; 89200,.limit 0;이 되야함
+            # save_csv에서 편하게 접근할 수 있도록 딕셔너리로 초기화
+            if next_block and hasattr(next_block, 'Limits') and next_block.Limits:
+                srializedata['TrackCommand'][track_position]['Limit'] = {}
+
+                for i, limit in enumerate(next_block.Limits):
+                    # 레일 인덱스를 Key로 하여 구조화된 딕셔너리 주입
+                    srializedata['TrackCommand'][track_position]['Limit'][i] = {
+                        'track_position': limit.TrackPosition,
+                        'speed': int(limit.speed * 3.6), #m/s -> km/h
+                        'direction': limit.direction,
+                        'cource': limit.cource
+                    }
+
+

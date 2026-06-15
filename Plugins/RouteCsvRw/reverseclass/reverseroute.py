@@ -8,6 +8,7 @@ from Plugins.RouteCsvRw.reverseclass.create_route import CreateRouteFILE
 from Plugins.RouteCsvRw.reverseclass.object_reverse import ObjectReverse
 from Plugins.RouteCsvRw.reverseclass.rail_reverse import RailReverse
 from Plugins.RouteCsvRw.reverseclass.serialize_data import SerializeRouteData
+from Plugins.RouteCsvRw.reverseclass.signal_reverser import SignalReverser
 from Plugins.RouteCsvRw.reverseclass.station_reverse import StationReverse
 from loggermodule import logger
 from RouteManager2.CurrentRoute import CurrentRoute
@@ -47,7 +48,7 @@ class RouteReverser:
 
         # 2. 역방향 기하학적 요소 변경
         total_blocks = len(self.data.Blocks)
-        for i in range(len(self.data.Blocks) - 1):
+        for i in range(total_blocks):
             block = self.data.Blocks[i]
             # 마지막 블록일 때는 next_block에 None을 주어 종단 마감을 유도합니다.
             next_block = self.data.Blocks[i + 1] if i < total_blocks - 1 else None
@@ -67,6 +68,10 @@ class RouteReverser:
 
             #FORM
             ObjectReverse.reverse_form(block)
+
+            #Signal
+            SignalReverser.reverse_limit(block, last_track_position)
+
             # -------------------------------------------------------------------
             # [교정 3] 블록이 뒤집힌 상태이므로 인덱스 i를 전달해 정차 위치(Stop)를 최종 교정!
             # -------------------------------------------------------------------

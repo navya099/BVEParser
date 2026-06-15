@@ -296,3 +296,10 @@ class SerializeRouteData:
                         cycle = 0
                     srializedata['TrackCommand'][track_position]['Ground'].append(cycle)
 
+            # background 직렬화
+            # background 특성상 nextblock에서 조회해야함
+            # 정방향 89200,.back 0; 89225,.back 3;이면
+            # 역방향은 89225,.back 0; 89200,.back 3;이 되야함(number swap필요)
+            if next_block and hasattr(next_block, 'Background') and next_block.Background:
+                srializedata['TrackCommand'][track_position]['Background'] = next_block.Background
+

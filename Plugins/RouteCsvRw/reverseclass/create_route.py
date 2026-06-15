@@ -163,6 +163,11 @@ class CreateRouteFILE:
                 for cycle in block_data['Ground']:
                     csv_lines.append(f"{dist},.Ground {cycle};")
 
+            # BackGround
+            if 'Background' in block_data:
+                # 수집단에서 정의한 rail_idx 순서대로 정렬 순회
+                csv_lines.append(f"{dist},.back {block_data['Background']};")
+
         # 3. 실제 파일 쓰기
         file_path = r'D:\BVE\루트\Railway\Route/route_reversed.csv'
         with open(file_path, 'w', encoding='utf-8') as f:

@@ -1,3 +1,5 @@
+import math
+
 from Plugins.RouteCsvRw.RouteData import RouteData
 from Plugins.RouteCsvRw.Structures.Block import Block
 from RouteManager2.CurrentRoute import CurrentRoute
@@ -24,6 +26,14 @@ class StationReverse:
             station = original_stations[index]
             # 출입문 개방 방향 좌우 반전 스왑
             station.OpenLeftDoors, station.OpenRightDoors = station.OpenRightDoors, station.OpenLeftDoors
+            # DefaultTrackPosition 반전
+            #먼저 정방향 stop의 블록을 찾아서 trackposition을 꺼내야함
+            #data.Blocks[block_index].StopPositions
+            stop_positions = self.get_stop_trackposition_by_station_index(index)
+            #가장 큰 stop_position 선택
+            select_stop_position = max(stop_positions)
+            #DefaultTrackPosition에 적용
+            station.DefaultTrackPosition = self.data.TrackPosition - select_stop_position
             reversed_stations.append(station)
 
         self.current_route.Stations = reversed_stations
@@ -101,3 +111,13 @@ class StationReverse:
             new_stops.append(rev_stop)
 
         block.StopPositions = new_stops
+
+    def get_stop_trackposition_by_station_index(self, station_index):
+        """station_index를 기반으로 stoppositions 얻기"""
+        stoppositions = []
+        for block in self.data.Blocks:
+            if block.StopPositions:
+                for stopposition in block.StopPositions:
+                    if stopposition.StationIndex == station_index:
+                        stoppositions.append(stopposition.TrackPosition)
+        return stoppositions

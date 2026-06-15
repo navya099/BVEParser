@@ -1,3 +1,4 @@
+from .ObjectDictionary import BackgroundDictionary
 from .Structures.Block import Block
 from .Structures.Route.Rail import Rail
 from Plugins.RouteCsvRw.Structures.StructureData import StructureData

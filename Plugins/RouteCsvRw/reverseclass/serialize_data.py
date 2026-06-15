@@ -130,6 +130,14 @@ class SerializeRouteData:
                                 cmd_string = f"Structure.Pole({first_idx}; {second_idx}) {obj_path}"
                                 serializedata['StructureCommand'].append(cmd_string)
 
+        #4 BACK 텍스쳐 네임스페이스
+        # 파서 원형: data.Backgrounds[command_indices[0]] = h
+        if hasattr(data, 'Backgrounds') and data.Backgrounds:
+            for idx, bg_file in data.Backgrounds.items():
+                obj_path = extract_pure_path(bg_file)
+                if obj_path:
+                    cmd_string = f"Texture.Background({idx}) {obj_path}"
+                    serializedata['StructureCommand'].append(cmd_string)
 
         logger.debug(f"[Structure 원형 직렬화 완료] 총 {len(serializedata['StructureCommand'])}개 명령어 캡처 완료")
 
@@ -300,6 +308,6 @@ class SerializeRouteData:
             # background 특성상 nextblock에서 조회해야함
             # 정방향 89200,.back 0; 89225,.back 3;이면
             # 역방향은 89225,.back 0; 89200,.back 3;이 되야함(number swap필요)
-            if next_block and hasattr(next_block, 'Background') and next_block.Background:
+            if next_block and hasattr(next_block, 'Background'):
                 srializedata['TrackCommand'][track_position]['Background'] = next_block.Background
 

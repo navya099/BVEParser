@@ -1,5 +1,6 @@
 import os
 
+from OpenBveApi.Routes.StaticBackground import StaticBackground
 from Plugins.RouteCsvRw.Namespaces.NonTrack.StructureCommands import StructureCommand
 from Plugins.RouteCsvRw.RouteData import RouteData
 from Plugins.RouteCsvRw.Structures.Expression import Expression
@@ -322,8 +323,8 @@ class Parser10:
                             # Backgrounds dict 초기화
                             if command_indices[0] not in data.Backgrounds:
                                 # 파이선에서는 필요 없어서 StaticBackground 객체 주석
-                                data.Backgrounds[command_indices[0]] = 'StaticBackground(null, 6, false, Plugin.CurrentOptions.ViewingDistance)'
-
+                                #data.Backgrounds[command_indices[0]] = StaticBackground(None, 6, False, self.Plugin.CurrentOptions.ViewingDistance, time=0.0, vao=None)
+                                pass
                             f = os.path.join(self.ObjectPath, arguments[0])
 
                             # Uchibo 호환성 처리
@@ -359,7 +360,9 @@ class Parser10:
                                             f"at line {expression.Line}, column {expression.Column} in file {expression.File}"
                                         )
                                 else:
-                                    pass
+                                    #파이선에서는 검증과정 필요 없이 곧바로 딕셔너리에 f를 집어넣으면 됨
+                                    data.Backgrounds[command_indices[0]] = f
+
                                     """파이선에서는 필요없어서 주석처리
                                     b = data.Backgrounds.get(command_indices[0])
                                     if isinstance(b, StaticBackground):

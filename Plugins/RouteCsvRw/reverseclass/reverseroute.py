@@ -37,10 +37,13 @@ class RouteReverser:
         station_reverser = StationReverse(self.data, self.current_route)
         station_reverser.reverse_stations()
 
+
         # 1. 이제 순수한 블록 리스트만 남았으므로 역순으로 뒤집기
         self.data.Blocks.reverse()
-        #뒤집은 후 id 매칭
-        station_reverser.reverse_block_station_id()
+
+        #stoppositions 뒤집기
+        station_reverser.revere_stoppositions()
+
         # 2. 역방향 기하학적 요소 변경
         total_blocks = len(self.data.Blocks)
         for i in range(total_blocks):
@@ -67,10 +70,6 @@ class RouteReverser:
             #Signal
             SignalReverser.reverse_limit(block, last_track_position)
 
-            # -------------------------------------------------------------------
-            # [교정 3] 블록이 뒤집힌 상태이므로 인덱스 i를 전달해 정차 위치(Stop)를 최종 교정!
-            # -------------------------------------------------------------------
-            station_reverser.reverse_stoppositions(i, block)
         #직렬화 및 저장
         srializedata = SerializeRouteData.serialize_route_data(self.current_route, self.data)
         CreateRouteFILE.save_csv(srializedata, self.data.BlockInterval)

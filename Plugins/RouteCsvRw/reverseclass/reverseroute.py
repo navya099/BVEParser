@@ -43,6 +43,8 @@ class RouteReverser:
 
         #stoppositions 뒤집기
         station_reverser.revere_stoppositions()
+        #station id 할당
+        station_reverser.apply_station_index_at_block()
 
         # 2. 역방향 기하학적 요소 변경
         total_blocks = len(self.data.Blocks)

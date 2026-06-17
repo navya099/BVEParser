@@ -214,6 +214,8 @@ class SerializeRouteData:
             if block.Station >= 0 and block.Station < len(current_route.Stations):
                 station_obj = current_route.Stations[block.Station]
                 srializedata['TrackCommand'][track_position]['Station']['Name'] = station_obj.Name
+                srializedata['TrackCommand'][track_position]['Station']['TrackPosition'] = station_obj.DefaultTrackPosition
+
             # stop 요소 직렬화
             for idx, stop in enumerate(block.StopPositions):
                 srializedata['TrackCommand'][track_position]['Stop'][idx] = stop.TrackPosition

@@ -37,7 +37,7 @@ class StationReverse:
         current_route: CurrentRoute
         total_stations_count: 전체 역 갯수
         infos: Stationinfo
-        stop_positions: stop_position
+        stopinfos: stop_position
     """
 
     def __init__(self, data: RouteData, current_route: CurrentRoute):
@@ -47,7 +47,7 @@ class StationReverse:
 
         #초기속성
         self.infos: list[Stationinfo] = []
-        self.stop_positions: list[Stop] = []
+        self.stopinfos: list[StopPositionInfo] = []
 
         #1회 수집 콜렉트 메서드
         self._collect_stationinfos()
@@ -72,9 +72,9 @@ class StationReverse:
         collected = []
         for block in self.data.Blocks:
             if block.StopPositions:
-                collected.extend(block.StopPositions)
+                collected.append(StopPositionInfo(self.get_block_index(block.CurrentTrackState.StartingTrackPosition), block.StopPositions))
 
-        self.stop_positions = deepcopy(collected)
+        self.stopinfos = deepcopy(collected)
 
     def reverse_stations(self):
         """전체 역 목록 자체를 역순으로 정렬하고 속성(출입문)을 반전합니다."""
@@ -106,29 +106,39 @@ class StationReverse:
         self.reset_blocks()
         reversed_stops = []
         # 역순으로 순회(3,2,1,0)
-        for info in reversed(self.infos):
+        for info, stopinfo in zip(reversed(self.infos), reversed(self.stopinfos)):
             station_index = info.index #역 인덱스
             start_station = info.start #시작 측점(정방향)
             end_station = info.end #끝 측점(정방향)
             offset = end_station - start_station #offset
             block_index = self.get_block_index(self.data.TrackPosition - start_station) #역방향 인덱스
             target_block = self.data.Blocks[block_index] #역방향 블록 내 타겟블록 가져오기
-            #정방향 stop_positions순회
-            for stopposition in self.stop_positions:
+            reversed_stops = []
+            for stop_position in stopinfo.stop_positions:
                 new_stop = Stop(
-                    track_position=self.data.TrackPosition - end_station + offset, #역방향 stop + offset
+                    track_position=self.data.TrackPosition - end_station + offset,  # 역방향 stop + offset
                     station_index=self.total_stations_count - 1 - station_index,
-                    forward_tolerance=stopposition.BackwardTolerance,
-                    backward_tolerance=stopposition.ForwardTolerance,
-                    direction=stopposition.Direction * -1,
-                    number_of_cars=stopposition.Cars
+                    forward_tolerance=stop_position.BackwardTolerance,
+                    backward_tolerance=stop_position.ForwardTolerance,
+                    direction=stop_position.Direction * -1,
+                    number_of_cars=stop_position.Cars
                 )
                 reversed_stops.append(new_stop)
+
             target_block.StopPositions = reversed_stops
-            target_block.Station = self.total_stations_count - 1 - station_index
+
+    def apply_station_index_at_block(self):
+        """블록에 station 인덱스 할당
+           블록을 뒤집은 후 실행
+        """
+        for i, station in enumerate(self.current_route.Stations):
+            track_position = station.DefaultTrackPosition
+            block_index = self.get_block_index(track_position)
+            target_block = self.data.Blocks[block_index]
+            target_block.Station = i  # 이미 역순으로 뒤집힌 상태라 i가 역방향 인덱스
 
     # 헬퍼 메서드
-    def get_stop_trackposition_by_station_index(self, station_index):
+    def get_stop_trackposition_by_station_index(self, station_index: int):
         """station_index를 바탕으로 stop_trackposition 얻기"""
         stoppositions = []
         for block in self.data.Blocks:

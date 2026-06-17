@@ -80,7 +80,8 @@ class CreateRouteFILE:
             # ④ 정거장 (.sta) 및 정차 마커 (.stop) 문법 조립
             if 'Station' in block_data and 'Name' in block_data['Station']:
                 st_name = block_data['Station']['Name']
-                csv_lines.append(f"{dist},.sta {st_name};")
+                sta_track_position = block_data['Station']['TrackPosition']
+                csv_lines.append(f"{sta_track_position},.sta {st_name};")
 
             # stop 위치
             if 'Stop' in block_data:

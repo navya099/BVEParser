@@ -19,6 +19,10 @@ class Program(tk.Tk):
         self.is_revese_button = ttk.Checkbutton(self, text="역방향 루트 생성", variable=self.is_revese_var)
         self.is_revese_button.pack(pady=10)
 
+        self.is_preview_var = tk.BooleanVar(value=False)
+        self.is_preview_button = ttk.Checkbutton(self, text="미리보기 전용", variable=self.is_preview_var)
+        self.is_preview_button.pack(pady=10)
+
         self.progress = ttk.Progressbar(self, orient="horizontal", length=400, mode="determinate")
         self.progress.pack(pady=5)
 
@@ -29,7 +33,7 @@ class Program(tk.Tk):
 
     def file_open(self):
         self.new_task_button.config(state="disabled")
-        loading = Loading(self.progress, self.status, self.new_task_button, self.is_revese_var.get())
+        loading = Loading(self.progress, self.status, self.new_task_button, self.is_revese_var.get(), self.is_preview_var.get())
         loading.run()
 
     def close_application(self):

@@ -2,7 +2,7 @@ import math
 from typing import List
 
 from loggermodule import logger
-from uitl import Util
+from utils.uitl import Util
 
 from RouteManager2.Climate.Fog import Fog
 from RouteManager2.CurrentRoute import CurrentRoute
@@ -23,7 +23,7 @@ from .PreprocessOptions import Parser2
 from .Functions import Parser4
 from .RouteData import RouteData
 from .Preprocess import Parser1
-from OpenBveApi.Objects.ObjectInterface import ObjectInterface, CompatabilityHacks
+from OpenBveApi.Objects.ObjectInterface import CompatabilityHacks
 from OpenBveApi.Routes.TrackDirection import TrackDirection
 from Plugins.RouteCsvRw.Structures.Trains.StopRequest import StopRequest
 from .Namespaces.Track.TrackCommands import TrackCommand

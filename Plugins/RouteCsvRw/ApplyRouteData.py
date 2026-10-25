@@ -1,5 +1,3 @@
-import time
-
 from Plugins.RouteCsvRw.RouteData import RouteData
 from OpenBveApi.Math.Vectors.Vector3 import Vector3
 from OpenBveApi.Math.Vectors.Vector2 import Vector2
@@ -9,9 +7,8 @@ from OpenBveApi.Routes.TrackElement import TrackElement
 
 import math
 import numpy as np
-from tqdm import tqdm
 
-from uitl import Util
+from utils.uitl import Util
 
 
 class Parser8:

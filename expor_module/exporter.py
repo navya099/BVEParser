@@ -5,6 +5,7 @@ from dataclasses import asdict
 
 from Plugins.RouteCsvRw.RouteData import RouteData
 from RouteManager2.CurrentRoute import CurrentRoute
+from .dxf_exporter import DXFManger
 from .helper import calculate_world_position, get_object_name
 from .landxml_exporter import LandXMLExporter
 from .schemas import AlignmentRecord, StructureRecord
@@ -30,6 +31,9 @@ class BVEExporter:
             self._save_json(structures, "structures.json")
             #LANDXML 추출
             LandXMLExporter.extract_and_save(alignments, self.output_dir)
+            #dxf 추출
+            dxfmgr = DXFManger()
+            dxfmgr.create_dxf(alignments, output_dir=self.output_dir, filename="alignment.dxf")
             print(f"[Vermoute] 데이터 추출 완료! 저장 위치: {self.output_dir}")
             return True
         except Exception as e:

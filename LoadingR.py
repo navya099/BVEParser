@@ -2,6 +2,9 @@ from tkinter import filedialog, messagebox
 from RouteLoader import RouteLoader
 import threading
 
+from expor_module.exporter import BVEExporter
+
+
 def askfile():
     return filedialog.askopenfilename(title="루트 파일 선택", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
 
@@ -28,7 +31,19 @@ class Loading:
         def background_task():
             success, error = loader.load(progress_callback)
             if success:
-                messagebox.showinfo("정보", "루트 로딩 성공")
+                # 💡 loader가 품고 있는 current_route에서 data 추출
+                route_data = getattr(loader.current_route, "route_data", None)
+                current_route = getattr(loader, "current_route", None)
+                if route_data and current_route:
+                    # Vermoute 익스포터 실행
+                    exporter = BVEExporter()
+                    result = exporter.extract_and_save(route_data, current_route)
+                    if result:
+                        messagebox.showinfo("정보", "루트 로딩 및 추출 성공!")
+                    else:
+                        messagebox.showerror("오류", "추출 실패!")
+                else:
+                    messagebox.showerror("오류", "데이터(ParsedData)를 찾을 수 없습니다.")
             else:
                 messagebox.showerror("오류", error)
             self.button.config(state="normal")

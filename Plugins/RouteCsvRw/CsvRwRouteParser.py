@@ -126,6 +126,8 @@ class Parser(Parser1, Parser2, Parser3, Parser4, Parser5, Parser6, Parser7, Pars
             self.Plugin.IsLoading = False
             return
         data = self.apply_route_data(file_name, data, preview_only)
+        # 익스포터 활용을 위해 route_data를 속성에 할당
+        self.CurrentRoute.route_data = data
         logger.debug('루트적용완료')
 
 

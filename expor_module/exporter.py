@@ -6,6 +6,7 @@ from dataclasses import asdict
 from Plugins.RouteCsvRw.RouteData import RouteData
 from RouteManager2.CurrentRoute import CurrentRoute
 from .helper import calculate_world_position, get_object_name
+from .landxml_exporter import LandXMLExporter
 from .schemas import AlignmentRecord, StructureRecord
 
 class BVEExporter:
@@ -27,7 +28,8 @@ class BVEExporter:
             # 파일 덤프 실행
             self._save_csv(alignments, "alignment.csv")
             self._save_json(structures, "structures.json")
-
+            #LANDXML 추출
+            LandXMLExporter.extract_and_save(alignments, self.output_dir)
             print(f"[Vermoute] 데이터 추출 완료! 저장 위치: {self.output_dir}")
             return True
         except Exception as e:

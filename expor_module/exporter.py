@@ -3,8 +3,8 @@ import csv
 import json
 from dataclasses import asdict
 
-from Plugins.RouteCsvRw.RouteData import RouteData
-from RouteManager2.CurrentRoute import CurrentRoute
+from openbve.Plugins.RouteCsvRw.RouteData import RouteData
+from openbve.RouteManager2.CurrentRoute import CurrentRoute
 from .dxf_exporter import DXFManger
 from .helper import calculate_world_position, get_object_name
 from .landxml_exporter import LandXMLExporter

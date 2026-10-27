@@ -2,11 +2,11 @@ import threading
 import time
 import os
 
-from RouteViewer.System.Host import Host
-from OpenBveApi.System.BaseOptions import BaseOptions
-from Plugins.RouteCsvRw.Plugin import Plugin
-from RouteManager2.CurrentRoute import CurrentRoute
-from OpenBveApi.System.TextEncoding import TextEncoding
+from openbve.RouteViewer.System.Host import Host
+from openbve.OpenBveApi.System.BaseOptions import BaseOptions
+from openbve.Plugins.RouteCsvRw.Plugin import Plugin
+from openbve.RouteManager2.CurrentRoute import CurrentRoute
+from openbve.OpenBveApi.System.TextEncoding import TextEncoding
 
 class RouteLoader:
     """GUI/CUI 공용 루트 로더"""

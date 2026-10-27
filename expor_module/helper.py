@@ -1,6 +1,6 @@
-from OpenBveApi.Math.Vectors.Vector3 import Vector3
-from OpenBveApi.World.Transformations import Transformation
-from Plugins.RouteCsvRw.ObjectDictionary import ObjectDictionary
+from openbve.OpenBveApi.Math.Vectors.Vector3 import Vector3
+from openbve.OpenBveApi.World.Transformations import Transformation
+from openbve.Plugins.RouteCsvRw.ObjectDictionary import ObjectDictionary
 
 
 def calculate_world_position(origin_coord: Vector3,  track_position: float, starting_distance: float, world_side: Transformation, world_up: Transformation, world_direction: Transformation) -> Vector3:

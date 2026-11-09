@@ -81,6 +81,9 @@ class Parser8:
         stacoordinates = []
         freeobjcoordinates = []
         bvedatas = []
+        curve_info = []
+        pitch_info = []
+        coordinates= []
         bvedatas.append(f'측점,X,Y,Z,Bearing,Radius,Cant,Pitch,height')
         for i in range(data.FirstUsedBlock, len(data.Blocks)):
             self.Plugin.CurrentProgress = 0.6667 + (i - data.FirstUsedBlock) * progress_factor
@@ -105,6 +108,7 @@ class Parser8:
             self.CurrentRoute.Tracks[0].Elements[n] = world_track_element
             self.CurrentRoute.Tracks[0].Elements[n].WorldPosition = Vector3(position.x, position.y, position.z)
 
+            coordinates.append(f'{position.x}, {position.z}, {position.y}')
 
             self.CurrentRoute.Tracks[0].Elements[n].WorldDirection = Vector3.get_vector3(direction,
                                                                                          data.Blocks[i].Pitch)
@@ -123,6 +127,7 @@ class Parser8:
             # Pitch
             self.CurrentRoute.Tracks[0].Elements[n].Pitch = data.Blocks[i].Pitch
             extrac_pitch = data.Blocks[i].Pitch
+            pitch_info.append(f"{starting_distance},{extrac_pitch}")
 
             # height txt
             extrac_height = data.Blocks[i].Height
@@ -163,7 +168,7 @@ class Parser8:
             extract_radius = world_track_element.CurveRadius
             extract_cant = world_track_element.CurveCant
             extract_bearing = math.atan2(direction.y, direction.x)
-
+            curve_info.append(f"{starting_distance},{extract_radius},{extract_cant}")
             #선형데이터 수집 후 저장
             bvedata = f'{starting_distance},{position.x},{position.z},{position.y},{extract_bearing},{extract_radius},{extract_cant},{extrac_pitch},{extrac_height}'
             bvedatas.append(bvedata)
@@ -307,6 +312,9 @@ class Parser8:
         rail_info.sort(key=lambda r: r[0])
         rail_info = [f"{s},{rk},{x},{z},{y}" for s, rk, x, z, y in rail_info]
         Util.write_all_lines(r"c:\temp\rail_info.txt", rail_info)
+        Util.write_all_lines(r"c:\temp\curve_info.txt", curve_info)
+        Util.write_all_lines(r"c:\temp\pitch_info.txt", pitch_info)
+        Util.write_all_lines(r"c:\temp\bve_coordinates.txt", coordinates)
         Util.write_all_lines(r"c:\temp\bve_stationcoordinates.txt", stacoordinates)
         Util.write_all_lines(r"c:\temp\bve_freeobjcoordinates.txt", freeobjcoordinates)
         Util.write_all_lines(r"c:\temp\bve_alignment.txt", bvedatas)
